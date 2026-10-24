@@ -1,0 +1,22 @@
+name: Propose a standards change
+description: Suggest a change to STANDARDS.md (claim cards, strength levels, pipelines, layout).
+title: "[standards] "
+labels: ["standards"]
+body:
+  - type: textarea
+    id: change
+    attributes:
+      label: Proposed change
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: What problem it solves, and what precedent exists elsewhere (links welcome).
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Effect on existing entries

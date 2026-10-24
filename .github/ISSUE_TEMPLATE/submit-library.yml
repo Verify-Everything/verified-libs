@@ -1,0 +1,63 @@
+name: Submit a library
+description: Propose a library to verify (or one you've already verified) for verified-libs.
+title: "[entry] <library> <version>"
+labels: ["entry"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks! Agreeing on the success criteria up front saves everyone time. See [STANDARDS.md](https://github.com/Verify-Everything/verified-libs/blob/main/STANDARDS.md).
+  - type: input
+    id: library
+    attributes:
+      label: Library and exact version
+      placeholder: "e.g. foo-parser 2.4.1 (or a commit hash)"
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Upstream source
+      placeholder: "https://..."
+    validations:
+      required: true
+  - type: input
+    id: tool
+    attributes:
+      label: Verification tool and version
+      placeholder: "e.g. Verus 0.x, Lean 4.x, Kani 0.x"
+    validations:
+      required: true
+  - type: dropdown
+    id: strength
+    attributes:
+      label: Target strength level
+      options:
+        - functional
+        - contracts
+        - safety
+        - bounded
+    validations:
+      required: true
+  - type: textarea
+    id: criteria
+    attributes:
+      label: Success criteria
+      description: Which properties, at which level, for which parts of the library. What will count as done?
+    validations:
+      required: true
+  - type: textarea
+    id: trusted
+    attributes:
+      label: Expected trusted base and gaps
+      description: What you expect to assume without proof, and what won't be covered.
+  - type: dropdown
+    id: state
+    attributes:
+      label: Where is the work?
+      options:
+        - Not started (looking for someone)
+        - In progress
+        - Done, PR coming
+    validations:
+      required: true

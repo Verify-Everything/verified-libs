@@ -99,4 +99,6 @@ models = [
 # Gate 8: the proved (patched) tree vs a bitwise reference CRC-32 and vs pristine upstream, on every
 # x86_64 kernel (portable, SSE, AVX2, AVX-512; an instrumented copy confirms which one runs) and the
 # std build. Random data, offsets, initial CRCs, split points and combine. Also checks the overflow fix.
-commands = ["bash {proj}/crosscheck/diff.sh {tree} 50000"]
+# models.sh: every CPU instruction the Lean models stand for, run on random inputs (x86 on this CPU,
+# aarch64 under qemu) and compared with the models evaluated in the built variant projects.
+commands = ["bash {proj}/crosscheck/diff.sh {tree} 50000", "bash {proj}/crosscheck/models.sh {build}/.."]

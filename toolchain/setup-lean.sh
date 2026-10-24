@@ -44,7 +44,10 @@ if ! rustup toolchain list | grep -q "^$CHAN"; then
   rustup toolchain install "$CHAN" --profile minimal -c "$RCOMP" >&2
 fi
 # riscv64 no_std target lets Charon skip SIMD/arch code without source edits (see general.md).
-rustup target add --toolchain "$CHAN" riscv64gc-unknown-none-elf >&2 2>/dev/null || true
+# Extra targets for [[variant]] builds (crc32fast aarch64): VPIPE_RUST_TARGETS, space-separated.
+for t in riscv64gc-unknown-none-elf ${VPIPE_RUST_TARGETS:-}; do
+  rustup target add --toolchain "$CHAN" "$t" >&2 2>/dev/null || true
+done
 
 # 4. elan + Lean (release.lean-lang.org is blocked, so link a GitHub release).
 if [ ! -x "$HOME/.elan/bin/elan" ]; then

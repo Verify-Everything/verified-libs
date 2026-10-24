@@ -141,6 +141,7 @@ note = "variant aarch64: any length, any align_to split, 1-stream and 3-stream p
 
 [[function]]
 id = "src/specialized/aarch64.rs:split_quads"
+lean = "specialized.aarch64.split_quads"  # kept opaque in extraction; modelled in External/FunsExternal.lean, checked against the CPU by crosscheck/models.sh
 theorems = ["split_eq", "calculate_eq"]
 label = "full-correctness"
 note = "helper added by patch 0002 around align_to; std model: prefix ++ u64s (little endian) ++ suffix for any split"
@@ -233,18 +234,21 @@ label = "full-correctness"
 
 [[function]]
 id = "src/specialized/pclmulqdq.rs:load128"
+lean = "specialized.pclmulqdq.load128"  # kept opaque in extraction; modelled in External/FunsExternal.lean, checked against the CPU by crosscheck/models.sh
 theorems = ["get_eq"]
 label = "full-correctness"
 note = "helper added by patch 0002 around _mm_loadu_si128; intrinsic model, used only with >= 16 bytes (proved at every call)"
 
 [[function]]
 id = "src/specialized/pclmulqdq.rs:load256"
+lean = "specialized.pclmulqdq.load256"  # kept opaque in extraction; modelled in External/FunsExternal.lean, checked against the CPU by crosscheck/models.sh
 theorems = ["get256_eq"]
 label = "full-correctness"
 note = "helper added by patch 0002; intrinsic model, used only with >= 32 bytes"
 
 [[function]]
 id = "src/specialized/pclmulqdq.rs:load512"
+lean = "specialized.pclmulqdq.load512"  # kept opaque in extraction; modelled in External/FunsExternal.lean, checked against the CPU by crosscheck/models.sh
 theorems = ["get512_eq"]
 label = "full-correctness"
 note = "helper added by patch 0002; intrinsic model, used only with >= 64 bytes"

@@ -22,3 +22,10 @@ Open (each blocks admission):
 Findings to report upstream (ask Yerin first): `AsciiSet::add`/`remove` panic (index out of bounds) on non-ASCII bytes; undocumented.
 
 Disk: the session allowance is ~39 GB; Verus (unpacked ~1.5 GB + its Rust toolchain) did not fit alongside the rest. Free space first.
+
+## 2026-10-24 08:40-09:30 UTC: second tool (Yerin chose it at 08:37)
+- Tool: Creusot v0.14.0 (2026-10-12, Rust nightly-2026-08-03). Built from source fine (`cargo build --release -p cargo-creusot -p creusot-rustc`, ~4 min).
+- Blocked: Creusot pins Why3 git-05bf4ddf and why3find git-0f054b93; their sources are only on gitlab.inria.fr / git.frama-c.com / opam.ocaml.org, all denied by this sandbox's network policy. nixpkgs Why3 1.8.2 is too old: it rejects Creusot 0.14's Coma (`fun (_x: T) -> ...` lambdas), and why3find master needs newer Why3 APIs. Asked Yerin to allow those three hosts (new cloud environment; only new sessions pick it up).
+- Got working without them: solvers at Creusot's pinned versions (Alt-Ergo 2.6.4 and CVC5 1.4.1 from GitHub releases, sha256 checked; Z3 5.1.0 from nixpkgs; CVC4 1.8 via installer), why3find 1.3.0 built from the github.com/creusot-rs/why3find mirror (tag 1.3.0).
+- Creusot on the unmodified crate needs ghost-only additions: `extern crate creusot_std` under cfg(creusot), DeepModel for the PartialEq types, IteratorSpec for both Iterator impls, and visibility fixes for the consts. Plan: annotated copy whose non-ghost tokens equal upstream (pipeline check strips #[cfg(creusot)] items and creusot attributes, then diffs).
+- Disk: `nix-collect-garbage` freed 15 GB (old Nix detour). Don't write through a symlink when wrapping a tool (I overwrote the why3find binary once).

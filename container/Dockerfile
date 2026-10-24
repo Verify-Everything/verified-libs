@@ -1,7 +1,7 @@
 # Pinned toolchain image for admission gate 9 (STANDARDS.md): CI re-checks every entry from clean
 # inside this image, pinned by digest in toolchain/versions.toml [container].
 # It holds the tools only (Aeneas, Charon, Rust nightly, Lean, mathlib, Frama-C, Why3, Z3, CVC5,
-# CBMC); the repo is mounted at /work at run time. About 19 GB unpacked. Build from the repo root:
+# CBMC, plus qemu and an aarch64 cross gcc for crosscheck models); the repo is mounted at /work at run time. About 19 GB unpacked. Build from the repo root:
 #   docker build -f container/Dockerfile -t verified-libs-toolchain .
 # Behind a TLS-intercepting proxy, pass its CA as a build secret (not baked into the image):
 #   docker build --secret id=ca,src=/path/to/ca.pem --build-arg HTTPS_PROXY ...
@@ -17,6 +17,7 @@ RUN --mount=type=secret,id=ca,required=false,mode=0444 \
     if [ "$APT_HTTPS" = 1 ]; then sed -i 's#http://#https://#' /etc/apt/sources.list.d/ubuntu.sources; fi; \
     apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates curl git python3 build-essential zstd xz-utils bash-completion \
+      qemu-user-static gcc-aarch64-linux-gnu libc6-dev-arm64-cross \
     && rm -rf /var/lib/apt/lists/* /etc/apt/apt.conf.d/99ca
 # uid 1001 matches the GitHub runner user, so the mounted checkout stays writable.
 RUN useradd -m -u 1001 -s /bin/bash vpipe && mkdir -m 0755 /nix && chown vpipe /nix /home/vpipe

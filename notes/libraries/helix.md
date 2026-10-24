@@ -38,10 +38,11 @@ but their fixes are proved only on the model.
 Work: /mnt/project-files/helix-verify/selection/ (model/, lean/, difftest/, axioms/, real/ for the real-code bridge), helix-verify/position/.
 - MODEL-PROVED (does not count yet under the admission standard): all 65 selection.rs functions except derived Debug impls, on an Aeneas-extracted model crate. 231 theorems, std axioms only. Difftest vs upstream: 200k cases per function, no mismatch inside preconditions.
 - Model choices: text = &[u32] chars, LF-only lines (default ropey build; `unicode-lines` feature open), grapheme boundaries / regex matches / tree-sitter offsets as inputs, SmallVec->Vec, sort_unstable->insertion sort (pass proofs hold for any sorted input).
-- In progress: proof that the real helix-core code equals the model (Charon reads real helix-core; Aeneas fails only on the fn-item `Range::from` used as a closure and on update_positions).
+- REAL-CODE BRIDGE (2026-10-24, helix-verify/selection/real/BRIDGE.md): 53 of 66 real items proved (all Range methods, ensure_grapheme_boundary_prev/next, 24 Selection items), no Rust source edits, 384 theorems, std axioms only. normalize/push/replace/new/transform/cursors/ensure_invariants exact only when `from` keys are distinct (sort_unstable order of equal keys). Open: Selection::contains/is_subset, transform_iter, FromIterator, the 4 free functions, Range::map, Selection::map, map_no_normalize, line_ranges, LineRangeIter (Aeneas can't translate the last five).
+- Model vs real: real code panics on positions past the end where the model saturates; Selection::new debug-asserts primary_index < len; extend debug-asserts from <= to.
 - O: Debug impls (Range, Selection), `unicode-lines` feature, map_no_normalize size cap (model needs 2*len <= usize::MAX), ropey/smallvec/unicode-segmentation/regex/tree-house behaviour (trusted until those crates are verified).
 - Findings (not filed): transform_iter keeps a stale primary_index (panics if 2 <= count <= pi; invalid selection if count < 2); Selection::new with bad primary index and 1 range returns an invalid selection; is_subset / Selection::contains doc comments not exact ([0,3] vs point 3 gives false); LineRangeIter::next underflows on unsorted selections (reachable via primary_mut / map_no_normalize); merge_consecutive_ranges does not sort.
-- position.rs: MODEL-PROVED all 17 functions + derives except Debug (23 theorems, std axioms; difftest 120k-240k cases each). Bridge to real code in progress (helix-verify/position/real/). O: Debug, `unicode-lines`, size caps to classify. Details: helix-verify/position/STATUS.md.
+- position.rs: REAL-CODE PROVED (2026-10-24): all 17 functions + Position ops/derives (except Debug) proved on Charon/Aeneas extraction of the real helix-core, exact specs incl. when each panics; 171 theorems, std axioms only; no size caps except real panics. Work: helix-verify/position/real/ (BRIDGE.md, scripts/extract.sh). O: Debug; `unicode-lines`; 3 small source edits for Aeneas (`peek().copied()`, `*"\t"` x2) argued equal but not machine-proved; doc_formatter/text_annotations opaque (editing-helpers thread); trusted Lean models of ropey RopeSlice (ropey thread), unicode-width 0.1.12 table, std iterators. New finding 9: pos_at_coords `row + 1` overflow at row = usize::MAX (not physically reachable).
 - position.rs findings (not filed): pos_at_coords(limit=false) panics when row > len_lines; tab_width = 0 divides by zero; softwrapped_dimensions truncates with `as u16` (70000 chars -> 4464); Position Sub is componentwise ((1,0)-(0,1) panics in debug, wraps in release); visual_offset_from_anchor `anchor_line + max_rows` overflows for max_rows = usize::MAX. doc_formatter (other thread): loops forever when the wrap indicator is wider than viewport minus retained indent (e.g. viewport 12, indicator "->->->->-> ").
 ### Parsers/utilities thread ("Verify Helix parsers": command_line, snippets/*, uri, fuzzy, diff, editor_config, config, diagnostic)
 Work dirs: helix-verify/utils-real/ (REAL-CODE proofs, see README), helix-verify/utils/ (model, now only `tested`),
@@ -54,11 +55,29 @@ All real-code theorems: axioms only propext, Classical.choice, Quot.sound; no so
 - V (real code) `EditorConfig::from_pairs`, default and unicode-lines builds: `from_pairs_spec` = exact output for every map.
 - Gate 8 (editor_config): extracted Lean run against compiled upstream/fork Rust, 240k cases, 0 mismatches
   (utils-real/gate8/run.sh; planted differences are caught). Std models difftested 150k cases, 0 mismatches.
-- command_line.rs (helper, command_line/STATUS.md): 27 of 45 V on real code, no bugs. 17 D (Aeneas crashes on
-  str::pattern, dyn traits, lifetime constraints): split, Flag/ExpansionKind consts, Display, parse_unquoted, parse_quoted,
-  parse_percent_token, parse_quoted_balanced, Iterator::next, read_token, parse, push, first/get/get_flag, Index, IntoIterator
-  for &Args. Its std contracts (HashMap assoc list, str eq) still need gate-7 difftests.
-- tested only (model proofs + difftests): uri.rs, diagnostic.rs, config.rs, fuzzy.rs; editor_config Ini::from_str, find;
+- command_line.rs (helper, command_line/STATUS.md): 27 of 45 V on real code, no bugs; gates 7 (160k std cases) and 8
+  (120k cases vs compiled upstream) pass, all planted bugs caught. One hand edit: Aeneas prints the char '\'' wrongly
+  (printer bug, diff in command_line/real/quote-char-patch.diff). 17 D (Aeneas: str::pattern, dyn, lifetimes): split,
+  Flag/ExpansionKind consts, Display, parse_unquoted, parse_quoted, parse_percent_token, parse_quoted_balanced,
+  Iterator::next, read_token, parse, push, first/get/get_flag, Index, IntoIterator for &Args.
+- diagnostic.rs: 28 V on real code (utils-real/lean/HelixReal/DiagProof.lean): Severity Clone/PartialEq/Ord/PartialOrd/
+  Default; NumberOrString PartialEq/Eq/Clone/Hash (exact bytes fed to the hasher); DiagnosticTag Clone; LanguageServerId
+  (slotmap new_key_type!) Clone/PartialEq/Eq/Ord/PartialOrd/Hash/Default/Key::data/From; DiagnosticProvider Clone/PartialEq/
+  Eq/Ord/PartialOrd/language_server_id; Diagnostic::severity and Clone. Gates 7+8: 80k cases vs compiled upstream, real std
+  and slotmap, 0 mismatches; 13/13 planted bugs in the extraction break a proof. Open: Debug x6 and Display (fmt),
+  Serialize/Deserialize for Severity and NumberOrString (Deserialize comes out as sorry).
+- snippets parser.rs/elaborate.rs (helper, snippets_parse/STATUS.md): all D + model proofs only; Aeneas/Charon can't read
+  the helix-parsec closure style (Charon OOM, Aeneas internal errors). Findings: F1 exponential parse time on
+  "${1:" repeated (DoS from an LSP server), F2 stack overflow on deep nesting, F3 Transform::apply wrong when
+  range.start != 0 (latent), F4 elaborate pushes a placeholder's default before it (root cause of render B1-B3).
+- snippets render.rs/active.rs (helper, snippets_render/STATUS.md): 16 of 27 on real code (has_placeholder, Index/IndexMut x4,
+  ActiveSnippet::new, activate_tabstop, Tabstop::selection, first_selection, tabstops, tabstop_selection, primary_idx,
+  next_tabstop, prev_tabstop, prepare_render; delete_placeholder still uses the Transaction::delete axiom). Gate 7 for
+  iterator/SmallVec/Selection stand-ins and gate 8 still open (round 3 running); one hand edit (deleted Iterator fields).
+  Proved fixes on patched real code: B4 (activate_tabstop hang on parent cycle), B1 (empty-range tabstop panic), B3 helper
+  clamp_range (map itself not extractable). D only: render family (Box<dyn Fn>), push_str, push_newline, is_valid,
+  insert_subsnippet, map. B2, B6 no proved fix (render not extractable).
+- tested only (model proofs + difftests): uri.rs (real-code helper running), config.rs, fuzzy.rs; editor_config Ini::from_str, find;
   diff.rs. snippets: see helper STATUS files (bugs B1-B6 in snippets_render).
 - Aeneas blockers on real code: str::pattern (crash), fmt (Formatter opaque, so no Display/Debug), fuzzy fn-pointer field,
   config::user_lang_loader early return in closure loop, str::strip_suffix closure and Box AsRef (Ini::from_str, find),
@@ -75,7 +94,7 @@ Text model: RopeSlice = list of `Ch` (code point + Unicode facts as data). Lines
 - M textobject: textobject_pair_surround, _closest, _impl (syntax=None)
 - in progress (model): tree-sitter fns and Some(syntax) paths via an abstract tree model
 - Real-code probe (Aeneas fdebf20 on unmodified helix-core, deps ropey/unicode-segmentation/tree-house opaque): only find_nth_char, skip_while, as_char translate with no sorry anywhere. The rest hit Aeneas limits: non-ASCII char literals (most common), closures/arrow types, lifetime constraints, continue-to-outer-loop. A worker is extending Aeneas (char literals first).
-- Likely bug (not reported, needs a verified fix): find_nth_closest_pairs_plain shifts close positions by one when the range starts at 0 (`close_pos = pos.saturating_sub(1)`). On ")(" with cursor 0 it returns (1,1); so get_surround_pos(None) can return a duplicate position and surround delete/replace build overlapping changes. Proved on the model (closestPlain_oddity) and confirmed on upstream by difftest.
+- Likely bug (not reported, needs a verified fix): find_nth_closest_pairs_plain shifts close positions by one when the range starts at 0 (`close_pos = pos.saturating_sub(1)`). On ")(" with cursor 0 it returns (1,1); so get_surround_pos(None) can return a duplicate position and surround delete/replace build overlapping changes. Proved on the model (closestPlain_oddity) and confirmed on upstream by difftest. Severity low: with a range starting at 0 a pair is only accepted when the text starts with a close bracket directly followed by its opener (")(..."); every other start-of-file case gives PairNotFound as it should.
 - Odd behaviour seen (not reported): `miW`/`maW` with cursor on whitespace or \n right after a WORD selects that WORD (`miw` selects nothing); count=0 paragraph motions can move the wrong way (callers pass >=1); backwards_skip_while doc says "saturating" but returns None when all chars match.
 ### history.rs, auto_pairs.rs, comment.rs, indent.rs, increment/*, text_annotations.rs, doc_formatter.rs — thread "Verify Helix editing helpers"
 Work: /mnt/project-files/helix-verify/helpers/ (indent_ts/ = tree-sitter part of indent.rs: model, difftest, Lean project IndentTS).
@@ -84,6 +103,34 @@ Under the admission standards NOTHING here counts as verified yet (model proofs 
 - M indent.rs text helpers (line/byte/char conversions, whitespace, tab width, indent_level_for_line), injection_base_level, get_scopes, parent walk, has_header, last_preceding_child, deepest_last, opaque_hit / is_opaque_interior / any_opaque_hit, candidate_body_for_new_line, extend_nodes, is_outdent_token_at upward walk, account_node capture scan. In progress: account_node, containment_accounting, query side (IndentQuery::new, are_satisfied, process_match, query_indents), treesitter_indent_for_pos.
 - BUG (confirmed on real upstream, not filed): injection_base_level panics (ropey slice.rs:515) when Enter is pressed inside an injection on the last line with no trailing newline, e.g. `<script>foo();</script>` at EOF in HTML. Fix `(bl + 1).min(total - 1)` proved on the model; patch helpers/indent_ts/patches/, issue draft helpers/indent_ts/issues/.
 - history.rs, increment/*, auto_pairs.rs, comment.rs, indent.rs (non-tree-sitter), text_annotations.rs, doc_formatter.rs: workers in progress; doc_formatter infinite-loop finding is listed under position.rs above.
+### graphemes.rs, line_ending.rs, chars.rs, case_conversion.rs, rope_reader.rs, wrap.rs — thread "Verify Helix text helpers"
+Work: /mnt/project-files/helix-verify/text/ (real/ = real-code extraction + EXTRACT.md, lean/HelixReal = real-code proofs,
+lean/HelixText = older model proofs, only `tested`). Real-code theorems: axioms propext, Classical.choice, Quot.sound only.
+Assumed: ropey model (helix-verify/text/lean/HelixCommon/Ropey.lean; ropey is open), text length < usize::MAX, default build
+(unicode-lines off). Std models in HelixReal/FunsExternal.lean still need gate-7 difftests.
+- V (real code) chars.rs: char_is_line_ending, char_is_whitespace, char_is_punctuation, char_is_word, categorize_char (+ LineEnding::from_char).
+- V (real code) line_ending.rs: from_str, str_is_line_ending, get_line_ending_of_str, get_line_ending, from_rope_slice,
+  line_end_char_index, line_end_byte_index, line_without_line_ending, rope_end_without_line_ending, auto_detect_line_ending,
+  len_chars, as_str, PartialEq, Clone, NATIVE_LINE_ENDING. O: Debug::fmt (no recording Formatter), rope_is_line_ending
+  (Aeneas: fn item as closure, "Arrow types"), unicode-lines build (needs its own extraction).
+- V (real code) case_conversion.rs, all 6: to_pascal_case(_with), to_upper_case_with, to_lower_case_with, to_camel_case(_with),
+  for any char iterator, as list functions (HelixReal/CaseConversion.lean). Assumed: smartstring (Tendril) push/extend model;
+  result fits in isize::MAX bytes. std case tables generated from real std.
+- V (real code) graphemes.rs: tab_width_at (fails for tab_width 0), grapheme_width (fails on ""), Grapheme::change_position
+  (HelixReal/Graphemes.lean). unicode-width modelled from its 0.1.12 tables (open assumption).
+- O graphemes.rs rest: Grapheme::new/new_decoration/width/is_whitespace/is_word_boundary/eq/clone/Display/Debug,
+  GraphemeStr (pointer code: Kani only, not yet linked; Aeneas models RawPtr.cast_scalar as undef, so pointer code can't be
+  proved there), the boundary functions (GraphemeCursor model needed). Aeneas sorry bodies: Grapheme::is_whitespace,
+  is_word_boundary, nth_prev/next_grapheme_boundary (nested borrows), RopeReader::read.
+- V (real code) rope_reader.rs: RopeReader::new (HelixReal/RopeReader.lean). O: RopeReader::read (Aeneas sorry body).
+  GraphemeStr unsafe code: Kani, unbounded (Deref, Drop, From<&str>/String/Cow, Clone, length encoding); not linked to Lean.
+- O wrap.rs (1): reflow_hard_wrap is one call to textwrap::refill. textwrap types break Aeneas; textwrap 0.16.2 + smawk are
+  open assumptions. Model of the textwrap path (helix-verify/text/wrap/) proved up to the line cost (tested only); difftest
+  1.2M runs vs upstream, 0 mismatches. Odd upstream behaviour (not filed): CRLF becomes LF; a one-line `// ` comment loses its
+  prefix on later lines; a later line starting with a prefix char loses it ("-v flag" -> "v flag"); blank lines are dropped
+  (paragraphs merge); tabs count as width 0; lines can exceed text_width (7101 of 200k random cases).
+- Findings (not filed): tab_width 0 panics; Grapheme::new("") then width() panics; GraphemeStr::from panics at >= 2^31 bytes
+  (and From<String> leaks before panicking); "_ab" to camelCase gives "aB".
 ### All other helix-core modules: O
 command_line.rs 40, movement.rs 29, indent.rs 27, graphemes.rs 26, text_annotations.rs 24,
 history.rs 22, auto_pairs.rs 18, snippets/* 52, match_brackets.rs 15, line_ending.rs 15, uri 9,

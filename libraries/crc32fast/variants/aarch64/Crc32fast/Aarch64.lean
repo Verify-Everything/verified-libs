@@ -14,6 +14,11 @@ open Aeneas Aeneas.Std Result crc32fast Crc32Spec
 
 namespace Crc32fastVerif
 
+theorem quadsOf_length (n : Nat) (l : List Std.U8) : (a64.quadsOf n l).length = n := by
+  induction n generalizing l with
+  | zero => rfl
+  | succ n ih => simp [a64.quadsOf, ih]
+
 /-- The bytes of a list of `u64`s, in memory order. -/
 def qb (qs : List U64) : List (BitVec 8) := qs.flatMap (fun q => bytes8 q.bv)
 
@@ -409,7 +414,7 @@ theorem split_eq (data : Slice U8) :
     simp only [bytes, ← List.map_append, List.drop_drop]
     congr 1
     rw [List.append_assoc, ← List.drop_drop, List.take_append_drop, List.take_append_drop]
-  · simp only [Slice.length, Slice.from_val, a64.quadsOf_length]
+  · simp only [Slice.length, Slice.from_val, quadsOf_length]
     omega
 
 theorem index_range (s : Slice U64) (x y : Usize) (hxy : x.val ≤ y.val) (hy : y.val ≤ s.length) :

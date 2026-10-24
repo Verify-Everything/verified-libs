@@ -25,11 +25,21 @@ Fix (patch 0001): `wrapping_add` in update and combine. Not reported upstream ye
   No behaviour change intended; not yet proved equivalent (gate 1). Yerin is choosing between
   a verified fork and an equivalence proof.
 
+## Pipeline run (2026-10-24, vpipe 0.2.4)
+All 5 variants prove: 1151/1151 theorems, standard axioms only. Gates passed: all inputs, cross-check.
+Cross-checks (crosscheck/ in the library folder, run by vpipe):
+- diff.sh: patched tree vs bitwise reference vs pristine upstream on every kernel (x86 portable,
+  SSE, AVX2, AVX-512, std; aarch64 crc, portable, std under qemu). An instrumented copy confirms
+  which kernel runs. All match; upstream panics on the overflow case, the fix wraps.
+- models.sh: the Lean models of all 27 x86 intrinsics vs this CPU (108k cases per run) and the
+  aarch64 CRC32B/CRC32X models vs qemu (40k). 0 mismatches. Planted mismatches are caught.
+
 ## Open gates
 - Gate 1: fork repo or equivalence proof for 0002 (waiting on Yerin).
-- Gate 6: planted bugs picked by a fresh reviewer.
-- Gate 7: forbidden scan flags `opaque` models (CPU feature flag, align_to split, fmt sink).
-- Gate 8: differential tests (fork vs upstream, intrinsic models vs real CPU).
+- Gate 6: planted bugs picked by a fresh reviewer; `vpipe mutate` does not support variants yet (asked).
+- Gate 7: opaque models now allowed (0.2.4); x86 leanchecker replay OOMs with all modules in one call (asked pipeline thread to batch).
+- Gate 2: inventory ignores functions.toml in variant runs (asked pipeline thread).
+- Gate 9: clean reproducible runs in a pinned container.
 - Gates 5, 10: spec review and two reviews (Yerin's sign-off).
 - Latent: `_mm256_castsi128_si256` / `_mm512_castsi128_si512` leave upper bits undefined
   per Intel; the code assumes zero. Model assumes zero; to be reported.

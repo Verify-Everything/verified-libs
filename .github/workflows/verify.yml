@@ -63,6 +63,8 @@ jobs:
       - name: Install
         if: steps.pin.outputs.digest == ''
         run: |
+          # aarch64 crosscheck models (crc32fast); the pinned image has these too
+          sudo apt-get update -qq && sudo apt-get install -y -qq qemu-user-static gcc-aarch64-linux-gnu
           bash install.sh --yes --agents none --tools lean,framac,cbmc
           echo "$HOME/.vpipe/bin" >> "$GITHUB_PATH"
       - name: Pick libraries and entries

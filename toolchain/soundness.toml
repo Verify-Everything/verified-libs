@@ -7,3 +7,11 @@
 # versions = ["4.35.0"]
 # note = "kernel accepted ... (link)"
 # fixed_in = "4.35.1"
+
+[[bug]]
+tool = "frama_c"
+versions = ["33.0"]          # prefix of installed.json "frama_c" ("33.0 (Arsenic)")
+# Only entries whose annotated C contains this construct are affected.
+pattern = '(?:const\s+(?:(?:un)?signed\s+)?char|char\s+const)\s+\*?\s*\w+\s*\[[^\]]*\]\s*=\s*"'
+unless_wp_args = ["-wp-no-init-const"]
+note = "Frama-C 33 WP with default -wp-init-const assumes a const char array initialised from a string literal is all zeros, so it can prove false facts. Rewrite it as a brace list via a declared tool patch. verification-notes/toolchain-bugs/framac33-wp-string-init.md (Neovim thread, 2026-10-24)"

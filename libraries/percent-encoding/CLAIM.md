@@ -8,7 +8,7 @@ tool: Lean 4 + Aeneas
 tool_version: aeneas nightly-2026.10.23-fdebf20, charon_rust nightly-2026-09-17, lean 4.35.0; sha256:e70fa595928911df6c112e8841481da9137b4febfbb51887cd0eba6938a1a858
 strength: tested  # lowest label; real value: unlabelled (functions without a label in functions.toml, or open)
 status: candidate
-functions: 21/33
+functions: 28/33
 ---
 
 # percent-encoding 2.3.2: CLAIM
@@ -17,7 +17,7 @@ functions: 21/33
 
 Status: candidate
 Entry strength: unlabelled
-Functions: 21/33 at full-correctness (27 verified or fixed)
+Functions: 28/33 at full-correctness (28 verified or fixed)
 
 ## Success criteria (written before proof work)
 - Written: 2026-10-24 (Proofs/Spec.lean, written before the proofs in the percent-encoding thread). Reviewed by: 
@@ -64,7 +64,6 @@ Functions: 21/33 at full-correctness (27 verified or fixed)
 - `src/lib.rs:Iterator for PercentDecode::next`: proved only on the patched body; the patch is not yet proved equivalent to the original (admission gate 1)
 - `src/lib.rs:PercentDecode::if_any`: proved only on the patched body; the patch is not yet proved equivalent to the original (admission gate 1)
 - `src/lib.rs:decode_utf8_lossy`: proved only on the patched body; the patch is not yet proved equivalent to the original (admission gate 1)
-- `src/lib.rs:From for Cow::from@L317`: not extracted (unsupported by Aeneas or excluded by cfg)
 
 ## How to re-check
 
@@ -80,13 +79,13 @@ Functions: 21/33 at full-correctness (27 verified or fixed)
 | Gate | Pass | Detail |
 |---|---|---|
 | real code | NO | tool-only patches without a proved equivalence: ['rust/aeneas-friendly.patch'] |
-| every function | NO | 27/33 functions verified or fixed |
+| every function | NO | 28/33 functions verified or fixed |
 | all inputs | yes | no bounded-only evidence |
 | full strength | NO | entry strength unlabelled |
 | spec first | NO | need [scope].properties, [scope].written (date) and [scope].reviewed_by |
 | not vacuous | NO | no planted-bug run on this commit (`vpipe mutate`) |
 | trusted base | NO | forbidden: 1; axioms not listed in [trust]: []; std models not listed: [] |
-| cross check | NO | 2 differential cross-check command(s) |
+| cross check | yes | 2 differential cross-check command(s) |
 | reproducible | NO | 0 matching clean run(s) on this toolchain; no container digest pinned in toolchain/versions.toml [container] |
 | two reviews | NO | need [review].maintainer and [review].adversarial |
 
@@ -120,13 +119,13 @@ Functions: 21/33 at full-correctness (27 verified or fixed)
 | `src/lib.rs:PercentDecode::decode_utf8` | verified | full-correctness | decode_utf8_spec |
 | `src/lib.rs:PercentDecode::decode_utf8_lossy` | verified | full-correctness | decode_utf8_lossy_spec |
 | `src/lib.rs:decode_utf8_lossy` | open | none | free_decode_utf8_lossy_spec |
-| `src/lib.rs:next_chunk` | verified | unlabelled | encode_next_loop_spec, next_chunk_spec |
-| `src/lib.rs:write_chunks` | verified | unlabelled | write_chunks_spec, write_chunks_buffer, write_chunks_ok |
-| `src/lib.rs:From for Cow::from@L229` | verified | unlabelled | cow_from_encode_spec |
-| `src/lib.rs:From for Cow::from@L317` | open | none |  |
-| `src/lib.rs:decode_if_any` | verified | unlabelled | decode_if_any_spec |
-| `src/lib.rs:decode_from_percent` | verified | unlabelled | decode_from_percent_spec |
-| `src/lib.rs:position_of_percent` | verified | unlabelled | position_of_percent_loop_spec, position_of_percent_spec |
+| `src/lib.rs:next_chunk` | verified | full-correctness | next_chunk_spec |
+| `src/lib.rs:write_chunks` | verified | full-correctness | write_chunks_spec, write_chunks_buffer |
+| `src/lib.rs:From for Cow::from@L229` | verified | full-correctness | cow_from_encode_spec |
+| `src/lib.rs:From for Cow::from@L317` | verified | full-correctness | cow_from_decode_spec |
+| `src/lib.rs:decode_if_any` | verified | full-correctness | decode_if_any_spec |
+| `src/lib.rs:decode_from_percent` | verified | full-correctness | decode_from_percent_spec |
+| `src/lib.rs:position_of_percent` | verified | full-correctness | position_of_percent_spec |
 
 ## Credits
 - not recorded

@@ -54,7 +54,11 @@ def sh(cmd, cwd=None, env=None, check=True, capture=False, timeout=None):
     e = dict(os.environ)
     e["PATH"] = f"{VH}/bin:{VH}/aeneas:{Path.home()}/.elan/bin:{Path.home()}/.cargo/bin:" + e.get("PATH", "")
     if env:
+        env = dict(env)
+        pre = env.pop("PATH_PREPEND", None)
         e.update(env)
+        if pre:
+            e["PATH"] = f"{pre}:" + e["PATH"]
     if cwd is None:
         # Never inherit the caller's cwd: on the network mount getcwd() sometimes fails, which
         # made setup scripts die with "cannot get cwd" inside the gate.
@@ -171,11 +175,14 @@ def setup(which="all", tries=3):
 
 def _setup(which):
     v = versions()
-    info = {}
+    # Keep what the other setup recorded: `setup lean` must not drop the Frama-C versions (the
+    # soundness-bug check reads them from installed.json).
+    info = load_json(VH / "installed.json", {}) if which != "all" else {}
     if which in ("lean", "all"):
         r = sh(["bash", ROOT / "toolchain/setup-lean.sh", v["aeneas"]["tag"], v["aeneas"]["url"],
                 v["lean"]["version"], v["lean"]["url"], v["lean"]["elan_init"],
-                ",".join(v["rust"]["components"])], capture=True)
+                ",".join(v["rust"]["components"])], capture=True,
+               env={"VPIPE_RUST_TARGETS": " ".join(v["rust"].get("targets", []))})
         info.update(json.loads(r.stdout.strip().splitlines()[-1]))
     if which in ("framac", "all"):
         r = sh(["bash", ROOT / "toolchain/setup-framac.sh", " ".join(v["framac"]["nix_packages"]),
@@ -197,12 +204,14 @@ def cache_dirs():
     return [Path(d) if Path(d).is_absolute() else ROOT / d for d in dirs]
 
 
-def restore_lake_packages(proj: Path):
+def restore_lake_packages(proj: Path, key=None):
     """Give the project a built .lake/packages (mathlib etc.) without compiling it for hours.
     One shared copy per cache key lives in $VPIPE_HOME/lake/<key>/ and is symlinked into every
     project, so N libraries cost one mathlib on disk (3-8 GB each otherwise; toolkit thread hit
-    "No space left"). Tarball layout: .lake/packages/... plus lake-manifest.json."""
-    key = mathlib_cache_key()
+    "No space left"). Tarball layout: .lake/packages/... plus lake-manifest.json.
+    `key` selects another store, e.g. the one with the Aeneas Lean library patch (see lean_lib_store)."""
+    patched_key = key not in (None, mathlib_cache_key())
+    key = key or mathlib_cache_key()
     shared = VH / "lake" / key
     if damaged_oleans(shared / ".lake/packages"):
         # A full disk during unpacking leaves zero-byte .olean files that lake then trusts
@@ -220,7 +229,7 @@ def restore_lake_packages(proj: Path):
         for d in cache_dirs():
             if not d.exists():
                 continue
-            cands = sorted(d.glob(f"*{key}*.tar*")) or sorted(d.glob(f"*{short}*mathlib*.tar*"))
+            cands = sorted(d.glob(f"*{key}*.tar*")) or ([] if patched_key else sorted(d.glob(f"*{short}*mathlib*.tar*")))
             for c in (c for c in cands if not c.name.endswith(".part")):
                 log(f"unpacking lake packages from {c} into {shared}")
                 shutil.rmtree(shared, ignore_errors=True)
@@ -230,6 +239,8 @@ def restore_lake_packages(proj: Path):
                     break
             if (shared / ".lake/packages/mathlib").exists():
                 break
+    if patched_key and not (shared / ".lake/packages/mathlib").exists():
+        build_lean_lib_store(key)
     if not (shared / ".lake/packages/mathlib").exists():
         log("no mathlib cache found; trying `lake exe cache get`, else lake compiles mathlib (slow)")
         return False
@@ -242,6 +253,70 @@ def restore_lake_packages(proj: Path):
     if not (proj / "lake-manifest.json").exists() and (shared / "lake-manifest.json").exists():
         shutil.copy(shared / "lake-manifest.json", proj / "lake-manifest.json")
     return True
+
+
+# ---------------------------------------------------------------- Aeneas Lean library patch (optional)
+# [extract] lean_lib_patch = true uses a second packages store, $VPIPE_HOME/lake/<key>-leanlib-<sha12>,
+# that is the normal one with versions.toml [aeneas_patched].lean_lib_patch applied to Aeneas's Lean
+# library (Helix: Iterator.size_hint, «Ty».sub) and Aeneas rebuilt. The shared store stays untouched.
+# The lakefile is unchanged (same Aeneas commit); the patch sits uncommitted in the package checkout.
+
+def lean_lib_patch(m):
+    if not m.get("extract", {}).get("lean_lib_patch"):
+        return None
+    pv = versions().get("aeneas_patched") or {}
+    if not pv.get("lean_lib_patch"):
+        raise SystemExit("lean_lib_patch = true but versions.toml [aeneas_patched] has no lean_lib_patch")
+    p = Path(pv["dir"]) / pv["lean_lib_patch"]
+    sha = _sha256_file(p)
+    if sha != pv.get("lean_lib_patch_sha256"):
+        raise SystemExit(f"{p}: sha256 {sha} does not match the pin {pv.get('lean_lib_patch_sha256')}")
+    return {"file": pv["lean_lib_patch"], "path": p, "sha256": sha, "key": f"{mathlib_cache_key()}-leanlib-{sha[:12]}"}
+
+
+def lake_key(m):
+    lp = lean_lib_patch(m)
+    return lp["key"] if lp else mathlib_cache_key()
+
+
+def build_lean_lib_store(key):
+    """Unpack the normal packages tarball into a new store, apply the Lean library patch, rebuild
+    Aeneas (mathlib is untouched), and save a tarball so other machines skip this."""
+    pv = versions()["aeneas_patched"]
+    patch = Path(pv["dir"]) / pv["lean_lib_patch"]
+    base_key = mathlib_cache_key()
+    short = versions()["aeneas"]["commit"][:7]
+    tb = next((c for d in cache_dirs() if d.exists() for c in sorted(d.glob(f"*{base_key}*.tar*")) +
+               sorted(d.glob(f"*{short}*mathlib*.tar*")) if "leanlib" not in c.name and not c.name.endswith(".part")), None)
+    if not tb:
+        raise SystemExit("no base mathlib packages tarball to build the Lean-library-patched store from")
+    shared = VH / "lake" / key
+    tmp = shared.with_name(shared.name + ".tmp")
+    shutil.rmtree(tmp, ignore_errors=True)
+    tmp.mkdir(parents=True)
+    log(f"building {key}: unpack {tb.name}, apply {patch.name}, rebuild Aeneas")
+    sh(f"tar -xf '{tb}' -C '{tmp}'")  # tar keeps mtimes, so lake still trusts mathlib's build
+    sh(["git", "apply", str(patch)], cwd=tmp / ".lake/packages/aeneas")
+    proj = WORK / "leanlib-build"
+    shutil.rmtree(proj, ignore_errors=True)
+    (proj / ".lake").mkdir(parents=True)
+    (proj / "lakefile.lean").write_text(
+        'import Lake\nopen Lake DSL\nrequire aeneas from git\n  "https://github.com/AeneasVerif/aeneas.git" @ "'
+        + versions()["aeneas"]["commit"] + '" / "backends/lean"\npackage «leanlibbuild» where\n')
+    (proj / "lean-toolchain").write_text(f"leanprover/lean4:v{versions()['lean']['version']}\n")
+    shutil.copy(tmp / "lake-manifest.json", proj / "lake-manifest.json")
+    (proj / ".lake/packages").symlink_to(tmp / ".lake/packages", target_is_directory=True)
+    r = sh(["lake", "build", "Aeneas"], cwd=proj, check=False, capture=True, timeout=3 * 3600)
+    if r.returncode != 0:
+        raise SystemExit(f"Aeneas did not build with {patch.name}:\n{(r.stdout + r.stderr)[-3000:]}")
+    tmp.rename(shared)
+    cache = ROOT / "cache"
+    cache.mkdir(parents=True, exist_ok=True)
+    out = cache / f"lake-packages-{key}.tar.zst"
+    if not out.exists():
+        part = Path(str(out) + ".part")
+        sh(f"tar -C '{shared}' -cf - .lake/packages lake-manifest.json | zstd -T0 -3 > '{part}' && mv '{part}' '{out}'")
+        log(f"saved {out}")
 
 
 def damaged_oleans(pk: Path, limit=20):
@@ -327,7 +402,8 @@ def extract_rust(m, src, proj):
         cargo_args.append("--locked")
     if cargo_args:
         cmd += ["--", *cargo_args]
-    r = sh(cmd, cwd=crate, check=False, capture=True)
+    tenv = translator_env(m)
+    r = sh(cmd, cwd=crate, check=False, capture=True, env=tenv)
     if r.returncode != 0:
         return {"ok": False, "stage": "charon", "log": (r.stdout + r.stderr)[-6000:]}
     mod = module_name(m)
@@ -337,7 +413,7 @@ def extract_rust(m, src, proj):
     render_lakefile(proj)
     # Output lands in <proj>/<Module>/Extracted/{Types,Funs}.lean, imported as <Module>.Extracted.*
     r = sh(["aeneas", "-backend", "lean", str(llbc), "-dest", str(proj), "-subdir", sub,
-            "-split-files", *x.get("aeneas_args", [])], check=False, capture=True)
+            "-split-files", *x.get("aeneas_args", [])], check=False, capture=True, env=tenv)
     text = ANSI_RE.sub("", r.stdout + r.stderr)
     # Aeneas exits non-zero when it skips unsupported items but still writes the rest. Treat the run
     # as usable if Funs.lean exists and list what was skipped: that list decides the scope.
@@ -356,11 +432,92 @@ def extract_rust(m, src, proj):
     strict = x.get("strict_externals", False) and bool(template_changes)
     ok = (ext / "Funs.lean").exists() and not unexpected and not strict and all(q["ok"] for q in post)
     return {"ok": ok, "stage": "aeneas", "aeneas_rc": r.returncode, "postprocess": post,
+            "translator": translator_info(m),
             "unexpected_errors": unexpected[:50],
             "unsupported": unsupported[:100], "assumed_axioms": assumed,
             "external_template_changes": list(template_changes),
             "warnings": [w.strip() for w in re.findall(r"\[Warn\s*\]\s*([^\n]+)", text)][:50],
             "log": re.sub(r"[^\n]*(Translated|Post-processed|Applied prepasses)[^\n]*\n?", "", text)[-6000:]}
+
+
+# ---------------------------------------------------------------- patched translator (optional)
+# [extract] toolchain = "patched" uses the patched Charon + Aeneas from versions.toml [aeneas_patched]
+# (owned by the "Extend Aeneas for real library code" thread). Each patch is a trusted-base change:
+# its sha256 is recorded in every run and listed in CLAIM.md, and `selftest --full` runs its
+# regression suite whenever any library uses it.
+
+def uses_patched(m):
+    return (m.get("extract", {}).get("toolchain") == "patched" or bool(m.get("extract", {}).get("lean_lib_patch"))
+            or any(v.get("toolchain") == "patched" for v in variants(m)))
+
+
+def _sha256_file(p):
+    h = hashlib.sha256()
+    with open(p, "rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def patched_tools():
+    """Unpack the pinned patched binaries (checked against their sha256) once; return their folder."""
+    pv = versions().get("aeneas_patched")
+    if not pv:
+        raise SystemExit("a manifest asks for toolchain = \"patched\" but versions.toml has no [aeneas_patched]")
+    d = VH / f"aeneas-patched-{pv['aeneas_sha256'][:12]}-{pv['charon_sha256'][:12]}"
+    if (d / "aeneas").exists() and (d / "charon").exists():
+        return d
+    tmp = d.with_name(d.name + ".tmp")
+    shutil.rmtree(tmp, ignore_errors=True)
+    tmp.mkdir(parents=True)
+    for k in ("aeneas", "charon"):
+        tb = Path(pv["dir"]) / pv[f"{k}_tarball"]
+        got = _sha256_file(tb)
+        if got != pv[f"{k}_sha256"]:
+            raise SystemExit(f"{tb}: sha256 {got} does not match the pin {pv[k + '_sha256']}; update versions.toml only after review")
+        with tarfile.open(tb) as t:
+            t.extractall(tmp, filter="data")
+    tmp.rename(d)
+    return d
+
+
+def translator_env(m):
+    return {"PATH_PREPEND": str(patched_tools())} if m.get("extract", {}).get("toolchain") == "patched" else None
+
+
+def translator_info(m):
+    lp = lean_lib_patch(m)
+    if m.get("extract", {}).get("toolchain") != "patched" and not lp:
+        return {"patched": False}
+    pv = versions()["aeneas_patched"]
+    if m.get("extract", {}).get("toolchain") != "patched":
+        return {"patched": True, "base": "stock Charon/Aeneas binaries", "aeneas_sha256": "", "charon_sha256": "",
+                "patches": {lp["file"]: lp["sha256"]}}
+    return {"patched": True, "base": pv.get("base"), "aeneas_sha256": pv["aeneas_sha256"], "charon_sha256": pv["charon_sha256"],
+            "patches": {**{p_: (_sha256_file(Path(pv["dir"]) / p_) if (Path(pv["dir"]) / p_).exists() else "missing")
+                           for p_ in pv.get("patches", [])}, **({lp["file"]: lp["sha256"]} if lp else {})}}
+
+
+def aeneas_regress():
+    """The patched translator's regression suite (every case fails on stock Aeneas, passes patched)."""
+    pv = versions().get("aeneas_patched") or {}
+    script = Path(pv.get("dir", "")) / pv.get("regress", "aeneas-regress/run.sh")
+    if not script.exists():
+        return {"ok": False, "why": f"{script} missing"}
+    d = patched_tools()
+    w = WORK / "aeneas-regress"
+    shutil.rmtree(w, ignore_errors=True)
+    (w / "lean/.lake").mkdir(parents=True)
+    # Pre-link the shared mathlib so run.sh does not copy .lake/packages (a copy breaks lake's traces
+    # and lake then calls `cache get`, which hangs where the cache server is blocked).
+    if not restore_lake_packages(w / "lean"):
+        return {"ok": False, "why": "no shared mathlib packages to link"}
+    (w / "lean/lake-manifest.json").unlink(missing_ok=True)  # run.sh brings its own
+    r = sh(["bash", str(script)], check=False, capture=True, timeout=3 * 3600,
+           env={"CHARON": str(d / "charon"), "AENEAS": str(d / "aeneas"), "WORK": str(w),
+                "LEAN_PKGS": str(VH / "lake" / mathlib_cache_key() / ".lake/packages"), "PATH_PREPEND": str(d)})
+    out = (r.stdout or "") + (r.stderr or "")
+    return {"ok": r.returncode == 0 and "ALL PASS" in out, "tail": out[-2000:]}
 
 
 ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
@@ -509,7 +666,7 @@ def audit_axioms(proj, thms):
 
 
 def prove_lean(m, proj):
-    restored = restore_lake_packages(proj)
+    restored = restore_lake_packages(proj, lake_key(m))
     if not restored:
         # On an open network mathlib's own cache works and saves hours; harmless if blocked.
         sh(["lake", "exe", "cache", "get"], cwd=proj, check=False, capture=True, timeout=3600)
@@ -579,13 +736,20 @@ def kernel_replay(proj, m):
     exe = tc / "leanchecker"
     if not exe.exists():
         return {"ok": False, "modules": len(mods), "log": f"{exe} missing"}
+    # One module per call: all modules in one call ran out of memory on a 15 GB machine for the
+    # crc32fast x86_64 variants (exit 137, empty log); each alone passes.
     t0 = dt.datetime.now()
-    r = sh([str(exe), *mods], cwd=proj, check=False, capture=True, timeout=6 * 3600,
-           env={"LEAN_PATH": lean_search_path(proj), "PATH": f"{tc}:" + os.environ.get("PATH", "")})
-    out = (r.stdout or "") + (r.stderr or "")
-    ok = r.returncode == 0 and "found a problem" not in out
-    return {"ok": ok, "tool": "leanchecker", "modules": len(mods), "seconds": (dt.datetime.now() - t0).seconds,
-            "log": out[-3000:]}
+    env = {"LEAN_PATH": lean_search_path(proj), "PATH": f"{tc}:" + os.environ.get("PATH", "")}
+    failed, logs = [], []
+    for mod in mods:
+        r = sh([str(exe), mod], cwd=proj, check=False, capture=True, timeout=6 * 3600, env=env)
+        out = (r.stdout or "") + (r.stderr or "")
+        if r.returncode != 0 or "found a problem" in out:
+            why = ("killed (out of memory)" if r.returncode in (137, -9) else f"exit {r.returncode}")
+            failed.append({"module": mod, "why": why})
+            logs.append(f"{mod}: {why}\n{out[-1500:]}")
+    return {"ok": not failed, "tool": "leanchecker", "modules": len(mods), "failed": failed,
+            "seconds": (dt.datetime.now() - t0).seconds, "log": "\n".join(logs)[-3000:]}
 
 
 # ---------------------------------------------------------------- frama-c
@@ -685,7 +849,9 @@ def prove_framac(m, src, proj, mutant=None, tag="annotated", clean=False, only=N
         e["total"] += 1
         e["proved"] += 1 if g.get("passed") else 0
     rc_bad = [n for n, r, _ in runs if r.returncode != 0]
-    return {"ok": not rc_bad and not failed and bool(goals) and not honesty and all(t["ok"] for t in tps),
+    sb = soundness_pattern_scan(tree, f.get("files", []), wp_args)
+    return {"ok": not rc_bad and not failed and bool(goals) and not honesty and all(t["ok"] for t in tps) and not sb,
+            "soundness_pattern_hits": sb,
             "annotation_diffs": honesty, "wp_args": wp_args, "tool_patches": tps, "runs": len(runs), "failed_runs": rc_bad[:50],
             "per_function": dict(sorted(per_fn.items())),
             "seconds": (dt.datetime.now() - t0).seconds, "proved": len(goals) - len(failed),
@@ -906,7 +1072,10 @@ def _unique_ids(fns):
 def function_inventory(m, tree, proj, res, patched=None):
     lib = m["name"]
     overrides = {}
-    of = proj / "functions.toml"
+    # The entry's functions.toml, also for variants (whose local build gets only common/ + variants/<v>/).
+    of = Path(m["_proof_dir"]) / "functions.toml" if m.get("_proof_dir") else proj / "functions.toml"
+    if not of.exists():
+        of = proj / "functions.toml"
     if of.exists():
         for e in tomllib.loads(of.read_text()).get("function", []):
             overrides[e["id"]] = e
@@ -1119,7 +1288,7 @@ def variants(m):
 
 def variant_manifest(m, v):
     x = dict(m.get("extract", {}))
-    for k in ("cargo_args", "sysroot_default", "aeneas_args", "charon_args", "crate_dir", "cargo_lock"):
+    for k in ("cargo_args", "sysroot_default", "aeneas_args", "charon_args", "crate_dir", "cargo_lock", "toolchain"):
         if k in v:
             x[k] = v[k]
     mv = dict(m)
@@ -1187,6 +1356,13 @@ def merge_variants(per):
               "axiom_thms": sum(q.get("axiom_thms", 0) for q in prs), "unaudited": sum(q.get("unaudited", 0) for q in prs),
               "errors": [e for q in prs for e in q.get("errors", [])][:50],
               "theorems": [dict(t, variant=n) for n, r in per.items() if r.get("prove") for t in r["prove"]["theorems"]]}
+        # Kernel replay: ok only if every variant's replay ran and passed; failures listed per variant.
+        reps = {n: (r.get("prove") or {}).get("replay") for n, r in per.items()}
+        pr["replay"] = {"ok": len(prs) == len(exs) and all(x and x.get("ok") for x in reps.values()), "tool": "leanchecker",
+                        "modules": sum((x or {}).get("modules", 0) for x in reps.values()),
+                        "failed": [dict(f, variant=n) for n, x in reps.items() for f in (x or {}).get("failed", [])]
+                        + [{"variant": n, "why": "replay not run"} for n, x in reps.items() if not x],
+                        "seconds": sum((x or {}).get("seconds", 0) for x in reps.values())}
     return ex, pr
 
 
@@ -1257,6 +1433,13 @@ def run(lib, use_agent=False, rounds=3, budget=60, extract_only=False, clean=Fal
            "toolchain_digest": toolchain_digest(tool), "container_digest": os.environ.get("VPIPE_CONTAINER_DIGEST"),
            "ci_run": os.environ.get("VPIPE_CI_RUN"), "agent_cli": agent_cli() if use_agent else None}
     pristine = src
+    m["_proof_dir"] = str(proj)
+    if tool == "lean-aeneas" and uses_patched(m):
+        ti = translator_info(m) if (m.get("extract", {}).get("toolchain") == "patched" or lean_lib_patch(m)) else \
+            translator_info({"extract": {"toolchain": "patched"}})
+        res["toolchain"]["aeneas_patched"] = ti
+        res["toolchain_digest"] = "sha256:" + hashlib.sha256(
+            (res["toolchain_digest"] + ti["aeneas_sha256"] + ti["charon_sha256"] + json.dumps(ti["patches"], sort_keys=True)).encode()).hexdigest()
     res["archive_sha256"] = standards.archive_sha256(src, m["commit"])
     src, res["source"] = prepare_source(m, src, proj)
     if res["source"].get("error"):
@@ -1416,12 +1599,41 @@ def history(lib, limit=20):
     return out
 
 
-def soundness_hits(res):
-    """Known soundness bugs (toolchain/soundness.toml) in a tool version this run used."""
+def soundness_bugs():
     f = ROOT / "toolchain/soundness.toml"
-    bugs = tomllib.loads(f.read_text()).get("bug", []) if f.exists() else []
+    return tomllib.loads(f.read_text()).get("bug", []) if f.exists() else []
+
+
+def soundness_hits(res):
+    """Known soundness bugs (toolchain/soundness.toml) in a tool version this run used. A bug with a
+    `pattern` affects only entries whose proved sources contain it (found by prove_framac)."""
     tc = res.get("toolchain", {})
-    return [b for b in bugs if str(tc.get(b.get("tool"), "")) in [str(v) for v in b.get("versions", [])]]
+    pattern_hits = {h["note"] for h in (res.get("prove") or {}).get("soundness_pattern_hits", [])}
+    out = []
+    for b in soundness_bugs():
+        used = str(tc.get(b.get("tool"), ""))
+        if not any(used == str(v) or used.startswith(str(v) + " ") for v in b.get("versions", [])):
+            continue
+        if b.get("pattern") and b.get("note") not in pattern_hits:
+            continue
+        out.append(b)
+    return out
+
+
+def soundness_pattern_scan(tree, files, wp_args):
+    """Constructs that trigger a known Frama-C soundness bug, in the files WP proves."""
+    hits = []
+    for b in soundness_bugs():
+        if b.get("tool") != "frama_c" or not b.get("pattern") or set(b.get("unless_wp_args", [])) & set(wp_args):
+            continue
+        for rel in files:
+            p = tree / rel
+            if not p.exists():
+                continue
+            text = ACSL_RE.sub("", p.read_text(errors="replace"))
+            for mm in re.finditer(b["pattern"], text):
+                hits.append({"file": rel, "line": text[:mm.start()].count("\n") + 1, "note": b["note"]})
+    return hits
 
 
 def evaluate(lib, m, res, proj, write_card=False):
@@ -1779,8 +1991,6 @@ def toml_str(x):
 def mutate(lib, suggest=0, only=None):
     m = manifest(lib)
     tool = m["tool"]
-    if variants(m):
-        raise SystemExit("mutate does not support [[variant]] entries yet")
     setup("lean" if tool == "lean-aeneas" else "framac")
     entry, proj = entry_dir(lib, m), proof_dir(lib, m)
     src = fetch(m)
@@ -1801,6 +2011,8 @@ def mutate(lib, suggest=0, only=None):
     if not mf.exists():
         raise SystemExit(f"{mf} missing (the reviewer writes it; `--suggest 20` gives candidates)")
     spec = tomllib.loads(mf.read_text())
+    if variants(m) and tool == "lean-aeneas":
+        return mutate_variants(lib, m, proj, tree, base, spec, mf, only)
     proved0 = {t["name"] for t in (base.get("prove") or {}).get("theorems", []) if t.get("status") == "proved"}
     if not proved0 and tool == "lean-aeneas":
         raise SystemExit("no proved theorems in the latest run; run the entry first")
@@ -1836,6 +2048,82 @@ def mutate(lib, suggest=0, only=None):
         except ValueError as e:
             rec.update(outcome="invalid", why=str(e))
         log(f"mutant {i}: {rec['outcome']} ({mu.get('note', '')})")
+        results.append(rec)
+    out = {"commit": m["commit"], "chosen_by": spec.get("chosen_by"), "file_sha256": hashlib.sha256(mf.read_bytes()).hexdigest(),
+           "total": sum(r["outcome"] != "invalid" for r in results), "caught": sum(r["outcome"] == "caught" for r in results),
+           "invalid": sum(r["outcome"] == "invalid" for r in results), "finished": now(), "mutants": results}
+    if only is None:
+        (results_dir(lib) / "mutants.json").write_text(json.dumps(out, indent=1))
+        if base:
+            card(lib)
+    return out
+
+
+def _lean_tree_digest(d):
+    h = hashlib.sha256()
+    for f in sorted(Path(d).rglob("*.lean")) if Path(d).exists() else []:
+        h.update(str(f.relative_to(d)).encode()); h.update(f.read_bytes())
+    return h.hexdigest()
+
+
+def mutate_variants(lib, m, proj, tree, base, spec, mf, only):
+    """Planted bugs for [[variant]] entries (crc32fast): each mutant is applied in every variant. A
+    variant whose generated Lean is unchanged does not compile the mutated code and is skipped; the
+    mutant is caught if any affected variant loses a proved theorem or fails to build."""
+    common = proj / "common"
+    results, base_gen = [], {}
+    for i, mu in enumerate(spec.get("mutant", [])):
+        if only is not None and i not in only:
+            continue
+        rec = {"i": i, **mu, "variants": {}}
+        for v in variants(m):
+            mv = variant_manifest(m, v)
+            name = v["name"]
+            proved0 = {t["name"] for t in (((base.get("variants") or {}).get(name) or {}).get("prove") or {}).get("theorems", [])
+                       if t.get("status") == "proved"}
+            vtree, err = variant_tree(m, v, tree, proj)
+            if err:
+                rec["variants"][name] = "patch failed"
+                continue
+            mt = WORK / m["name"] / "mutant-tree"
+            shutil.rmtree(mt, ignore_errors=True)
+            shutil.copytree(vtree, mt, ignore=shutil.ignore_patterns(".git", "target"))
+            try:
+                apply_mutant(mt, mu) if (mt / mu["file"]).exists() else apply_mutant(mt / mv["extract"].get("crate_dir", "."), mu)
+            except ValueError as e:
+                rec["variants"][name] = f"invalid: {e}"
+                continue
+            local = WORK / m["name"] / "mutant-variants" / name
+            mirror(common, local, delete=True)
+            vdir = proj / "variants" / name
+            if vdir.exists():
+                shutil.copytree(vdir, local, dirs_exist_ok=True, ignore=shutil.ignore_patterns(".lake"))
+            shutil.rmtree(local / ".lake/build", ignore_errors=True)
+            if name not in base_gen:  # generated Lean of the unmutated variant, extracted once
+                ex0 = extract_rust(mv, vtree, local)
+                base_gen[name] = _lean_tree_digest(local / extracted_rel(mv)) if ex0.get("stage") != "charon" else None
+                mirror(common, local, delete=True)
+                if vdir.exists():
+                    shutil.copytree(vdir, local, dirs_exist_ok=True, ignore=shutil.ignore_patterns(".lake"))
+            ex = extract_rust(mv, mt, local)
+            if not (local / extracted_rel(mv) / "Funs.lean").exists():
+                rec["variants"][name] = "does not extract"
+                continue
+            if base_gen[name] and _lean_tree_digest(local / extracted_rel(mv)) == base_gen[name]:
+                rec["variants"][name] = "not compiled here"
+                continue
+            pr = prove_lean(mv, local)
+            still = {t["name"] for t in pr["theorems"] if t.get("status") == "proved"}
+            lost = sorted(proved0 - still)
+            rec["variants"][name] = "caught" if lost or not pr["ok"] else "survived"
+            if lost:
+                rec.setdefault("broken_theorems", {})[name] = lost[:20]
+            rec.setdefault("extract_ok", {})[name] = ex["ok"]
+        outs = set(rec["variants"].values())
+        rec["outcome"] = ("caught" if "caught" in outs else "survived" if "survived" in outs else "invalid")
+        if rec["outcome"] == "invalid":
+            rec["why"] = "no variant compiles the mutated code (or it does not apply / extract)"
+        log(f"mutant {i}: {rec['outcome']} {rec['variants']} ({mu.get('note', '')})")
         results.append(rec)
     out = {"commit": m["commit"], "chosen_by": spec.get("chosen_by"), "file_sha256": hashlib.sha256(mf.read_bytes()).hexdigest(),
            "total": sum(r["outcome"] != "invalid" for r in results), "caught": sum(r["outcome"] == "caught" for r in results),
@@ -1925,6 +2213,10 @@ def selftest(full=False):
     if cs != ["sat.c:add_sat", "sat.c:count_nonzero"]:
         fails.append(f"c function scan: {cs}")
     fails += standards_selftest()
+    if full and any(uses_patched(manifest(lib)) for lib in all_libraries() if manifest_path(lib).exists()):
+        r = aeneas_regress()  # a library uses the patched translator: its regression suite must pass
+        if not r["ok"]:
+            fails.append(f"aeneas-regress: {r.get('why') or r.get('tail', '')[-500:]}")
     for kind in ("framac", "rust"):
         try:
             r = check_fixture(kind, full)

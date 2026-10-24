@@ -127,3 +127,60 @@ Snapshots for rollback are in self/snapshots/.
   6.4.1 via .deb).
 - check: `vpipe setup framac` gives the same store paths as before (Frama-C 33.0, CBMC 6.11.0,
   Z3 5.1.0, CVC5 1.4.0, Why3 1.8.2); quick gate passed.
+
+## 2026-10-24T08:02Z v0.2.6 first soundness-bug entry: Frama-C 33 string-literal const arrays
+- what: toolchain/soundness.toml lists the Frama-C 33.0 WP bug (const char arrays initialised from a
+  string literal are assumed all zeros). Bugs can now carry a `pattern` (and `unless_wp_args`):
+  prove_framac scans the proved files (ACSL stripped) and fails the run on a match; such an entry is
+  also marked with the bug in CLAIM.md and cannot be admitted. A declared tool patch that rewrites
+  the array as a brace list removes the match.
+- why: Neovim thread found the bug (verification-notes/toolchain-bugs/framac33-wp-string-init.md).
+- check: fixture with `static const char alpha[] = "AB";` fails with the bug named; without it, no
+  hit; quick gate passed.
+
+## 2026-10-24T08:45Z v0.2.7 variants: functions.toml, kernel replay memory, planted bugs (crc32fast thread)
+- what: (1) the function inventory reads the entry's functions.toml for [[variant]] runs too (the
+  local variant build had only common/ + variants/<v>/, so declared theorems, fixes and lean= were
+  ignored). (2) leanchecker replays one module per call and reports exit 137 as "killed (out of
+  memory)" per module (all 23 x86_64 modules in one call ran out of memory on 15 GB). (3) `vpipe
+  mutate` supports [[variant]] entries: each mutant is applied in every variant; a variant whose
+  generated Lean is unchanged by the mutant is skipped ("not compiled here"); caught if any affected
+  variant loses a proved theorem or fails. (4) setup installs [rust].targets (aarch64 added).
+  (5) `setup lean` / `setup framac` keep the other's versions in installed.json (Frama-C versions
+  were dropped, which would have hidden soundness-bug matches).
+- check: crc32fast replay 14/14 modules one at a time (277 s, was 61 s in one call); trial planted
+  bug in update_slow caught in all 5 variants (18.7 min for one mutant, so 10 mutants take about 3 h);
+  quick gate passed.
+
+## 2026-10-24T09:00Z v0.2.8 optional patched Charon + Aeneas (Helix "real library code" thread)
+- what: versions.toml [aeneas_patched] pins the patched binaries by sha256 and lists the patch files.
+  A library opts in with [extract] toolchain = "patched" (also per [[variant]]). vpipe unpacks the
+  binaries only if their sha256 matches, puts them first on PATH for Charon and Aeneas, records base,
+  binary hashes and every patch's sha256 in res.toolchain.aeneas_patched and extract.translator,
+  folds them into the toolchain digest, and lists them in CLAIM.md under the trusted base.
+  `selftest --full` runs aeneas-regress/run.sh while any library uses the patched build, with the
+  shared mathlib pre-linked so run.sh does not copy .lake/packages.
+- not supported: the Aeneas Lean library patch (aeneas-fdebf20-lean-lib.patch). Applying it would
+  change the shared .lake/packages every library uses; it needs its own cache key first.
+- check: binaries unpacked and hashes verified; aeneas-regress ALL PASS (lean: ok) with the patched
+  build; quick gate passed.
+
+## 2026-10-24T09:05Z v0.2.9 Aeneas Lean library patch in its own packages store (Helix thread)
+- what: [extract] lean_lib_patch = true builds against $VPIPE_HOME/lake/<key>-leanlib-<sha12>: the
+  normal packages tarball unpacked again, [aeneas_patched].lean_lib_patch applied (sha256 pinned)
+  to the Aeneas checkout, and Aeneas rebuilt; mathlib is not rebuilt. A tarball of it is saved to
+  pipeline/cache/ so other machines unpack it instead. The shared store is never modified. The patch
+  is recorded per run and in CLAIM.md like the binary patches. No lakefile change: same Aeneas commit
+  (lake prints "repository has local changes", which is expected).
+- check: store built in 2.6 min (Aeneas only), tarball 572 MB; a test project sees
+  Iterator.size_hint and U32.sub; the shared store shows no local changes; quick gate passed.
+
+## 2026-10-24T09:10Z pin update: patched Aeneas build 2
+- aeneas-hv-bin-x86_64.tar.gz sha256 f5bd8678… (was 85e159ef…); patch files changed too and are
+  recorded per run; Charon tarball unchanged. Hashes checked on disk; aeneas-regress (7 cases): ALL PASS.
+
+## 2026-10-24T09:12Z v0.2.10 kernel replay merged across variants (crc32fast thread)
+- what: merge_variants sets prove.replay ok only when every variant's leanchecker replay ran and
+  passed; failed modules are listed per variant, a missing replay as "replay not run".
+- why: gate 7 read the top-level replay, which variant runs never filled ("replay not run").
+- check: merge cases (all ok; one variant out of memory; one variant without replay); quick gate passed.

@@ -141,6 +141,12 @@ def core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.fold
 The proofs show this equals the spec's bit-at-a-time `crcRaw` on the data bytes in memory order
 (aarch64 Linux is little endian). -/
 
+/-- Where `align_to` splits: it may pick any prefix length and any number of `u64`s that fit
+    (Rust only promises that `prefix ++ middle ++ suffix` is the input). Opaque, so the proofs
+    hold for every split. -/
+opaque a64.splitPre : List Std.U8 → Nat := fun _ => 0
+opaque a64.splitMid : List Std.U8 → Nat := fun _ => 0
+
 namespace a64
 
 /-- `Poly32Mod2` steps for bits `32 + k - 1` down to `32`: if bit `i` is set, XOR
@@ -168,21 +174,10 @@ def ofBytes : List (BitVec 8) → BitVec 64
   | [] => 0#64
   | b :: l => b.setWidth 64 ^^^ (ofBytes l <<< 8)
 
-/-- Where `align_to` splits: it may pick any prefix length and any number of `u64`s that fit
-    (Rust only promises that `prefix ++ middle ++ suffix` is the input). Opaque, so the proofs
-    hold for every split. -/
-opaque splitPre : List Std.U8 → Nat := fun _ => 0
-opaque splitMid : List Std.U8 → Nat := fun _ => 0
-
 /-- The `u64`s of a byte list, 8 bytes each. -/
 def quadsOf : Nat → List Std.U8 → List Std.U64
   | 0, _ => []
   | n + 1, l => ⟨ofBytes ((l.take 8).map (·.bv))⟩ :: quadsOf n (l.drop 8)
-
-theorem quadsOf_length (n : Nat) (l : List Std.U8) : (quadsOf n l).length = n := by
-  induction n generalizing l with
-  | zero => rfl
-  | succ n ih => simp [quadsOf, ih]
 
 end a64
 
@@ -206,5 +201,11 @@ def specialized.aarch64.split_quads (data : Slice Std.U8) :
   have hp : p ≤ data.val.length := Nat.min_le_right _ _
   have hm : m ≤ (data.val.length - p) / 8 := Nat.min_le_right _ _
   ok (Slice.from (data.val.take p) (by simp only [List.length_take]; omega),
-      Slice.from (a64.quadsOf m (data.val.drop p)) (by rw [a64.quadsOf_length]; omega),
+      Slice.from (a64.quadsOf m (data.val.drop p)) (by
+        have h : ∀ (k : Nat) (l : List Std.U8), (a64.quadsOf k l).length = k := by
+          intro k
+          induction k with
+          | zero => intro l; rfl
+          | succ k ih => intro l; simp [a64.quadsOf, ih]
+        rw [h]; omega),
       Slice.from (data.val.drop (p + 8 * m)) (by simp only [List.length_drop]; omega))

@@ -224,7 +224,9 @@ def claim_card(m, res, g, entry_label, status, archive_sha, upstream):
     review = m.get("review", {})
     axioms = sorted({a for t in p.get("theorems", []) for a in t.get("axioms", [])})
     tool_names = {"lean-aeneas": "Lean 4 + Aeneas", "framac": "Frama-C WP"}
-    tool_version = ", ".join(f"{k} {v}" for k, v in tc.items() if k not in ("aeneas_dir", "why3_provers"))
+    tool_version = ", ".join(f"{k} {v}" for k, v in tc.items() if k not in ("aeneas_dir", "why3_provers", "aeneas_patched", "nixpkgs"))
+    if (tc.get("aeneas_patched") or {}).get("patched"):
+        tool_version += f", patched aeneas {tc['aeneas_patched']['aeneas_sha256'][:12]}"
     front = {"library": m["name"], "version": m.get("version", ""), "source": m["upstream"], "commit": m["commit"],
              "archive_sha256": archive_sha or "", "tool": tool_names.get(m["tool"], m["tool"]),
              "tool_version": (tool_version + "; " if tool_version else "") + (res.get("container_digest") or res.get("toolchain_digest") or ""),
@@ -255,7 +257,7 @@ def claim_card(m, res, g, entry_label, status, archive_sha, upstream):
         f"- Formal spec files: {', '.join(scope.get('spec_files', [])) or 'not listed'}",
         f"- Matches standard / test vectors: {', '.join(scope.get('test_vectors', [])) or 'NONE'}",
         "", "## Proof",
-        f"- Tool(s) and versions: {m['tool']}; " + ", ".join(f"{k} {v}" for k, v in tc.items() if k not in ('aeneas_dir', 'why3_provers'))
+        f"- Tool(s) and versions: {m['tool']}; " + ", ".join(f"{k} {v}" for k, v in tc.items() if k not in ('aeneas_dir', 'why3_provers', 'aeneas_patched', 'nixpkgs'))
         + f"; toolchain digest {res.get('toolchain_digest', 'unknown')}; container digest {res.get('container_digest') or 'NOT IN A PINNED CONTAINER'}",
         f"- Kernel replay (leanchecker): {((p.get('replay') or {}).get('ok') and 'passed') or ('FAILED' if p.get('replay') else 'not run')}" if m['tool'] == 'lean-aeneas' else "- Kernel replay: not applicable",
         f"- Theorems / goals: {p.get('proved', 0)}/{p.get('total', 0)} proved, {p.get('sorries', 0)} sorries, {p.get('axiom_thms', 0)} with extra axioms",
@@ -268,6 +270,10 @@ def claim_card(m, res, g, entry_label, status, archive_sha, upstream):
         + (f" (unlisted models assumed by the extraction: {len(set((res.get('extract') or {}).get('assumed_axioms', [])) - set(trust.get('models', [])))})"
            if (res.get("extract") or {}).get("assumed_axioms") else ""),
         f"- Tool assumptions: {trust.get('tool_assumptions', 'translator (Aeneas/Charon) faithful; Lean kernel sound' if m['tool'] == 'lean-aeneas' else 'Frama-C WP memory model and provers sound')}",
+        (f"- Patched translator (trusted-base change): {tc['aeneas_patched'].get('base')}; aeneas sha256 {tc['aeneas_patched']['aeneas_sha256']}, "
+         f"charon sha256 {tc['aeneas_patched']['charon_sha256']}; patches: "
+         + ", ".join(f"{k} ({v[:16]})" for k, v in tc['aeneas_patched'].get('patches', {}).items())
+         if (tc.get("aeneas_patched") or {}).get("patched") else "- Translator: stock Aeneas/Charon release"),
         f"- Unsafe / FFI boundaries: {trust.get('unsafe', 'not listed')}",
         f"- Patches applied: {', '.join(m.get('patches', {}).get('files', [])) or 'none'}" + ("; MODEL CRATE" if res.get("model_crate") else ""),
         f"- Forbidden constructs found: {len(res.get('forbidden', []))}",

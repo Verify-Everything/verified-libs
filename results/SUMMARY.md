@@ -11,32 +11,11 @@ Strength = weakest per-function label (full-correctness > safety-contracts > no-
 
 | Library | Tool | Version | Proved | Sorries | Extra-axiom thms | Axioms | Skipped | Functions | Progress | Strength | Entry | Run |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| crc32fast | lean-aeneas | 1.5.3 | 723/1151 | 0 | 0 | 0 | 0 | 30/46 | open: 16 functions | unlabelled | candidate (1/10) | 2026-10-24T07:55:09Z |
-| percent-encoding | lean-aeneas | 2.3.2 | 123/123 | 0 | 0 | 0 | 1 | 27/33 | open: 6 functions | unlabelled | candidate (1/10) | 2026-10-24T07:48:17Z |
+| crc32fast | lean-aeneas | 1.5.3 | 1151/1151 | 0 | 0 | 0 | 0 | 46/46 | complete | full-correctness | candidate (4/10) | 2026-10-24T09:01:06Z |
+| percent-encoding | lean-aeneas | 2.3.2 | 123/123 | 0 | 0 | 0 | 1 | 28/33 | open: 5 functions | unlabelled | candidate (2/10) | 2026-10-24T07:57:29Z |
 | semver | lean-aeneas | 1.0.28 | 145/145 | 0 | 0 | 0 | 0 | 4/92 | open: 88 functions | - | - (0/10) | 2026-10-24T06:02:56Z |
 
-## crc32fast: open functions (16 of 46)
-
-| Function | Why open |
-|---|---|
-| `src/lib.rs:Hasher::update` | no theorem about it; x86_64: no theorem about it; x86_64-std: no theorem about it; aarch64: no theorem about it; aarch64-std: no theorem about it |
-| `src/lib.rs:Hasher::total_len` | no theorem about it; x86_64: no theorem about it; x86_64-std: no theorem about it; aarch64: no theorem about it; aarch64-std: no theorem about it |
-| `src/lib.rs:Hasher::finalize` | no theorem about it; x86_64: no theorem about it; x86_64-std: no theorem about it; aarch64: no theorem about it; aarch64-std: no theorem about it |
-| `src/lib.rs:Hasher::reset` | no theorem about it; x86_64: no theorem about it; x86_64-std: no theorem about it; aarch64: no theorem about it; aarch64-std: no theorem about it |
-| `src/lib.rs:Hasher::combine` | no theorem about it; x86_64: no theorem about it; x86_64-std: no theorem about it; aarch64: no theorem about it; aarch64-std: no theorem about it |
-| `src/specialized/aarch64.rs:State::new@L8` | not extracted (unsupported by Aeneas or excluded by cfg); x86_64: not extracted (unsupported by Aeneas or excluded by cfg); x86_64-std: not extracted (unsupported by Aeneas or excluded by cfg); aarch64: theorems not proved: ['state_new_eq']; aarch64-std: not extracted (unsupported by Aeneas or excluded by cfg) |
-| `src/specialized/aarch64.rs:State::new@L19` | not extracted (unsupported by Aeneas or excluded by cfg); x86_64: not extracted (unsupported by Aeneas or excluded by cfg); x86_64-std: not extracted (unsupported by Aeneas or excluded by cfg); aarch64: not extracted (unsupported by Aeneas or excluded by cfg); aarch64-std: theorems not proved: ['state_new_eq'] |
-| `src/specialized/aarch64.rs:State::update` | not extracted (unsupported by Aeneas or excluded by cfg); x86_64: not extracted (unsupported by Aeneas or excluded by cfg); x86_64-std: not extracted (unsupported by Aeneas or excluded by cfg); aarch64: no theorem about it; aarch64-std: no theorem about it |
-| `src/specialized/aarch64.rs:crc_quads` | not extracted (unsupported by Aeneas or excluded by cfg); x86_64: not extracted (unsupported by Aeneas or excluded by cfg); x86_64-std: not extracted (unsupported by Aeneas or excluded by cfg); aarch64: theorems not proved: ['call_q', 'crc_quads_eq', 'fold_quads', 'quads_body_none', 'quads_body_some', 'quads_loop_eq', 'quads_unfold']; aarch64-std: theorems not proved: ['call_q', 'crc_quads_eq', 'fold_quads', 'quads_body_none', 'quads_body_some', 'quads_loop_eq', 'quads_unfold'] |
-| `src/specialized/aarch64.rs:split_quads` | not extracted (unsupported by Aeneas or excluded by cfg); x86_64: not extracted (unsupported by Aeneas or excluded by cfg); x86_64-std: not extracted (unsupported by Aeneas or excluded by cfg); aarch64: not extracted (unsupported by Aeneas or excluded by cfg); aarch64-std: not extracted (unsupported by Aeneas or excluded by cfg) |
-| `src/specialized/aarch64.rs:crc_bytes` | not extracted (unsupported by Aeneas or excluded by cfg); x86_64: not extracted (unsupported by Aeneas or excluded by cfg); x86_64-std: not extracted (unsupported by Aeneas or excluded by cfg); aarch64: theorems not proved: ['call_q', 'fold_quads']; aarch64-std: theorems not proved: ['call_q', 'fold_quads'] |
-| `src/specialized/mod.rs:State::update` | no theorem about it; x86_64: not extracted (unsupported by Aeneas or excluded by cfg); x86_64-std: not extracted (unsupported by Aeneas or excluded by cfg); aarch64: not extracted (unsupported by Aeneas or excluded by cfg); aarch64-std: not extracted (unsupported by Aeneas or excluded by cfg) |
-| `src/specialized/pclmulqdq.rs:State::update` | not extracted (unsupported by Aeneas or excluded by cfg); x86_64: no theorem about it; x86_64-std: no theorem about it; aarch64: not extracted (unsupported by Aeneas or excluded by cfg); aarch64-std: not extracted (unsupported by Aeneas or excluded by cfg) |
-| `src/specialized/pclmulqdq.rs:load128` | not extracted (unsupported by Aeneas or excluded by cfg); x86_64: not extracted (unsupported by Aeneas or excluded by cfg); x86_64-std: not extracted (unsupported by Aeneas or excluded by cfg); aarch64: not extracted (unsupported by Aeneas or excluded by cfg); aarch64-std: not extracted (unsupported by Aeneas or excluded by cfg) |
-| `src/specialized/pclmulqdq.rs:load256` | not extracted (unsupported by Aeneas or excluded by cfg); x86_64: not extracted (unsupported by Aeneas or excluded by cfg); x86_64-std: not extracted (unsupported by Aeneas or excluded by cfg); aarch64: not extracted (unsupported by Aeneas or excluded by cfg); aarch64-std: not extracted (unsupported by Aeneas or excluded by cfg) |
-| `src/specialized/pclmulqdq.rs:load512` | not extracted (unsupported by Aeneas or excluded by cfg); x86_64: not extracted (unsupported by Aeneas or excluded by cfg); x86_64-std: not extracted (unsupported by Aeneas or excluded by cfg); aarch64: not extracted (unsupported by Aeneas or excluded by cfg); aarch64-std: not extracted (unsupported by Aeneas or excluded by cfg) |
-
-## percent-encoding: open functions (6 of 33)
+## percent-encoding: open functions (5 of 33)
 
 | Function | Why open |
 |---|---|
@@ -45,7 +24,6 @@ Strength = weakest per-function label (full-correctness > safety-contracts > no-
 | `src/lib.rs:Iterator for PercentDecode::next` | proved only on the patched body; the patch is not yet proved equivalent to the original (admission gate 1) |
 | `src/lib.rs:PercentDecode::if_any` | proved only on the patched body; the patch is not yet proved equivalent to the original (admission gate 1) |
 | `src/lib.rs:decode_utf8_lossy` | proved only on the patched body; the patch is not yet proved equivalent to the original (admission gate 1) |
-| `src/lib.rs:From for Cow::from@L317` | not extracted (unsupported by Aeneas or excluded by cfg) |
 
 ## semver: open functions (88 of 92)
 

@@ -213,6 +213,11 @@ Result: full functional correctness of encoder + decoder + round trip, standard 
 - To prove a hang (divergence) on extracted code, use `dspec (f x) (fun _ => False)` via `loop.fixpoint_induct body P` with `Lean.Order.admissible_pi` + `dspec_func_admissible`. Give explicit type annotations on the admissibility lambda.
 - Simp tips for Aeneas output: `Std.bind_ok` (plain `bind_ok` is ambiguous), `_root_.dite_true`, and `simp only [uncurry]` for `let (a, b) ← …`. For Usize subtraction, unfold `UScalar.sub` (it is `if x < y then fail else ok`).
 - `update_positions` on an unsorted position list is not equal to per-position `map_pos`. Only compare them on sorted input.
+- Charon `--include 'crate::path::Type'` inside an `--opaque` crate makes just that struct transparent. For helix, `--include helix_stdx::range::Range` turned 8 "Internal error"/"Ignoring the body" functions (closures reading `range.start`) into clean extractions; `--include helix_core::snippets::elaborate::Tabstop` did the same for `prepare_render` ("Unexpected error" on a field read). Try this before any flag sweep: `--hide-marker-traits`, `--monomorphize(-mut)`, `--lift-associated-types '*'` (there is no `--remove-associated-types`) fixed nothing here. Run it under `set -f` so `*` is not globbed.
+- Aeneas emits `map`/`collect`/`position` fields in `Iterator` impls that the Aeneas Lean `Iterator` structure lacks: delete them from the generated `Funs.lean` (mark the edit).
+- Loops in proofs: prove one generic loop lemma (body `B` as a parameter, with `hend`/`hstep` hypotheses) and instantiate it with `refine Exists.imp (fun .. => ..) (lemma .. ?hend ?hstep ..)`, so `B` unifies with the extracted lambda. Restating the lambda by hand fails because the matchers differ. Aeneas's `Vec::from_iter` (`FromIteratorVec.iterToList`, a partial_fixpoint) unfolds with `rw [alloc.vec.FromIteratorVec.iterToList]`.
+- For `Vec` values, use `alloc.vec.Vec.from_val` (`(Vec.from l h).val = l`); `rfl` does not close it.
+- Charon on a big workspace fills the disk via incremental build dirs: set `CARGO_INCREMENTAL=0` and delete `target/` after each extraction.
 
 ## 2026-10-24 Helix text helpers: Aeneas and char literals (real code)
 - Aeneas rejects `match` on char literals ("Unsupported switch scrutinee", whole body becomes sorry) and cannot print
@@ -288,3 +293,69 @@ Result: full functional correctness of encoder + decoder + round trip, standard 
 - When a C value is a big expression, derive facts from a small logic value first (e.g. `be64(s + i)`), then transfer with one equality assert. Big let-bound terms make lemma instantiation time out.
 - Differential test that's cheap and useful: compile the pristine file, the patched+annotated file and a glibc-byteorder build, and compare all three with a reference (Python's base64 + canonical check) on ~100k inputs.
 - E-ACSL 33 fails on logic functions with `integer` parameters (GMP codegen bug); don't count on it for runtime spec checks.
+
+## 2026-10-24 Aeneas: str::ends_with and friends, fn items (Helix text helpers thread)
+- `str::ends_with/starts_with::<P>` (Pattern trait + `for<'a> ReverseSearcher<'a>` bound) crash Aeneas. Fix without touching
+  source: charon `--exclude 'core::str::pattern'`, then the LLBC pass helix-verify/real-common/tools/specialize_fn.py, which
+  points each call at a copy specialized to the concrete pattern type (ends_with_str, ends_with_char) with no trait clauses.
+  Give each copy a Lean model and difftest it. Should work for strip_suffix, rfind, find, contains the same way.
+- Fn items passed as closures (`iter.all(f)`) still fail ("Arrow types are not supported"); erase_fndef_binders.py
+  gets call_mut through but not call_once. Needs an Aeneas OCaml fix (SymbolicToPureTypes: treat TFnDef as borrow-free) or a second tool.
+- Make opaque third-party types `abbrev` (not `def`) when you model them with a Lean structure, so lemmas about the
+  structure apply without unfolding.
+- In Aeneas output, `do let x ← ok a; f x` simplifies with `bind_ok`, not `bind_tc_ok`.
+
+## 2026-10-24 inih (Frama-C WP): why string facts vanish in big functions, and the fix
+
+- Symptom: a fact that proves at once in a small copy (e.g. `valid_read_string(&section[0])`
+  after a call that writes another buffer) times out in a large function, on every prover.
+- Cause: WP's Qed simplifier deletes a hypothesis like `section[k] == '\0'` when it can
+  derive it itself (through `memcpy(...)` memory terms). The SMT provers then lack the
+  ground term `M[section + k]` they need to fire the strlen axioms, so they never start.
+  Writing the hint as a quantifier does not help; Qed removes that too. `-wp-no-core`,
+  `-wp-havoc`, `-wp-no-filter` and Wp.filter scripts did not help.
+- Fix: wrap the facts in named predicates that Qed does not unfold, plus small lemmas
+  (all proved by WP) linking them to strlen:
+  `ini_nul_at(s,k)`, `ini_nonnul(s,n)`, `ini_str_len(s,n)`, with lemmas
+  nul_at -> strlen <= k, str_len -> strlen == n, strlen -> str_len, shift, and frame
+  lemmas. A frame lemma for `e + 1` needs its own form (`e[j + 1]`), because Qed
+  rewrites `(e+1)[j]` to `e[j+1]` in goals but the prover won't match that with `shift(shift(e,1),j)`.
+  Pattern per write: assert ini_nonnul before the write, a ghost label, then after the write:
+  nul_at, a cell frame against the label, nonnul, str_len, then valid_read_string.
+- Also: index-form facts (`\forall integer j; ... s[j]`) prove where pointer-quantified
+  facts (`\forall char* p; s <= p < e ==> *p`) don't. Add an index-form ensures to helpers.
+- Ghost labels work: `/*@ ghost L: ; */` then `\at(e, L)`.
+- The Frama-C "const char a[] = \"..\" assumed zero" WP bug (toolchain-bugs/) also exists in 32.1.
+- (cmdline, gates 7/8) A gate-8 test can set private fields when it is a `#[cfg(test)] #[path=...] mod gate8;` child of the module. That lets the Tokenizer start at unreachable positions, so panic agreement is tested too. Reuse the one helix copy: append the mod line, run, restore, and check the restore with `cmp`. Show that the harness discriminates with one-line sed mutants of the Rust source (run against the unchanged Lean extraction).
+- An `#eval` of an Aeneas `Vec` needs `⟨slice⟩`, because `alloc.vec.Vec` is a structure wrapping a `Slice`. `Flag` clashes with Mathlib, so write `command_line.Flag.mk`. Field names like `alias` need «» in structure-instance notation.
+- Hash no-op contracts can be justified by testing real std with a constant hasher (write no-op, finish 0) next to RandomState: the answers must agree.
+
+## Helix parsers (snipparse)
+- Parser-combinator code (helix-parsec: `impl Parser` closures nested by `seq!`/`choice!`) is out of reach of
+  Charon/Aeneas fdebf20. Charon runs out of memory (it tries 12 GB allocations) on the nested closure types, and
+  the small combinators fail in Aeneas: closures give "Can't end abstraction"; a `Peekable` loop gives "Joining
+  region abstractions containing shared loans…". Check this before writing a model of combinator code.
+- Mutually recursive model fns extract as one `partial_fixpoint` block. To prove them: state each fn's spec with a
+  hypothesis `hm : ∀ k > i, ManySpec s k` for the recursive callee. Prove each fn from `hm`, using
+  `apply WP.spec_bind (hm …)` at the call (or `step*` with the instantiated spec as a local `have`). Then close with
+  strong induction on `len - i`. This is much simpler than a fixpoint-induction proof.
+- The spec side can use WF `mutual` defs over `List Nat`, `termination_by (s.length, rank)`, with `match h : …` only
+  for the decreasing proofs. Prove separate `_eq` unfolding lemmas that drop the `h :`, and use those in simp_all.
+- PEG properties are cheap once the spec exists. For example: "parse fails iff input is empty" needs only "every
+  alternative's rest is shorter" lemmas plus `Option` `or_some` / `bind_eq_some_iff` destructuring.
+- Mutation-test the difftest itself (4–5 hand mutants of the model). It costs minutes and shows the generators
+  actually reach dedup, `$0` and transform paths.
+- Aeneas's `Result` is now a coinductive tree, not an inductive. To evaluate a model in a test
+  program use `match Result.match r with | .ok v => ...`; `| ok v` patterns no longer work.
+- Lean models of CPU instructions can be checked cheaply: a Rust program prints random cases from
+  the real instruction, `lake env lean --run Check.lean` evaluates the model on them (270k cases in
+  seconds). aarch64 runs under qemu-user-static with gcc-aarch64-linux-gnu as linker.
+- In no_std builds crates often pick SIMD kernels with `cfg!(target_feature)`, so
+  `RUSTFLAGS=-C target-feature=...` selects each kernel for differential tests.
+- leanchecker on many heavy modules in one call can be OOM-killed (exit 137, empty log); run per module.
+
+## 2026-10-24 Helix movement thread: Aeneas on real (unmodified) Rust, and what blocks it
+- Charon handles real helix-core fine with `--start-from <fn path> --opaque ropey --opaque tree_house --opaque unicode_segmentation`; Aeneas then exits non-zero but still writes partial Lean (check for `sorry`, don't treat exit code as crash). Lean names are `module.fn`, not `module::fn`.
+- Patched Aeneas (helix-verify/motion/aeneas-patches/, build.sh via Nix) adds non-ASCII char literals, string escapes and `match` on char. Upstream fdebf20 also mis-printed `'\''`, `'\\'` and Latin-1 chars (invalid UTF-8 in Funs.lean).
+- Remaining hard blockers on idiomatic code (each more than a day in Aeneas): nested borrows (`x.chars_at(..).method(..)`), `&dyn Fn` closures, fn items passed as closures (late-bound regions), `iter().find(|..|)` lifetime constraints, loops with several exits (`?`/return inside an inner loop), and some "Unexpected error"s. Plan for a rewrite (fork) or another tool when code is iterator/closure heavy.
+- Charon's `--start-from` builds leave a big incremental cache in target/: set CARGO_INCREMENTAL=0 (it filled 11 GB here). Saturn's test suite stalls a Nix OCaml build: disable its tests.

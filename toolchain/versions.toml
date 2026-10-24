@@ -17,6 +17,7 @@ elan_init = "https://raw.githubusercontent.com/leanprover/elan/master/elan-init.
 [rust]
 # Must equal the channel in the Aeneas release's rust-toolchain file (setup reads it from there).
 components = ["rustc-dev", "llvm-tools", "rust-src", "miri"]
+targets = ["riscv64gc-unknown-none-elf", "aarch64-unknown-linux-gnu"]   # for variant builds (Charon only needs the std lib)
 
 [mathlib]
 # The mathlib cache server is blocked in this environment, so mathlib builds from source (slow).
@@ -39,3 +40,21 @@ wp_timeout = 20
 # Set digest to the image's sha256 once the toolkit publishes one; CI exports VPIPE_CONTAINER_DIGEST.
 image = "ghcr.io/verify-everything/verified-libs-toolchain"
 digest = ""                  # "sha256:<64 hex>", exactly as CI exports VPIPE_CONTAINER_DIGEST
+
+[aeneas_patched]
+# Optional patched Charon + Aeneas (owner: "Extend Aeneas for real library code" thread). A library
+# opts in with [extract] toolchain = "patched" (or per [[variant]]). Binaries are checked against
+# these sha256 values before use; every patch's sha256 goes into each run and CLAIM.md (trusted-base
+# change); `vpipe selftest --full` runs the regression suite while any library uses it.
+base = "Aeneas fdebf20 + Charon de8736f7"
+dir = "/mnt/project-files/helix-verify/toolchain"
+aeneas_tarball = "aeneas-hv-bin-x86_64.tar.gz"
+aeneas_sha256 = "f5bd86786b112956ab072ce0485dc5d98b2c4023e46a679397ec77687fe494dd"   # build 2, 2026-10-24
+charon_tarball = "charon-helix-bin-x86_64.tar.gz"
+charon_sha256 = "03e0e5995ca15dfb86350ac28ced7f1ca812bc25924e67139b5bcb46ce2e9e06"
+patches = ["aeneas-fdebf20-real-code.patch", "charon-ml-de8736f-fndef-names.patch", "charon-de8736f-helix.patch"]
+regress = "aeneas-regress/run.sh"
+# Aeneas Lean library patch (Iterator.size_hint, «Ty».sub). A library opts in with
+# [extract] lean_lib_patch = true; it then builds against $VPIPE_HOME/lake/<key>-leanlib-<sha12>.
+lean_lib_patch = "aeneas-fdebf20-lean-lib.patch"
+lean_lib_patch_sha256 = "097fb47f571b3a0899065a132dce4fab9375b544e18a37b578167404da2675ef"

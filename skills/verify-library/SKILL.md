@@ -76,7 +76,7 @@ In the manifest comment, record the prior-work search (where you looked, what yo
 
 ## 5. Prove
 - By hand with the tool skill (**lean-aeneas-proofs** or **framac-wp-proofs**), or
-- `vkit run <lib> --agent` to let a headless agent iterate (up to 3 build/fix rounds).
+- `vkit run <lib> --agent [--agent-cli claude|codex|gemini]` to let a headless agent iterate (up to 3 build/fix rounds).
 Re-run `vkit run <lib>` until the result is green, then keep going until `Functions` is N/N. A theorem counts as proved only if its
 axioms are propext, Classical.choice and Quot.sound (the engine audits this). Never add
 `axiom`, `sorry`, `admit`, `native_decide` or `bv_decide` to a claimed result.

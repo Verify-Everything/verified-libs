@@ -26,7 +26,8 @@ Read it: https://claude.ai/artifact/1tqQsrMgXckaNZQJVXPWvp . What changes for He
 - Bugs: report fixes as "proved fix" only when the fix is proved on the real (patched) code.
 
 ## Rule for third-party dependencies (all Helix threads; Yerin decided 2026-10-24: the used parts of ropey, smartstring, smallvec get verified as separate entries)
-ropey, smartstring, smallvec, unicode-segmentation, unicode-width, regex, tree-house/tree-sitter, log, etc. are NOT std.
+ropey, smartstring, smallvec, unicode-segmentation, unicode-width, regex, tree-house/tree-sitter, log, url, nucleo, imara-diff,
+toml/serde, globset, etc. are NOT std. The same decision applies to each: it becomes its own verified-libs entry.
 - Model each one you reach as a small Lean definition (or a parameter with a stated spec), never as a bare `axiom` with no spec.
 - List every one in your STATUS.md and in helix.md under "Open external assumptions": crate + version, the functions used,
   the exact behaviour assumed, and the differential test that checks the model against the real crate.

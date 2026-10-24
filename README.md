@@ -109,7 +109,7 @@ Or by hand:
 vkit new <lib> --lang rust --upstream <git url> --commit <sha> --version <tag>
 vkit run <lib> --extract-only    # what Aeneas can translate; decides the scope
 vkit run <lib>                   # build proofs, audit axioms, write results
-vkit run <lib> --agent           # let a headless Claude Code session write specs and proofs
+vkit run <lib> --agent           # let a headless agent write specs and proofs (--agent-cli claude|codex|gemini)
 ```
 
 ## How it works

@@ -189,3 +189,27 @@ Result: full functional correctness of encoder + decoder + round trip, standard 
 - "Returns inside of nested loops are not supported yet" drops the whole function body (semver display::pad).
 - Under the admission standards, a model crate is only a candidate. Run this upstream test FIRST on a new
   library, before writing a model, to see how much of the real code Aeneas can read.
+
+## 2026-10-24 Helix parsers: real-code extraction with no axioms left (worked end to end)
+- Do NOT mark core/alloc/std `--opaque`: Aeneas then crashes on its own builtin types (RangeFrom etc.).
+- After `--exclude 'core::str::pattern'`, the Lean has `«sorry /- Could not find: trait_decl_id -/»` holes
+  where the Pattern trait was. A sed swap to a hand-written `core.str.pattern.Pattern` structure (char
+  instance = the char's UTF-8 bytes) closes them. Script: helix-verify/utils-real/extract.sh.
+- Replace FunsExternal axioms by `def`s (helix-verify/utils-real/lean/HelixReal/StdModels.lean: str len/find/
+  contains/index by a.., ..e, a..e, Option::map_or). Std methods nothing calls can be `fail .panic`: that only
+  makes proofs fail, never pass wrongly.
+- In this Aeneas, `Result` is a coinductive tree, not an inductive: you cannot `match r with | ok x`. Use
+  `Option.ofResult r` (or `r.match`). This is also how to run Lean std models in `#eval`.
+- Difftest of std models against real std without compiling a Lean exe: a Rust program writes inputs plus std
+  results to a file; a Lean file `#eval`s the models on each line (100k cases in ~17 s). See utils-real/stdtest.
+- `omega` can fail with "Application type mismatch ... Coeffs" when the context has `⋯.choose` atoms;
+  prove the arithmetic fact earlier (before those hypotheses) and reuse it.
+- Concrete evaluation of extracted functions via `simp` is painful (loop is partial_fixpoint, Str vs Slice U8
+  types block bind_ok). Keep bug witnesses as runs of the real Rust code instead.
+
+## Helix parsers (sniprender)
+- Aeneas on real helix-core: Charon works, but Aeneas hits internal errors on core `Iterator`, slice iterators and `map`/`flat_map` closures. It also rejects `dyn` trait types ("not supported yet") and `str::strip_suffix` ("Unimplemented"). To get a buildable partial extraction, `--exclude helix_core::path::_::fn_name` the offending functions (an impl in the middle of a path is written `_`). Callers of excluded functions become axioms. `--start-from` does not accept `_` impl patterns.
+- Use `abbrev`, not `def`, for stand-in external types (e.g. `HashSet T := List T`) so that simp can see through them. Define the hash/default instance stubs too, or they show up in `#print axioms`.
+- To prove a hang (divergence) on extracted code, use `dspec (f x) (fun _ => False)` via `loop.fixpoint_induct body P` with `Lean.Order.admissible_pi` + `dspec_func_admissible`. Give explicit type annotations on the admissibility lambda.
+- Simp tips for Aeneas output: `Std.bind_ok` (plain `bind_ok` is ambiguous), `_root_.dite_true`, and `simp only [uncurry]` for `let (a, b) ← …`. For Usize subtraction, unfold `UScalar.sub` (it is `if x < y then fail else ok`).
+- `update_positions` on an unsorted position list is not equal to per-position `map_pos`. Only compare them on sorted input.

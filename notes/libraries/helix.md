@@ -44,38 +44,28 @@ Work: /mnt/project-files/helix-verify/selection/ (model/, lean/, difftest/, axio
 - position.rs: MODEL-PROVED all 17 functions + derives except Debug (23 theorems, std axioms; difftest 120k-240k cases each). Bridge to real code in progress (helix-verify/position/real/). O: Debug, `unicode-lines`, size caps to classify. Details: helix-verify/position/STATUS.md.
 - position.rs findings (not filed): pos_at_coords(limit=false) panics when row > len_lines; tab_width = 0 divides by zero; softwrapped_dimensions truncates with `as u16` (70000 chars -> 4464); Position Sub is componentwise ((1,0)-(0,1) panics in debug, wraps in release); visual_offset_from_anchor `anchor_line + max_rows` overflows for max_rows = usize::MAX. doc_formatter (other thread): loops forever when the wrap indicator is wider than viewport minus retained indent (e.g. viewport 12, indicator "->->->->-> ").
 ### Parsers/utilities thread ("Verify Helix parsers": command_line, snippets/*, uri, fuzzy, diff, editor_config, config, diagnostic)
-Work dirs: helix-verify/command_line/, helix-verify/snippets_parse/, helix-verify/snippets_render/, helix-verify/utils/ (each has STATUS.md).
-- BUG editor_config.rs `is_glob_relative`: `idx = ... |close| idx + close` should be `open + close`.
-  (a) panic: section header `[éé[ab]]` -> slices str at byte 3 inside 'é' -> Helix panics when an .editorconfig with it is read.
-  (b) wrong answer: `ab[c][d/]` returns true although the only '/' is inside brackets. Confirmed by running upstream code. Needs verified fix.
-- All other functions in these modules: O (in progress).
+Work dirs: helix-verify/utils-real/ (REAL-CODE proofs, see README), helix-verify/utils/ (model, now only `tested`),
+helix-verify/command_line/, snippets_parse/, snippets_render/ (helper agents; each has STATUS.md).
+- BUG editor_config.rs `is_glob_relative`: `|close| idx + close` should be `open + close`, and `source[..open]` should be
+  `source[idx..open]`. Wrong answers: "a[/]", "ab[c][d/]", "[a/]b[c]" return true (should be false). Panic: glob "éé[ab]"
+  (section header `[éé[ab]]`) slices inside 'é', so reading such an .editorconfig crashes Helix. Confirmed by running upstream.
+- V (real code, fork fix) `is_glob_relative`: fixed real Rust (2-line patch utils-real/fix-is_glob_relative.patch) extracted
+  by Aeneas; Lean `fix_is_glob_relative_spec`: no panic on any input, result = EditorConfig rule. Std models difftested 100k.
+- tested only (model proofs + difftests): uri.rs, diagnostic.rs, config.rs, fuzzy.rs; editor_config text_eq/trim/
+  parse_unsigned/parse_nonzero; diff.rs difftest. Need redoing on real code.
+- Aeneas blockers on real code: fuzzy LazyMutex (fn-pointer field, "Arrow types"), config::user_lang_loader closure
+  (early return in loop), str::strip_suffix and Box AsRef (Ini::from_str, EditorConfig::find).
+- All other functions in these modules: O.
 ### movement.rs, textobject.rs, match_brackets.rs, surround.rs, object.rs, search.rs (72 fns) — thread "Verify Helix movement and objects"
-Work: /mnt/project-files/helix-verify/motion/ (model crate, Lean project HelixMotion, difftest/run_difftest.sh).
-Text model: RopeSlice = list of `Ch` (code point + Unicode facts as data: grapheme boundary, White_Space, alphanumeric,
-punctuation category, lower/upper, width). Proofs hold for any values of those tables. Lines: default build (`unicode-lines` off, only \n).
-Shared layer (text.rs: categorize_char, graphemes, lines, Range::cursor/put_cursor/...) difftested 200k cases: matches upstream.
-- V `search::find_nth_char` (no panic; = n-th match forward from pos / backward from pos-1, None if n=0, pos>len, or too few), char matcher impl
-- O (in progress) match_brackets plain-text fns, surround plain-text fns, textobject word/paragraph/pair, movement word + paragraph + horizontal/vertical moves
-- O (tree-sitter, stub for now) goto_treesitter_object, find_parent_start, move_parent_node_end, textobject_treesitter,
-  find_matching_bracket, find_matching_bracket_fuzzy, find_pair, as_close_pair, as_open_pair, find_pair_end, as_char,
-  find_nth_closest_pairs_ts, all 8 of object.rs; plus the `Some(syntax)` paths of surround/textobject pair fns
-### Editing helpers (thread "Verify Helix editing helpers", started 2026-10-24)
-history.rs, auto_pairs.rs, comment.rs, indent.rs, increment/*, text_annotations.rs, doc_formatter.rs. Work in /mnt/project-files/helix-verify/helpers/<module>/.
-- O all (in progress)
-
-### graphemes.rs, line_ending.rs, chars.rs, case_conversion.rs, rope_reader.rs, wrap.rs — thread "Verify Helix text helpers"
-Work: /mnt/project-files/helix-verify/text/ (model/, lean/ = model proofs, gen/ = Unicode table generator, difftest/, real/ = real-code extraction).
-- MODEL-PROVED, counts only as `tested`: chars.rs (all 5), case_conversion.rs (all), rope_reader.rs, line_ending.rs 19 of 22
-  (open: auto_detect_line_ending, rope_is_line_ending, detectable helper). Unicode facts come from generated Lean tables
-  (Rust 1.90 std / Unicode 16, unicode-width 0.1.12, unicode-general-category 1.1.0). Difftest vs upstream: 0 mismatches.
-- REAL CODE (2026-10-24): Charon+Aeneas read the unmodified upstream modules. 77 functions translate; 8 come out as sorry
-  (from_char, char_is_whitespace, Grapheme::is_whitespace/is_word_boundary, nth_prev/next_grapheme_boundary, RopeReader::read,
-  reflow_hard_wrap); rope_is_line_ending and get_line_ending_of_str crash Aeneas and need another route. Details: text/real/EXTRACT.md.
-- Next: replace the 69 external axioms with definitions (std models + difftests; ropey/unicode-segmentation/etc. as open
-  assumptions), then re-prove the model specs on the real extraction.
-- Findings (not filed): tab_width 0 panics (tab_width_at, Grapheme::new); Grapheme::new("") then width() panics;
-  GraphemeStr::from panics at >= 2^31 bytes; to_camel_case on "_ab" gives "aB".
-
+Work: /mnt/project-files/helix-verify/motion/ (model crate, Lean project HelixMotion, difftest/run_difftest.sh, real-probe/).
+Under the admission standards (2026-10-24) NOTHING here counts as verified yet: all proofs below are about a model crate (label M = model proved in Lean + difftested 200k, no model-to-code proof). Every function is O for admission.
+Text model: RopeSlice = list of `Ch` (code point + Unicode facts as data). Lines: default build (`unicode-lines` off).
+- M search: find_nth_char
+- M movement: move_horizontally, word_move + 12 wrappers, range_to_target, is_word/long_word/sub_word_boundary, reached_target, skip_while, backwards_skip_while, move_prev/next_paragraph, move_vertically, move_vertically_visual (soft_wrap=false, no inline annotations only; soft wrap open)
+- M textobject: find_word_boundary, textobject_word, textobject_paragraph, Display for TextObject
+- in progress (model): match_brackets plain-text fns, surround plain-text fns, textobject_pair_surround*; tree-sitter fns via an abstract tree model
+- Real-code probe (Aeneas fdebf20 on unmodified helix-core, deps ropey/unicode-segmentation/tree-house opaque): only find_nth_char, skip_while, as_char translate with no sorry anywhere. The rest hit Aeneas limits: non-ASCII char literals (most common), closures/arrow types, lifetime constraints, continue-to-outer-loop. A worker is extending Aeneas (char literals first).
+- Odd behaviour seen (not reported): `miW`/`maW` with cursor on whitespace or \n right after a WORD selects that WORD (`miw` selects nothing); count=0 paragraph motions can move the wrong way (callers pass >=1); backwards_skip_while doc says "saturating" but returns None when all chars match.
 ### All other helix-core modules: O
 command_line.rs 40, movement.rs 29, indent.rs 27, graphemes.rs 26, text_annotations.rs 24,
 history.rs 22, auto_pairs.rs 18, snippets/* 52, match_brackets.rs 15, line_ending.rs 15, uri 9,

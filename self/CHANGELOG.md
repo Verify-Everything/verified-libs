@@ -88,3 +88,14 @@ Snapshots for rollback are in self/snapshots/.
   13/13, harness without unwinding assertions refused, complete vs bounded labels); quick gate passed.
 - not done: Codex/Gemini agent CLIs (toolkit request). The change was blocked by this session's
   safety check; waiting for Yerin.
+
+## 2026-10-24T07:22Z v0.2.2 Codex and Gemini as agent CLIs (Yerin approved 07:18)
+- what: `--agent-cli claude|codex|gemini` on run, run-all and improve (or VPIPE_AGENT_CLI; default
+  claude). codex: `codex exec -s workspace-write --skip-git-repo-check -C <cwd> --add-dir <dir>`.
+  gemini: `gemini -p ... --approval-mode yolo --sandbox --include-directories <dir>`, always
+  sandboxed (refuses without docker or podman). Results record agent_cli; improve's changelog line
+  names the agent.
+- why: toolkit thread's request; Yerin approved Codex and Gemini support with the sandboxing above.
+- check: command lines built for each CLI, bad names refused; quick gate passed. codex and gemini
+  are not installed in this container, so neither ran end to end here (the toolkit thread tested
+  the CLIs themselves).

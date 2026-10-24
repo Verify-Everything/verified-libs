@@ -35,8 +35,19 @@ agent, or the agent lists each skill twice. Codex shows the names and prompts fr
 `agents/openai.yaml`; other agents ignore that file. `vkit doctor` warns about old copies in
 `~/.codex/skills/` from earlier vkit versions.
 
-`vkit run <lib> --agent` and `vpipe improve` run a headless Claude Code session today
-(`claude -p`); choosing Codex or Gemini for those runs is planned in the engine.
+`vkit run <lib> --agent`, `run-all --agent` and `vpipe improve` hand work to a headless agent.
+Pick it with `--agent-cli claude|codex|gemini` (or `VPIPE_AGENT_CLI`; default `claude`):
+
+| CLI | Command the engine runs | Limits |
+|---|---|---|
+| claude | `claude -p ... --permission-mode acceptEdits --allowedTools <list>` | command allowlist, `--max-turns` |
+| codex | `codex exec -s workspace-write --skip-git-repo-check -C <proj> --add-dir <dir>` | Codex's workspace-write sandbox; bounded by the engine's timeout |
+| gemini | `gemini -p ... --approval-mode yolo --sandbox --include-directories <dir>` | runs only inside Gemini's sandbox (needs docker or podman) |
+
+Results record which CLI ran (`agent_cli`). Whatever the agent writes is judged by the same proof
+checks, axiom audit and protected gate. Status (2026-10-24): the codex and gemini command lines
+were checked against both CLIs, which accept them; no end-to-end proof run with either has been
+done yet, so report problems in a Toolchain problem issue.
 
 ## Tools one at a time
 | Command | Installs | Where |

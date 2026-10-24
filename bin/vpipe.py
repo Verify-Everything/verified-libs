@@ -716,9 +716,37 @@ def agent(m, proj, last, budget):
         prompt = prompt.replace("{{" + k + "}}", val)
     tools = ("Read Edit Write Glob Grep Bash(lake:*) Bash(lean:*) Bash(frama-c:*) Bash(cat:*) "
              "Bash(ls:*) Bash(grep:*) Bash(rg:*) Bash(head:*) Bash(tail:*) Bash(git diff:*)")
-    sh(["claude", "-p", prompt, "--max-turns", str(budget), "--permission-mode", "acceptEdits",
-        "--allowedTools", tools, "--add-dir", str(WORK / m["name"])], cwd=proj, check=False,
-       timeout=4 * 3600)
+    sh(agent_cmd(prompt, proj, WORK / m["name"], tools, budget), cwd=proj, check=False, timeout=4 * 3600)
+    last.setdefault("agents", []).append(agent_cli())
+
+
+AGENT_CLIS = ("claude", "codex", "gemini")
+
+
+def agent_cli():
+    c = os.environ.get("VPIPE_AGENT_CLI", "claude")
+    if c not in AGENT_CLIS:
+        raise SystemExit(f"VPIPE_AGENT_CLI={c!r}: use one of {AGENT_CLIS}")
+    return c
+
+
+def agent_cmd(prompt, cwd, add_dir, tools, budget):
+    """Headless agent command for the chosen CLI (--agent-cli / VPIPE_AGENT_CLI; Yerin approved Codex
+    and Gemini, 2026-10-24). Each runs sandboxed; whatever wrote a change, the same proof checks and
+    the protected gate judge it."""
+    c = agent_cli()
+    if c == "claude":
+        return ["claude", "-p", prompt, "--max-turns", str(budget), "--permission-mode", "acceptEdits",
+                "--allowedTools", tools, "--add-dir", str(add_dir)]
+    if c == "codex":
+        # Codex's workspace-write sandbox; no turn-limit flag, so the caller's timeout bounds the run.
+        return ["codex", "exec", "-s", "workspace-write", "--skip-git-repo-check", "-C", str(cwd),
+                "--add-dir", str(add_dir), prompt]
+    # Gemini can only run commands headless in yolo mode (no command allowlist), so it always runs
+    # inside gemini's own sandbox (docker or podman).
+    if not (shutil.which("docker") or shutil.which("podman")):
+        raise SystemExit("gemini runs only inside its sandbox (--sandbox), which needs docker or podman")
+    return ["gemini", "-p", prompt, "--approval-mode", "yolo", "--sandbox", "--include-directories", str(add_dir)]
 
 
 
@@ -1217,7 +1245,7 @@ def run(lib, use_agent=False, rounds=3, budget=60, extract_only=False, clean=Fal
            "started": now(), "pipeline_version": (ROOT / "VERSION").read_text().strip(),
            "toolchain": json.loads((VH / "installed.json").read_text()), "clean": clean,
            "toolchain_digest": toolchain_digest(tool), "container_digest": os.environ.get("VPIPE_CONTAINER_DIGEST"),
-           "ci_run": os.environ.get("VPIPE_CI_RUN")}
+           "ci_run": os.environ.get("VPIPE_CI_RUN"), "agent_cli": agent_cli() if use_agent else None}
     pristine = src
     res["archive_sha256"] = standards.archive_sha256(src, m["commit"])
     src, res["source"] = prepare_source(m, src, proj)
@@ -1971,8 +1999,7 @@ def improve(goal=None, propose=False, budget=80, branch=False):
         prompt = prompt.replace("{{editable}}", ", ".join(SELF_EDITABLE))
         tools = ("Read Edit Write Glob Grep Bash(ls:*) Bash(cat:*) Bash(grep:*) Bash(head:*) "
                  "Bash(tail:*) Bash(python3:*) Bash(bash -n:*) Bash(lake:*) Bash(lean:*) Bash(frama-c:*)")
-        sh(["claude", "-p", prompt, "--max-turns", str(budget), "--permission-mode", "acceptEdits",
-            "--allowedTools", tools, "--add-dir", str(NOTES)], cwd=ROOT, check=False, timeout=3 * 3600)
+        sh(agent_cmd(prompt, ROOT, NOTES, tools, budget), cwd=ROOT, check=False, timeout=3 * 3600)
         if tree_hash(guard) != before_guard:
             # Another session may have legitimately written notes/results meanwhile; only fail on
             # paths the agent could plausibly have touched (proofs/, libraries/).
@@ -1999,7 +2026,7 @@ def improve(goal=None, propose=False, budget=80, branch=False):
                       f"- restored {snap.name}")
             return False
         ver = bump_version()
-        changelog(f"- kept: selftest passed; pipeline version {ver}; files: {code_changed}")
+        changelog(f"- kept: selftest passed; pipeline version {ver}; agent {agent_cli()}; files: {code_changed}")
         if branch:
             commit_branch(f"vpipe improve: {goal or 'self-update'} (v{ver})", code_changed + ["VERSION", "self/CHANGELOG.md"])
         return True
@@ -2074,6 +2101,7 @@ def main():
         r.add_argument("--rounds", type=int, default=3); r.add_argument("--budget", type=int, default=60)
         r.add_argument("--extract-only", action="store_true", help="Rust: stop after Aeneas (scope check)")
         r.add_argument("--improve", action="store_true", help="afterwards, run the self-update loop on what this run showed")
+        r.add_argument("--agent-cli", choices=AGENT_CLIS, help="headless agent: claude (default), codex or gemini; or VPIPE_AGENT_CLI")
         r.add_argument("--functions", help="C: comma-separated functions to prove (quick check; result kept apart)")
         r.add_argument("--clean", action="store_true", help="rebuild every proof from scratch (no cached proof results); "
                        "two matching clean runs are admission gate 9")
@@ -2095,12 +2123,15 @@ def main():
     i = s.add_parser("improve")
     i.add_argument("--goal"); i.add_argument("--propose", action="store_true")
     i.add_argument("--budget", type=int, default=80)
+    i.add_argument("--agent-cli", choices=AGENT_CLIS)
     i.add_argument("--branch", action="store_true", help="in a git clone, commit a kept change to its own branch for a PR")
     cf = s.add_parser("check-fixture"); cf.add_argument("kind", choices=["framac", "rust"])
     cf.add_argument("--full", action="store_true")
     s.add_parser("upgrade-tools")
     s.add_parser("rollback").add_argument("snapshot", nargs="?")
     a = ap.parse_args()
+    if getattr(a, "agent_cli", None):
+        os.environ["VPIPE_AGENT_CLI"] = a.agent_cli
     if a.cmd == "setup":
         print(json.dumps(setup(a.which), indent=1))
     elif a.cmd == "new":

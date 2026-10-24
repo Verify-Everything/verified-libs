@@ -1,0 +1,5 @@
+# Codex UI metadata (developers.openai.com/codex/skills#optional-metadata). Other agents ignore it.
+interface:
+  display_name: "Pick a verification target"
+  short_description: "Choose a library and check for prior verification"
+  default_prompt: "Use $pick-verification-target to suggest three libraries worth verifying next."

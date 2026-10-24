@@ -1,0 +1,6 @@
+import Lake
+open Lake DSL
+require aeneas from git "https://github.com/AeneasVerif/aeneas.git" @ "{{aeneas_commit}}" / "backends/lean"
+package demo
+@[default_target] lean_lib Demo where
+  globs := #[.submodules `Demo]

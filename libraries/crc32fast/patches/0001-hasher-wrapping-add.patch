@@ -1,0 +1,45 @@
+From 990c6c1f0f652e11f48429e1d3af9bc71e530147 Mon Sep 17 00:00:00 2001
+From: crc32fast verification <noreply@anthropic.com>
+Date: Sat, 24 Oct 2026 07:13:41 +0000
+Subject: [PATCH 1/2] Hasher: wrap the byte count instead of panicking on
+ overflow
+
+Hasher::update and Hasher::combine add to a u64 byte count with `+=`,
+which panics in debug builds when it overflows (for example after
+new_with_initial_len(_, u64::MAX)). Release builds already wrap.
+Use wrapping_add so both profiles agree and no input can panic.
+
+Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01JGxgidugpFJPeiTe1bJ4g2
+---
+ src/lib.rs | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/src/lib.rs b/src/lib.rs
+index 1be5c9a..396f314 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -115,7 +115,9 @@ impl Hasher {
+ 
+     /// Process the given byte slice and update the hash state.
+     pub fn update(&mut self, buf: &[u8]) {
+-        self.amount += buf.len() as u64;
++        // Verified fix: the byte count wraps modulo 2^64 (as release builds already do) instead of
++        // panicking in debug builds, e.g. after `new_with_initial_len(_, u64::MAX)`.
++        self.amount = self.amount.wrapping_add(buf.len() as u64);
+         self.state = match &self.spec {
+             None => baseline::update_fast_16(self.state, buf),
+             Some(spec) => spec.update(self.state, buf),
+@@ -159,7 +161,8 @@ impl Hasher {
+ 
+     /// Combine the hash state with the hash state for the subsequent block of bytes.
+     pub fn combine(&mut self, other: &Self) {
+-        self.amount += other.amount;
++        // Verified fix: wraps modulo 2^64, as in `update`.
++        self.amount = self.amount.wrapping_add(other.amount);
+         self.state = combine::combine(self.state, other.state, other.amount);
+     }
+ }
+-- 
+2.43.0
+

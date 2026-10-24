@@ -1,0 +1,1068 @@
+{
+ "library": "semver",
+ "commit": "280ebcb6edac3aa4cdc545dbff8a26c5ac4861fe",
+ "version": "1.0.28",
+ "tool": "lean-aeneas",
+ "started": "2026-10-24T05:47:54Z",
+ "pipeline_version": "0.1.4",
+ "toolchain": {
+  "aeneas": "nightly-2026.10.23-fdebf20",
+  "charon_rust": "nightly-2026-09-17",
+  "lean": "4.35.0",
+  "aeneas_dir": "/root/.vpipe/aeneas-nightly-2026.10.23-fdebf20"
+ },
+ "source": {
+  "patches": [
+   "rust/model.patch"
+  ],
+  "tests": [
+   {
+    "cmd": "cd model && cargo test --release --features debug --quiet",
+    "ok": true,
+    "tail": "\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 1 test\n.\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.45s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n"
+   }
+  ]
+ },
+ "extract": {
+  "ok": true,
+  "stage": "aeneas",
+  "aeneas_rc": 0,
+  "postprocess": [],
+  "unexpected_errors": [],
+  "unsupported": [],
+  "assumed_axioms": [],
+  "external_template_changes": [],
+  "warnings": [],
+  "log": "[Info ] Imported: /root/vpipe-work/semver/semver.llbc\n[Info ] Creating missing directory: /root/vpipe-work/semver/proj/SemverModel/Code\n[Info ] Generated: /root/vpipe-work/semver/proj/SemverModel/Code/Types.lean\n[Info ] Generated: /root/vpipe-work/semver/proj/SemverModel/Code/Funs.lean\n[Info ] Total execution time: 1.598529 seconds\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+ },
+ "prove": {
+  "ok": true,
+  "seconds": 147,
+  "theorems": [
+   {
+    "name": "parse_version_total",
+    "file": "SemverModel/Proofs/Main.lean",
+    "line": 14,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "parse_then_print",
+    "file": "SemverModel/Proofs/Main.lean",
+    "line": 19,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "print_then_parse",
+    "file": "SemverModel/Proofs/Main.lean",
+    "line": 33,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "parse_prerelease_accepts",
+    "file": "SemverModel/Proofs/Main.lean",
+    "line": 50,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "parse_build_accepts",
+    "file": "SemverModel/Proofs/Main.lean",
+    "line": 67,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "eq_ok_of_spec",
+    "file": "SemverModel/Proofs/Order.lean",
+    "line": 15,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "version_cmp_ok",
+    "file": "SemverModel/Proofs/Order.lean",
+    "line": 18,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "prerelease_cmp_ok",
+    "file": "SemverModel/Proofs/Order.lean",
+    "line": 21,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "build_cmp_ok",
+    "file": "SemverModel/Proofs/Order.lean",
+    "line": 24,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "version_cmp_eq_versionOrd",
+    "file": "SemverModel/Proofs/Order.lean",
+    "line": 30,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "toP_inj",
+    "file": "SemverModel/Proofs/Order.lean",
+    "line": 33,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "version_cmp_total_order",
+    "file": "SemverModel/Proofs/Order.lean",
+    "line": 52,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "is_digit_spec",
+    "file": "SemverModel/Proofs/RefineCmp.lean",
+    "line": 10,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "segment_end_spec",
+    "file": "SemverModel/Proofs/RefineCmp.lean",
+    "line": 15,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "all_digits_spec",
+    "file": "SemverModel/Proofs/RefineCmp.lean",
+    "line": 33,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "cmp_bytes_spec",
+    "file": "SemverModel/Proofs/RefineCmp.lean",
+    "line": 53,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "cmp_usize_spec",
+    "file": "SemverModel/Proofs/RefineCmp.lean",
+    "line": 76,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "cmp_u64_spec",
+    "file": "SemverModel/Proofs/RefineCmp.lean",
+    "line": 81,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "skip_zeros_spec",
+    "file": "SemverModel/Proofs/RefineCmp.lean",
+    "line": 86,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "pre_segment_cmp_spec",
+    "file": "SemverModel/Proofs/RefineCmp.lean",
+    "line": 102,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "build_segment_cmp_spec",
+    "file": "SemverModel/Proofs/RefineCmp.lean",
+    "line": 109,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "cmp_segments_loop_spec",
+    "file": "SemverModel/Proofs/RefineCmp.lean",
+    "line": 119,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "deref_val",
+    "file": "SemverModel/Proofs/RefineCmp.lean",
+    "line": 159,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "slice_len_eq_zero",
+    "file": "SemverModel/Proofs/RefineCmp.lean",
+    "line": 162,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "prerelease_cmp_spec",
+    "file": "SemverModel/Proofs/RefineCmp.lean",
+    "line": 168,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "build_cmp_spec",
+    "file": "SemverModel/Proofs/RefineCmp.lean",
+    "line": 175,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "version_cmp_spec",
+    "file": "SemverModel/Proofs/RefineCmp.lean",
+    "line": 186,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "resMap_ok",
+    "file": "SemverModel/Proofs/RefineParse.lean",
+    "line": 13,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "resMap_err",
+    "file": "SemverModel/Proofs/RefineParse.lean",
+    "line": 14,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "numLoop_unfold",
+    "file": "SemverModel/Proofs/RefineParse.lean",
+    "line": 16,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "numeric_identifier_loop_spec",
+    "file": "SemverModel/Proofs/RefineParse.lean",
+    "line": 33,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "numeric_identifier_spec",
+    "file": "SemverModel/Proofs/RefineParse.lean",
+    "line": 51,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "dot_spec",
+    "file": "SemverModel/Proofs/RefineParse.lean",
+    "line": 56,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "is_ident_char_nondigit_spec",
+    "file": "SemverModel/Proofs/RefineParse.lean",
+    "line": 64,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "identLoop_unfold",
+    "file": "SemverModel/Proofs/RefineParse.lean",
+    "line": 70,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "isIdentNonDigit_zero",
+    "file": "SemverModel/Proofs/RefineParse.lean",
+    "line": 90,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "isDig_zero",
+    "file": "SemverModel/Proofs/RefineParse.lean",
+    "line": 93,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "identifier_loop_spec",
+    "file": "SemverModel/Proofs/RefineParse.lean",
+    "line": 108,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "sub_succ",
+    "file": "SemverModel/Proofs/RefinePrint.lean",
+    "line": 9,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "sub_self",
+    "file": "SemverModel/Proofs/RefinePrint.lean",
+    "line": 15,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "push_all_loop_spec",
+    "file": "SemverModel/Proofs/RefinePrint.lean",
+    "line": 18,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "push_all_spec",
+    "file": "SemverModel/Proofs/RefinePrint.lean",
+    "line": 41,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "copy_range_spec",
+    "file": "SemverModel/Proofs/RefinePrint.lean",
+    "line": 47,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "decimal_unfold",
+    "file": "SemverModel/Proofs/RefinePrint.lean",
+    "line": 54,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "decimal_length_pos",
+    "file": "SemverModel/Proofs/RefinePrint.lean",
+    "line": 59,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "digit_eq",
+    "file": "SemverModel/Proofs/RefinePrint.lean",
+    "line": 62,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "push_u64_spec",
+    "file": "SemverModel/Proofs/RefinePrint.lean",
+    "line": 71,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "sub_zero_full",
+    "file": "SemverModel/Proofs/RefinePrint.lean",
+    "line": 96,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "version_to_bytes_spec",
+    "file": "SemverModel/Proofs/RefinePrint.lean",
+    "line": 100,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "numLoop_le",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 15,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "dotM_ok",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 20,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "identLoop_bounds",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 24,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "spec_exists",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 30,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "identifier_spec0",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 33,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "identifier_spec",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 39,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "numeric_identifier_spec'",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 48,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "dot_spec'",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 57,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "parse_prerelease_spec",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 73,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "parse_build_spec",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 91,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "usize_eq_len",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 110,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "usize_eq_iff",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 113,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "usize_lt_len",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 115,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "u8_eq_iff",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 118,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "branch_ok_eq",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 120,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "branch_err_eq",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 122,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "residual_eq",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 124,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "branch_spec'",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 131,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "getElem_bang",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 136,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "vec_new_val",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 139,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "parse_version_spec",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 149,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "decimal_lt10",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 16,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "ofNat_congr",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 20,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "decimal_snoc",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 23,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "digit_byte",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 32,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "sub_one",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 39,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "sub_append",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 42,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "numLoop_read",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 51,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "numM_read",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 87,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "dotM_read",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 91,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "identM_read",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 100,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "byte_at",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 104,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "sub_len_ne",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 110,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "parse_print",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 114,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "decimal_ne_nil",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 198,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "decimal_isDig",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 201,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "numLoop_step",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 215,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "numLoop_stop",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 226,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "get_mid",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 237,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "decimal_split",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 241,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "numLoop_dec",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 246,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "numM_dec",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 280,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "getElem!_mid",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 302,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "identLoop_ctx",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 306,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "numM_at",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 350,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "dotM_at",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 355,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "getElem!_at",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 360,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "sub_at",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 365,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "identM_whole",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 373,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "identM_at",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 380,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "stopper_nil",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 388,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "stopper_plus",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 389,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "nd_dot",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 391,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "nd_dash",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 393,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "nd_plus",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 395,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "nd_nil",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 397,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "prefix_parse",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 399,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "print_parse",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 418,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "sub_cons",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 15,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "sub_nil",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 22,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "sub_length",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 25,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "allDigits_eq",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 31,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "cmpBytes_eq",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 45,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "compareLex_byteCmp",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 80,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "bytesN_inj",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 91,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "skipZeros_eq",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 99,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "cmpNat_eq",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 129,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "preSegCmp_eq",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 133,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "trim_decomp",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 145,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "eq_of_trim_eq",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 161,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "buildSegCmp_eq",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 164,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "segEnd_dot",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 192,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "segEnd_nodot",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 199,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "splitFrom_unfold",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 221,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "splitFrom_ne_nil",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 226,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "sub_full",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 229,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "drop_split",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 232,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "intercalate_splitFrom",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 240,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "splitDot_inj",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 254,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "cmpSegsLoop_eq",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 262,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "cmpBytes_step",
+    "file": "SemverModel/Spec/Mirror.lean",
+    "line": 41,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "cmpBytes_stop",
+    "file": "SemverModel/Spec/Mirror.lean",
+    "line": 49,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "skipZeros_step",
+    "file": "SemverModel/Spec/Mirror.lean",
+    "line": 62,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "skipZeros_stop",
+    "file": "SemverModel/Spec/Mirror.lean",
+    "line": 66,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "skipZeros_bounds",
+    "file": "SemverModel/Spec/Mirror.lean",
+    "line": 69,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "segEnd_ge",
+    "file": "SemverModel/Spec/Mirror.lean",
+    "line": 98,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "segEnd_le",
+    "file": "SemverModel/Spec/Mirror.lean",
+    "line": 101,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "segEnd_ge'",
+    "file": "SemverModel/Spec/Mirror.lean",
+    "line": 104,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "cmpSegsLoop_unfold",
+    "file": "SemverModel/Spec/Mirror.lean",
+    "line": 124,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "segEnd_bounds",
+    "file": "SemverModel/Spec/Mirror.lean",
+    "line": 139,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "transCmp_pullback",
+    "file": "SemverModel/Spec/Order.lean",
+    "line": 18,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "lawfulEqCmp_pullback",
+    "file": "SemverModel/Spec/Order.lean",
+    "line": 24,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "splitDot_nil",
+    "file": "SemverModel/Spec/Order.lean",
+    "line": 74,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "preCmp_eq",
+    "file": "SemverModel/Spec/Order.lean",
+    "line": 78,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "buildCmp_eq",
+    "file": "SemverModel/Spec/Order.lean",
+    "line": 93,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "versionCmp_eq",
+    "file": "SemverModel/Spec/Order.lean",
+    "line": 113,
+    "axioms": [],
+    "status": "proved"
+   }
+  ],
+  "proved": 145,
+  "total": 145,
+  "generated_sorries": 0,
+  "sorries": 0,
+  "axiom_thms": 0,
+  "unaudited": 0,
+  "errors": [],
+  "log": "\u2714 [1796/1810] Built SemverModel.Code.Types (2.2s)\n\u26a0 [1797/1810] Built SemverModel.Spec.Mirror (3.2s)\nwarning: SemverModel/Spec/Mirror.lean:47:39: This simp argument is unused:\n  List.getElem!_eq_getElem?_getD\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h1, h2, ha, hb, List.getElem?_eq_getElem]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Spec/Mirror.lean:47:71: This simp argument is unused:\n  List.getElem?_eq_getElem\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h1, h2, ha, hb, List.getElem!_eq_getElem?_getD]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Spec/Mirror.lean:51:31: `if_false` has been deprecated: Use `ite_false` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335f\u0335a\u0335l\u0335s\u0335e\u0335i\u0332t\u0332e\u0332_\u0332f\u0332a\u0332l\u0332s\u0332e\u0332\nwarning: SemverModel/Spec/Mirror.lean:64:32: This simp argument is unused:\n  List.getElem!_eq_getElem?_getD\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h1, ha, List.getElem?_eq_getElem]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Spec/Mirror.lean:64:64: This simp argument is unused:\n  List.getElem?_eq_getElem\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h1, ha, List.getElem!_eq_getElem?_getD]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Spec/Mirror.lean:108:5: Variable name `hi` is not explicitly referenced.\n\nHint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:\n  [apply] _hi\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`\n\u2714 [1798/1810] Built SemverModel.Code.Funs (3.3s)\n\u26a0 [1799/1810] Built SemverModel.Spec.Lists (3.7s)\nwarning: SemverModel/Spec/Lists.lean:290:29: This simp argument is unused:\n  ite_true\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [hle, hre, ite_false]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\n\u2714 [1800/1810] Built SemverModel.Spec.Order (3.2s)\n\u2714 [1801/1810] Built SemverModel.Spec.ParseMirror (4.6s)\n\u26a0 [1802/1810] Built SemverModel.Proofs.RefineCmp (9.7s)\nwarning: SemverModel/Proofs/RefineCmp.lean:156:47: This simp argument is unused:\n  eq_comm (a := Ordering.eq)\n\nHint: Omit it from the simp argument list.\n  [apply] simp only at *\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Proofs/RefineCmp.lean:144:31: Unused tactic linter: `(try simp only [eq_comm (a := Ordering.eq)] at *)` does nothing.\n\nNote: This linter can be disabled with `set_option linter.unusedTactic false`\nwarning: SemverModel/Proofs/RefineCmp.lean:190:41: This simp argument is unused:\n  eq_comm (a := Ordering.eq)\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [eq_comm (a := Ordering.lt), eq_comm (a := Ordering.gt)] at *\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\n\u2714 [1803/1810] Built SemverModel.Proofs.Order (2.8s)\n\u26a0 [1804/1810] Built SemverModel.Proofs.RefinePrint (9.4s)\nwarning: SemverModel/Proofs/RefinePrint.lean:87:47: This simp argument is unused:\n  ite_false\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [*, List.append_assoc, ite_true, List.nil_append]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Proofs/RefinePrint.lean:87:58: This simp argument is unused:\n  List.nil_append\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [*, List.append_assoc, ite_true, ite_false]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Proofs/RefinePrint.lean:94:18: This simp argument is unused:\n  List.append_assoc\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [*, ite_true, ite_false, List.nil_append]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Proofs/RefinePrint.lean:94:37: This simp argument is unused:\n  ite_true\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [*, List.append_assoc, ite_false, List.nil_append]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Proofs/RefinePrint.lean:111:88: Unused tactic linter: `done` does nothing.\n\nNote: This linter can be disabled with `set_option linter.unusedTactic false`\n\u26a0 [1805/1810] Built SemverModel.Proofs.RefineParse (66s)\nwarning: SemverModel/Proofs/RefineParse.lean:61:62: Unused tactic linter: `<;>` should be replaced with `;` or be removed.\n\nNote: This linter can be disabled with `set_option linter.unusedTactic false`\n\u26a0 [1806/1810] Built SemverModel.Proofs.RefineVersion (32s)\nwarning: SemverModel/Proofs/RefineVersion.lean:158:6: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: SemverModel/Proofs/RefineVersion.lean:158:18: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\n\u2714 [1807/1810] Built SemverModel.Proofs.RoundTrip (5.3s)\n\u2714 [1808/1810] Built SemverModel.Proofs.Main (2.2s)\n\u2714 [1809/1810] Built SemverModel (2.0s)\nBuild completed successfully (1810 jobs).\n"
+ },
+ "finished": "2026-10-24T05:50:43Z"
+}

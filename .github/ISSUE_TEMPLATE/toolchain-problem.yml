@@ -1,0 +1,16 @@
+name: Toolchain problem
+description: Setup fails, versions disagree, or a tool misbehaves.
+title: "setup: <short description>"
+labels: ["toolchain"]
+body:
+  - type: textarea
+    id: cmd
+    attributes: { label: Command you ran and the error }
+    validations: { required: true }
+  - type: textarea
+    id: doctor
+    attributes: { label: "Output of `vkit doctor --json`", render: json }
+    validations: { required: true }
+  - type: textarea
+    id: notes
+    attributes: { label: Anything else (network restrictions, OS, container) }

@@ -1,0 +1,14 @@
+# Build context for container/Dockerfile: the engine and installer only.
+.git
+libraries
+candidates
+libs
+results
+notes
+docs
+cache
+**/.lake
+**/target
+**/__pycache__
+*.tar.zst
+self/snapshots

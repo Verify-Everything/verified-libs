@@ -1,0 +1,219 @@
+# Per-function evidence for percent-encoding (vpipe reads this).
+# Upstream lines and patched-code lines differ (rust/aeneas-friendly.patch), so each entry names
+# the Lean def it was extracted to and the proved theorems that specify it.
+# Derived impls (Clone, PartialEq, Eq, Debug) are not `fn`s in the source, so the scanner does not
+# list them; their theorems are in Proofs/Traits.lean (all proved except PercentDecode's derived
+# Debug, which Aeneas cannot translate).
+
+[[function]]
+id = "src/ascii_set.rs:AsciiSet::contains"
+lean = "ascii_set.AsciiSet.contains"
+theorems = ["contains_spec"]
+label = "full-correctness"
+
+[[function]]
+id = "src/ascii_set.rs:AsciiSet::should_percent_encode"
+lean = "ascii_set.AsciiSet.should_percent_encode"
+theorems = ["should_percent_encode_spec"]
+label = "full-correctness"
+
+[[function]]
+id = "src/ascii_set.rs:AsciiSet::add"
+lean = "ascii_set.AsciiSet.add"
+theorems = ["add_spec", "add_nonascii_panics"]
+label = "full-correctness"
+note = "panics (array index out of bounds) for bytes >= 128; proved, undocumented upstream"
+
+[[function]]
+id = "src/ascii_set.rs:AsciiSet::remove"
+lean = "ascii_set.AsciiSet.remove"
+theorems = ["remove_spec", "remove_nonascii_panics"]
+label = "full-correctness"
+note = "panics (array index out of bounds) for bytes >= 128; proved, undocumented upstream"
+
+[[function]]
+id = "src/ascii_set.rs:AsciiSet::union"
+lean = "ascii_set.AsciiSet.union"
+theorems = ["union_spec"]
+label = "full-correctness"
+
+[[function]]
+id = "src/ascii_set.rs:AsciiSet::complement"
+lean = "ascii_set.AsciiSet.complement"
+theorems = ["complement_spec"]
+label = "full-correctness"
+
+[[function]]
+id = "src/ascii_set.rs:ops::Add for AsciiSet::add"
+lean = "ascii_set.AsciiSet.Insts.CoreOpsArithAddAsciiSetAsciiSet.add"
+theorems = ["add_op_spec"]
+label = "full-correctness"
+
+[[function]]
+id = "src/ascii_set.rs:ops::Not for AsciiSet::not"
+lean = "ascii_set.AsciiSet.Insts.CoreOpsBitNotAsciiSet.not"
+theorems = ["not_op_spec"]
+label = "full-correctness"
+
+[[function]]
+id = "src/ascii_set.rs:_static_assert"
+lean = "ascii_set._static_assert"
+theorems = ["static_assert_spec"]
+label = "full-correctness"
+
+[[function]]
+id = "src/lib.rs:percent_encode_byte"
+lean = "percent_encode_byte"
+theorems = ["percent_encode_byte_spec"]
+label = "full-correctness"
+
+[[function]]
+id = "src/lib.rs:percent_encode"
+lean = "percent_encode"
+theorems = ["percent_encode_correct", "percent_encode_output_allowed"]
+label = "full-correctness"
+
+[[function]]
+id = "src/lib.rs:utf8_percent_encode"
+lean = "utf8_percent_encode"
+theorems = ["utf8_percent_encode_correct"]
+label = "full-correctness"
+
+[[function]]
+id = "src/lib.rs:Iterator for PercentEncode::next"
+lean = "PercentEncode.Insts.CoreIterTraitsIteratorIteratorSharedAStr.next"
+theorems = ["encode_next_spec", "next_chunk_spec"]
+status = "open"
+why = "proved only on the patched body; the patch is not yet proved equivalent to the original (admission gate 1)"
+note = "patched body (next_chunk); equivalence to the original not yet proved"
+
+[[function]]
+id = "src/lib.rs:Iterator for PercentEncode::size_hint"
+lean = "PercentEncode.Insts.CoreIterTraitsIteratorIteratorSharedAStr.size_hint"
+theorems = ["encode_size_hint_spec"]
+label = "full-correctness"
+
+[[function]]
+id = "src/lib.rs:fmt::Display for PercentEncode::fmt"
+lean = "PercentEncode.Insts.CoreFmtDisplay.fmt"
+theorems = ["display_fmt_spec", "write_chunks_spec", "write_chunks_buffer"]
+status = "open"
+why = "proved only on the patched body; the patch is not yet proved equivalent to the original (admission gate 1)"
+note = "patched body (write_chunks); equivalence to the original not yet proved"
+
+[[function]]
+id = "src/lib.rs:From for Cow::from@L195"
+lean = "alloc.borrow.CowAStrString.Insts.CoreConvertFromPercentEncode.from"
+theorems = ["cow_from_encode_spec"]
+label = "full-correctness"
+
+[[function]]
+id = "src/lib.rs:percent_decode_str"
+lean = "percent_decode_str"
+theorems = ["percent_decode_str_correct"]
+label = "full-correctness"
+
+[[function]]
+id = "src/lib.rs:percent_decode"
+lean = "percent_decode"
+theorems = ["percent_decode_correct"]
+label = "full-correctness"
+
+[[function]]
+id = "src/lib.rs:after_percent_sign"
+lean = "after_percent_sign"
+theorems = ["after_percent_sign_spec"]
+label = "full-correctness"
+
+[[function]]
+id = "src/lib.rs:Iterator for PercentDecode::next"
+lean = "PercentDecode.Insts.CoreIterTraitsIteratorIteratorU8.next"
+theorems = ["decode_next_spec"]
+status = "open"
+why = "proved only on the patched body; the patch is not yet proved equivalent to the original (admission gate 1)"
+note = "patched body (closure replaced by match); equivalence to the original not yet proved"
+
+[[function]]
+id = "src/lib.rs:Iterator for PercentDecode::size_hint"
+lean = "PercentDecode.Insts.CoreIterTraitsIteratorIteratorU8.size_hint"
+theorems = ["decode_size_hint_spec"]
+label = "full-correctness"
+note = "uses the Rust guarantee that a slice is at most isize::MAX bytes"
+
+[[function]]
+id = "src/lib.rs:From for Cow::from@L281"
+lean = "alloc.borrow.CowASliceU8VecU8.Insts.CoreConvertFromPercentDecode.from"
+theorems = ["cow_from_decode_spec"]
+label = "full-correctness"
+
+[[function]]
+id = "src/lib.rs:PercentDecode::if_any"
+lean = "PercentDecode.if_any"
+theorems = ["if_any_spec", "decode_if_any_spec"]
+status = "open"
+why = "proved only on the patched body; the patch is not yet proved equivalent to the original (admission gate 1)"
+note = "patched body (decode_if_any); equivalence to the original not yet proved"
+
+[[function]]
+id = "src/lib.rs:PercentDecode::decode_utf8"
+lean = "PercentDecode.decode_utf8"
+theorems = ["decode_utf8_spec"]
+label = "full-correctness"
+
+[[function]]
+id = "src/lib.rs:PercentDecode::decode_utf8_lossy"
+lean = "PercentDecode.decode_utf8_lossy"
+theorems = ["decode_utf8_lossy_spec"]
+label = "full-correctness"
+
+[[function]]
+id = "src/lib.rs:decode_utf8_lossy"
+lean = "decode_utf8_lossy"
+theorems = ["free_decode_utf8_lossy_spec"]
+status = "open"
+why = "proved only on the patched body; the patch is not yet proved equivalent to the original (admission gate 1)"
+note = "patched body (debug_assert!(ptr::eq) removed); equivalence to the original not yet proved"
+
+# Helpers added by rust/aeneas-friendly.patch (vpipe also lists the patched tree's functions).
+[[function]]
+id = "src/lib.rs:next_chunk"
+lean = "next_chunk"
+theorems = ["next_chunk_spec"]
+label = "full-correctness"
+
+[[function]]
+id = "src/lib.rs:write_chunks"
+lean = "write_chunks"
+theorems = ["write_chunks_spec", "write_chunks_buffer"]
+label = "full-correctness"
+
+[[function]]
+id = "src/lib.rs:decode_if_any"
+lean = "decode_if_any"
+theorems = ["decode_if_any_spec"]
+label = "full-correctness"
+
+[[function]]
+id = "src/lib.rs:decode_from_percent"
+lean = "decode_from_percent"
+theorems = ["decode_from_percent_spec"]
+label = "full-correctness"
+
+[[function]]
+id = "src/lib.rs:position_of_percent"
+lean = "position_of_percent"
+theorems = ["position_of_percent_spec"]
+label = "full-correctness"
+
+# Patched copies of the two Cow From impls (same Lean defs as @L195 / @L281).
+[[function]]
+id = "src/lib.rs:From for Cow::from@L229"
+lean = "alloc.borrow.CowAStrString.Insts.CoreConvertFromPercentEncode.from"
+theorems = ["cow_from_encode_spec"]
+label = "full-correctness"
+
+[[function]]
+id = "src/lib.rs:From for Cow::from@L317"
+lean = "alloc.borrow.CowASliceU8VecU8.Insts.CoreConvertFromPercentDecode.from"
+theorems = ["cow_from_decode_spec"]
+label = "full-correctness"

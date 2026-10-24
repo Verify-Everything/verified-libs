@@ -1,0 +1,33 @@
+{
+ "library": "percent-encoding",
+ "commit": "00a6ce58d02f4e0d43c5ca0702c0bedb8b1ebf3a",
+ "version": "2.3.2",
+ "tool": "lean-aeneas",
+ "started": "2026-10-24T05:18:12Z",
+ "pipeline_version": "0.1.2",
+ "toolchain": {
+  "aeneas": "nightly-2026.10.23-fdebf20",
+  "charon_rust": "nightly-2026-09-17",
+  "lean": "4.35.0",
+  "aeneas_dir": "/root/.vpipe/aeneas-nightly-2026.10.23-fdebf20"
+ },
+ "source": {
+  "patches": [
+   "rust/aeneas-friendly.patch"
+  ],
+  "tests": [
+   {
+    "cmd": "sed -i 's/^name = \"percent-encoding\"/name = \"percent-encoding-aeneas\"/' {tree}/percent_encoding/Cargo.toml && printf '\\n[lib]\\nname = \"percent_encoding\"\\n' >> {tree}/percent_encoding/Cargo.toml",
+    "ok": true,
+    "tail": ""
+   },
+   {
+    "cmd": "cd {tree}/percent_encoding && cargo +stable test --quiet",
+    "ok": false,
+    "tail": "error: no matching package named `percent-encoding` found\nlocation searched: /root/vpipe-work/percent-encoding/patched/percent_encoding\nrequired by package `url v2.5.8 (/root/vpipe-work/percent-encoding/patched/url)`\n"
+   }
+  ],
+  "error": "test failed: cd {tree}/percent_encoding && cargo +stable test --quiet"
+ },
+ "finished": "2026-10-24T05:18:13Z"
+}

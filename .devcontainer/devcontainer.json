@@ -1,0 +1,8 @@
+{
+  "name": "verified-libs",
+  "build": { "dockerfile": "Dockerfile" },
+  "remoteUser": "dev",
+  "postCreateCommand": "bash install.sh --yes --agents claude --tools lean,framac,cbmc",
+  "hostRequirements": { "memory": "16gb", "storage": "32gb" },
+  "customizations": { "vscode": { "extensions": ["leanprover.lean4"] } }
+}

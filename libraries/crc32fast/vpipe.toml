@@ -1,0 +1,104 @@
+# Library manifest. `vpipe run crc32fast` reads this. Created 2026-10-24, variants added 2026-10-24.
+name = "crc32fast"
+lang = "rust"
+tool = "lean-aeneas"
+upstream = "https://github.com/srijs/rust-crc32fast"
+commit = "d2363eab95ebc85fcf726d1c8fa845148e474591"   # v1.5.3
+version = "1.5.3"
+archive_sha256 = "5f9d28e38dcb613309c036523202e50241cdea899e8af524de6397dad594bf61"
+thread = "Verify crc32fast in Lean"
+
+[extract]
+crate_dir = "."
+module = "Crc32fast"
+charon_args = ["--preset=aeneas"]
+cargo_args = ["--no-default-features", "--target", "riscv64gc-unknown-none-elf"]
+sysroot_default = true
+aeneas_args = []
+
+# Applied in order to the pinned source before every variant.
+# 0001 is a fix (see functions.toml, status = "fixed"): the byte count wraps instead of panicking.
+# 0002 only makes the SIMD code readable by Aeneas (no behaviour change); it is NOT proved
+# equivalent yet, so gate 1 stays open until it ships in a published fork or gets a proof.
+[patches]
+files = ["patches/0001-hasher-wrapping-add.patch", "patches/0002-simd-readable-by-aeneas.patch"]
+
+# Every target crc32fast has code for. Each variant is its own Lean project:
+# common/ plus variants/<name>/ (kernel proofs, Detect.lean, Variant.lean, External/ models).
+[[variant]]
+name = "riscv64-portable"
+cargo_args = ["--no-default-features", "--target", "riscv64gc-unknown-none-elf"]
+sysroot_default = true
+
+[[variant]]
+name = "x86_64"
+charon_args = ["--preset=aeneas", "--opaque", "crc32fast::specialized::pclmulqdq::load128",
+  "--opaque", "crc32fast::specialized::pclmulqdq::load256", "--opaque", "crc32fast::specialized::pclmulqdq::load512"]
+cargo_args = ["--no-default-features", "--target", "x86_64-unknown-linux-gnu"]
+sysroot_default = false
+
+[[variant]]
+name = "x86_64-std"
+charon_args = ["--preset=aeneas", "--opaque", "crc32fast::specialized::pclmulqdq::load128",
+  "--opaque", "crc32fast::specialized::pclmulqdq::load256", "--opaque", "crc32fast::specialized::pclmulqdq::load512"]
+cargo_args = ["--target", "x86_64-unknown-linux-gnu"]
+sysroot_default = false
+
+[[variant]]
+name = "aarch64"
+charon_args = ["--preset=aeneas", "--opaque", "crc32fast::specialized::aarch64::split_quads"]
+cargo_args = ["--no-default-features", "--target", "aarch64-unknown-linux-gnu"]
+sysroot_default = false
+
+[[variant]]
+name = "aarch64-std"
+charon_args = ["--preset=aeneas", "--opaque", "crc32fast::specialized::aarch64::split_quads"]
+cargo_args = ["--target", "aarch64-unknown-linux-gnu"]
+sysroot_default = false
+
+[coverage]
+targets = [
+  "riscv64gc-unknown-none-elf, no_std (portable code: every target without a SIMD kernel)",
+  "x86_64-unknown-linux-gnu, no_std (compile-time detection) and std (runtime detection, any CPU answer)",
+  "aarch64-unknown-linux-gnu, no_std and std (runtime crc detection, any CPU answer)",
+  "x86_64 kernels: SSE4.1+PCLMULQDQ, AVX2+VPCLMULQDQ, AVX-512+VPCLMULQDQ (the nightly feature only switches the AVX-512 path on; its code is proved)",
+]
+
+[scope]
+summary = "crc32fast computes the standard CRC-32 (ISO-HDLC, reflected polynomial 0xEDB88320, init and final XOR 0xFFFFFFFF). Every public function returns the CRC the bit-at-a-time reference gives, for any input and on every target and kernel; incremental updates and combine equal a single pass; nothing panics."
+properties = [
+  "update_slow, update_fast_16, every SIMD kernel (SSE, AVX2, AVX-512, aarch64 CRC32) and hash equal the bit-at-a-time reference CRC-32, for inputs of any length",
+  "Hasher::update then finalize equals hash of the concatenated input (incremental = single pass), with any kernel State::new picks",
+  "combine and Hasher::combine equal the CRC of the concatenation",
+  "No function panics or fails on any input; the u64 byte count wraps modulo 2^64 (verified fix 0001)",
+  "Debug writes exactly `crc32fast::Hasher`; Clone, Default, Hash::write/finish behave as documented",
+]
+spec_files = ["common/Crc32fast/Spec.lean"]
+test_vectors = [
+  "CRC-32/ISO-HDLC check value crc32(\"123456789\") = 0xCBF43926 (Greg Cook's CRC catalogue), proved in Spec.lean",
+  "crc32fast's own vectors: crc32(\"\") = 0, crc32(\"hello world\") = 0x0d4a1185, proved in Spec.lean",
+]
+# written / reviewed_by: to be filled by Yerin after review (gate 5).
+
+[trust]
+# Hand-written Lean models of std/intrinsics, all plain definitions (no axioms). Opaque values
+# stand for facts the code does not control: CPU features, align_to's split point, the formatter.
+models = [
+  "core.fmt.Formatter.sink", "core.fmt.Formatter.isPretty", "core.fmt.Formatter.debug_struct",
+  "core.fmt.builders.DebugStruct.finish", "core.num.U32.wrapping_neg", "core.option.Option.unwrap_or_else",
+  "core.option.Option.Insts.CoreCloneClone.clone", "core.option.Option.Insts.CoreOpsTry_traitTry.branch",
+  "core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual",
+  "core.iter.traits.iterator.Iterator.fold.default", "core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.fold",
+  "x86 SSE2/SSSE3/SSE4.1/PCLMULQDQ/AVX/AVX2/AVX-512/VPCLMULQDQ intrinsics (24, in variants/x86_64*/Crc32fast/External)",
+  "crc32fast.specialized.pclmulqdq.load128", "crc32fast.specialized.pclmulqdq.load256", "crc32fast.specialized.pclmulqdq.load512",
+  "x86.cpuHas", "a64.cpuHasCrc", "core.core_arch.aarch64.neon.generated.__crc32d",
+  "core.core_arch.arm_shared.neon.generated.__crc32b", "crc32fast.specialized.aarch64.split_quads", "a64.splitPre", "a64.splitMid",
+]
+
+[crosscheck]
+# Gate 8: the proved (patched) tree vs a bitwise reference CRC-32 and vs pristine upstream, on every
+# x86_64 kernel (portable, SSE, AVX2, AVX-512; an instrumented copy confirms which one runs) and the
+# std build. Random data, offsets, initial CRCs, split points and combine. Also checks the overflow fix.
+# models.sh: every CPU instruction the Lean models stand for, run on random inputs (x86 on this CPU,
+# aarch64 under qemu) and compared with the models evaluated in the built variant projects.
+commands = ["bash {proj}/crosscheck/diff.sh {tree} 50000", "bash {proj}/crosscheck/models.sh {build}/.."]

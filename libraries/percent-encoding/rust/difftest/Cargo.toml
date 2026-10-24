@@ -1,0 +1,12 @@
+[package]
+name = "difftest"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+upstream = { path = "../../../rust-url/percent_encoding", package = "percent-encoding" }
+patched = { path = "../percent_encoding_patched", package = "percent-encoding-aeneas" }
+
+[profile.release]
+debug-assertions = true
+overflow-checks = true

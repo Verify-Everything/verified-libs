@@ -1,0 +1,5 @@
+# Codex UI metadata (developers.openai.com/codex/skills#optional-metadata). Other agents ignore it.
+interface:
+  display_name: "Verification setup"
+  short_description: "Install and repair the pinned provers with vkit"
+  default_prompt: "Use $verification-setup to run vkit doctor and fix what it reports."

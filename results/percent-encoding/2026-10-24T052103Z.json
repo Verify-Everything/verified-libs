@@ -1,0 +1,429 @@
+{
+ "library": "percent-encoding",
+ "commit": "00a6ce58d02f4e0d43c5ca0702c0bedb8b1ebf3a",
+ "version": "2.3.2",
+ "tool": "lean-aeneas",
+ "started": "2026-10-24T05:18:29Z",
+ "pipeline_version": "0.1.2",
+ "toolchain": {
+  "aeneas": "nightly-2026.10.23-fdebf20",
+  "charon_rust": "nightly-2026-09-17",
+  "lean": "4.35.0",
+  "aeneas_dir": "/root/.vpipe/aeneas-nightly-2026.10.23-fdebf20"
+ },
+ "source": {
+  "patches": [
+   "rust/aeneas-friendly.patch"
+  ],
+  "tests": [
+   {
+    "cmd": "sed -i 's/^name = \"percent-encoding\"/name = \"percent-encoding-aeneas\"/' {tree}/percent_encoding/Cargo.toml && printf '\\n[lib]\\nname = \"percent_encoding\"\\n' >> {tree}/percent_encoding/Cargo.toml",
+    "ok": true,
+    "tail": ""
+   },
+   {
+    "cmd": "cd {tree}/percent_encoding && cargo +stable test --quiet",
+    "ok": true,
+    "tail": "\nrunning 18 tests\n..................\ntest result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 6 tests\n......\ntest result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.31s\n\n"
+   },
+   {
+    "cmd": "rm -rf {tree}/../difftest && cp -r {proj}/rust/difftest {tree}/../difftest && cd {tree}/../difftest && sed -i \"s#../../../rust-url/percent_encoding#{src}/percent_encoding#; s#../percent_encoding_patched#{tree}/percent_encoding#\" Cargo.toml && cargo +stable run --release --quiet -- 2000000",
+    "ok": true,
+    "tail": "difftest OK: 18777216 cases (exhaustive up to length 2 for 3 sets, length 3 for CONTROLS, plus random)\n"
+   }
+  ]
+ },
+ "extract": {
+  "ok": true,
+  "stage": "aeneas",
+  "aeneas_rc": 1,
+  "postprocess": [
+   {
+    "script": "scripts/postprocess.py",
+    "ok": true,
+    "out": "postprocess: replaced 1 U32.rem, removed 2 size_hint fields\n"
+   }
+  ],
+  "unexpected_errors": [],
+  "unsupported": [
+   {
+    "error": "Unimplemented",
+    "source": "'src/lib.rs', lines 248:4-248:30; this code is generated from a macro invocation at: 'src/lib.rs', lines 246:16-246:21"
+   },
+   {
+    "error": "Joining region abstractions containing shared loans whose shared value contains borrows is not supported yet",
+    "source": "'src/lib.rs', lines 185:8-189:5"
+   }
+  ],
+  "assumed_axioms": [
+   "Slice.Insts.CoreFmtDebug.fmt",
+   "core.intrinsics.transmute",
+   "core.iter.traits.iterator.Iterator.size_hint.default",
+   "core.slice.iter.Iter.Insts.CoreFmtDebug.fmt"
+  ],
+  "external_template_changes": [],
+  "warnings": [
+   "Could not translate the body of function 'percent_encoding::{impl core::fmt::Debug for percent_encoding::PercentDecode<'a>}::fmt because of previous error",
+   "Could not translate the body of function 'percent_encoding::{impl core::fmt::Display for percent_encoding::PercentEncode<'_0>}::fmt because of previous error",
+   "When retrieving the builtin information for trait decl 'core::iter::traits::iterator::Iterator', could not find the information for item 'size_hint'. The model defined in the Lean library seems to be missing the corresponding field."
+  ],
+  "log": "[Info ] Imported: /root/vpipe-work/percent-encoding/percent-encoding.llbc\n[Error] Unimplemented\nSource: 'src/lib.rs', lines 248:4-248:30; this code is generated from a macro invocation at: 'src/lib.rs', lines 246:16-246:21\n[Warn ] Could not translate the body of function 'percent_encoding::{impl core::fmt::Debug for percent_encoding::PercentDecode<'a>}::fmt because of previous error\nName pattern: 'percent_encoding::{core::fmt::Debug<percent_encoding::PercentDecode<'a>>}::fmt'\nDefinition span: 'src/lib.rs', lines 246:16-246:21\nSource: 'src/lib.rs', lines 248:4-248:30; this code is generated from a macro invocation at: 'src/lib.rs', lines 246:16-246:21\nCompiler source: interp/Interp.ml, line 682\n\n[Error] Joining region abstractions containing shared loans whose shared value contains borrows is not supported yet\nSource: 'src/lib.rs', lines 185:8-189:5\n[Warn ] Could not translate the body of function 'percent_encoding::{impl core::fmt::Display for percent_encoding::PercentEncode<'_0>}::fmt because of previous error\nName pattern: 'percent_encoding::{core::fmt::Display<percent_encoding::PercentEncode<'0>>}::fmt'\nDefinition span: 'src/lib.rs', lines 184:4-189:5\nSource: 'src/lib.rs', lines 185:8-189:5\nCompiler source: interp/Interp.ml, line 682\n\n[Warn ] When retrieving the builtin information for trait decl 'core::iter::traits::iterator::Iterator', could not find the information for item 'size_hint'. The model defined in the Lean library seems to be missing the corresponding field.\nSource: '/rustc/library/core/src/iter/traits/iterator.rs', lines 42:0-42:24\nCompiler source: extract/Extract.ml, line 2866\n\n[Info ] Generated the partial file (because of 2 errors, including 2 unique errors): /root/vpipe-work/percent-encoding/proj/PercentEncoding/Types.lean\n[Info ] Generated the partial file (because of 2 errors, including 2 unique errors): /root/vpipe-work/percent-encoding/proj/PercentEncoding/FunsExternal_Template.lean\n[Info ] Generated the partial file (because of 2 errors, including 2 unique errors): /root/vpipe-work/percent-encoding/proj/PercentEncoding/Funs.lean\n[Info ] Total execution time: 1.185645 seconds\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+ },
+ "prove": {
+  "ok": true,
+  "seconds": 115,
+  "theorems": [
+   {
+    "name": "and_two_pow_ne_zero",
+    "file": "Proofs/Code.lean",
+    "line": 10,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "size_of_u32_spec",
+    "file": "Proofs/Code.lean",
+    "line": 26,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "BITS_PER_CHUNK_spec",
+    "file": "Proofs/Code.lean",
+    "line": 30,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "contains_spec",
+    "file": "Proofs/Code.lean",
+    "line": 35,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "is_ascii_spec",
+    "file": "Proofs/Code.lean",
+    "line": 61,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "should_percent_encode_spec",
+    "file": "Proofs/Code.lean",
+    "line": 65,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "from_utf8_unchecked_spec",
+    "file": "Proofs/Code.lean",
+    "line": 72,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "enc_table_slices",
+    "file": "Proofs/Code.lean",
+    "line": 79,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "percent_encode_byte_spec",
+    "file": "Proofs/Code.lean",
+    "line": 86,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "split_first_spec",
+    "file": "Proofs/Code.lean",
+    "line": 100,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "encode_next_loop_spec",
+    "file": "Proofs/Code.lean",
+    "line": 114,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "lt128_of_not_should",
+    "file": "Proofs/Code.lean",
+    "line": 136,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "encByte_ascii",
+    "file": "Proofs/Code.lean",
+    "line": 141,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "take_not_should",
+    "file": "Proofs/Code.lean",
+    "line": 151,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "encode_next_spec",
+    "file": "Proofs/Code.lean",
+    "line": 171,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "encodeCollect_spec",
+    "file": "Proofs/Code.lean",
+    "line": 218,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "iter_clone_spec",
+    "file": "Proofs/Code.lean",
+    "line": 231,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "try_branch_spec",
+    "file": "Proofs/Code.lean",
+    "line": 236,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "from_residual_spec",
+    "file": "Proofs/Code.lean",
+    "line": 245,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "char_from_u8_spec",
+    "file": "Proofs/Code.lean",
+    "line": 251,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "to_digit_16_spec",
+    "file": "Proofs/Code.lean",
+    "line": 260,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "slice_iter_next_spec",
+    "file": "Proofs/Code.lean",
+    "line": 271,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "after_percent_sign_spec",
+    "file": "Proofs/Code.lean",
+    "line": 289,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "remBytes_drop",
+    "file": "Proofs/Code.lean",
+    "line": 303,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "decode_next_spec",
+    "file": "Proofs/Code.lean",
+    "line": 310,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "decodeCollect_spec",
+    "file": "Proofs/Code.lean",
+    "line": 369,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "percent_encode_correct",
+    "file": "Proofs/Code.lean",
+    "line": 382,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "percent_decode_correct",
+    "file": "Proofs/Code.lean",
+    "line": 393,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "percent_encode_output_allowed",
+    "file": "Proofs/Code.lean",
+    "line": 404,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "percent_roundtrip",
+    "file": "Proofs/Code.lean",
+    "line": 420,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "testBit_or_two_pow",
+    "file": "Proofs/Sets.lean",
+    "line": 15,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "add_spec",
+    "file": "Proofs/Sets.lean",
+    "line": 21,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "inSet_eq_map",
+    "file": "Proofs/Sets.lean",
+    "line": 63,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "CONTROLS_spec",
+    "file": "Proofs/Sets.lean",
+    "line": 74,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "NON_ALPHANUMERIC_spec",
+    "file": "Proofs/Sets.lean",
+    "line": 93,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "NON_ALPHANUMERIC_should",
+    "file": "Proofs/Sets.lean",
+    "line": 105,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "roundtrip_NON_ALPHANUMERIC",
+    "file": "Proofs/Sets.lean",
+    "line": 113,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "CONTROLS_no_roundtrip",
+    "file": "Proofs/Sets.lean",
+    "line": 124,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "hexVal_hexDigit",
+    "file": "Proofs/SpecLemmas.lean",
+    "line": 10,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "hexDigit_lt",
+    "file": "Proofs/SpecLemmas.lean",
+    "line": 13,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "encode_append",
+    "file": "Proofs/SpecLemmas.lean",
+    "line": 16,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "encode_of_not_should",
+    "file": "Proofs/SpecLemmas.lean",
+    "line": 22,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "decode_cons_of_ne",
+    "file": "Proofs/SpecLemmas.lean",
+    "line": 30,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "decode_escape",
+    "file": "Proofs/SpecLemmas.lean",
+    "line": 37,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "decode_pct",
+    "file": "Proofs/SpecLemmas.lean",
+    "line": 47,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "hexVal_lt",
+    "file": "Proofs/SpecLemmas.lean",
+    "line": 60,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "decode_encode",
+    "file": "Proofs/SpecLemmas.lean",
+    "line": 66,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "hexDigit_isEscapeChar",
+    "file": "Proofs/SpecLemmas.lean",
+    "line": 85,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "encode_output_allowed",
+    "file": "Proofs/SpecLemmas.lean",
+    "line": 90,
+    "axioms": [],
+    "status": "proved"
+   }
+  ],
+  "proved": 49,
+  "total": 49,
+  "sorries": 2,
+  "axiom_thms": 0,
+  "unaudited": 0,
+  "errors": [],
+  "log": "\u2714 [1796/1807] Built PercentEncoding.Types (4.9s)\n\u2714 [1797/1807] Built PercentEncoding.FunsExternal (4.6s)\n\u26a0 [1798/1807] Built PercentEncoding.Funs (12s)\nwarning: PercentEncoding/Funs.lean:597:4: declaration uses `sorry`\nwarning: PercentEncoding/Funs.lean:642:4: declaration uses `sorry`\n\u2714 [1799/1807] Built PercentEncoding (3.7s)\n\u2714 [1801/1807] Built Proofs.Spec (3.5s)\n\u2714 [1802/1807] Built Proofs.SpecLemmas (3.6s)\n\u2714 [1803/1807] Built Proofs.Code (20s)\n\u2714 [1804/1807] Built Proofs (2.7s)\n\u26a0 [1806/1807] Built Proofs.Sets (6.6s)\nwarning: Proofs/Sets.lean:58:14: This simp argument is unused:\n  List.getElem_set\n\nHint: Omit it from the simp argument list.\n  [apply] simp [Ne.symm hq]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nBuild completed successfully (1807 jobs).\nwarning: aeneas: repository has local changes:\n  /root/vpipe-work/percent-encoding/proj/.lake/packages/aeneas\nwarning: mathlib: repository has local changes:\n  /root/vpipe-work/percent-encoding/proj/.lake/packages/mathlib\nwarning: plausible: repository has local changes:\n  /root/vpipe-work/percent-encoding/proj/.lake/packages/plausible\nwarning: LeanSearchClient: repository has local changes:\n  /root/vpipe-work/percent-encoding/proj/.lake/packages/LeanSearchClient\nwarning: importGraph: repository has local changes:\n  /root/vpipe-work/percent-encoding/proj/.lake/packages/importGraph\nwarning: proofwidgets: repository has local changes:\n  /root/vpipe-work/percent-encoding/proj/.lake/packages/proofwidgets\nwarning: aesop: repository has local changes:\n  /root/vpipe-work/percent-encoding/proj/.lake/packages/aesop\nwarning: Qq: repository has local changes:\n  /root/vpipe-work/percent-encoding/proj/.lake/packages/Qq\nwarning: batteries: repository has local changes:\n  /root/vpipe-work/percent-encoding/proj/.lake/packages/batteries\nwarning: Cli: repository has local changes:\n  /root/vpipe-work/percent-encoding/proj/.lake/packages/Cli\n"
+ },
+ "finished": "2026-10-24T05:21:03Z"
+}

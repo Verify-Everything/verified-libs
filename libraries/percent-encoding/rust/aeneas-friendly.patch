@@ -1,0 +1,231 @@
+--- a/percent_encoding/src/lib.rs
++++ b/percent_encoding/src/lib.rs
+@@ -144,31 +144,45 @@
+     ascii_set: &'static AsciiSet,
+ }
+ 
++// AENEAS PATCH: the original body of `PercentEncode::next`, returning the
++// chunk and the remaining bytes instead of updating `self`.
++fn next_chunk<'a>(bytes: &'a [u8], set: &AsciiSet) -> Option<(&'a str, &'a [u8])> {
++    if let Some((&first_byte, remaining)) = bytes.split_first() {
++        if set.should_percent_encode(first_byte) {
++            Some((percent_encode_byte(first_byte), remaining))
++        } else {
++            // AENEAS PATCH: the original `for ... enumerate()` loop with an
++            // early `return` is replaced by a `while` loop that finds the
++            // same index. When no byte needs encoding, i == remaining.len()
++            // and split_at returns (whole slice, empty slice), which is what
++            // the original fall-through branch returned.
++            let mut i = 0;
++            while i < remaining.len() && !set.should_percent_encode(remaining[i]) {
++                i += 1;
++            }
++            let (unchanged_slice, remaining) = bytes.split_at(1 + i);
++            // The unsafe block is appropriate because the bytes are
++            // confirmed as a subset of UTF-8 in should_percent_encode.
++            Some((unsafe { str::from_utf8_unchecked(unchanged_slice) }, remaining))
++        }
++    } else {
++        None
++    }
++}
++
+ impl<'a> Iterator for PercentEncode<'a> {
+     type Item = &'a str;
+ 
+     fn next(&mut self) -> Option<&'a str> {
+-        if let Some((&first_byte, remaining)) = self.bytes.split_first() {
+-            if self.ascii_set.should_percent_encode(first_byte) {
++        // AENEAS PATCH: the body moved to `next_chunk` (below), which takes the
++        // set as a plain `&AsciiSet`; `Display` reuses it. Aeneas cannot
++        // translate loops that pass on the `&'static AsciiSet` field.
++        match next_chunk(self.bytes, self.ascii_set) {
++            Some((chunk, remaining)) => {
+                 self.bytes = remaining;
+-                Some(percent_encode_byte(first_byte))
+-            } else {
+-                // The unsafe blocks here are appropriate because the bytes are
+-                // confirmed as a subset of UTF-8 in should_percent_encode.
+-                for (i, &byte) in remaining.iter().enumerate() {
+-                    if self.ascii_set.should_percent_encode(byte) {
+-                        // 1 for first_byte + i for previous iterations of this loop
+-                        let (unchanged_slice, remaining) = self.bytes.split_at(1 + i);
+-                        self.bytes = remaining;
+-                        return Some(unsafe { str::from_utf8_unchecked(unchanged_slice) });
+-                    }
+-                }
+-                let unchanged_slice = self.bytes;
+-                self.bytes = &[][..];
+-                Some(unsafe { str::from_utf8_unchecked(unchanged_slice) })
++                Some(chunk)
+             }
+-        } else {
+-            None
++            None => None,
+         }
+     }
+ 
+@@ -183,11 +197,31 @@
+ 
+ impl fmt::Display for PercentEncode<'_> {
+     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+-        for c in (*self).clone() {
+-            formatter.write_str(c)?
++        // AENEAS PATCH: the `for` loop with `?` is moved into `write_chunks`,
++        // a `while` loop over any `fmt::Write` sink (`Formatter` is one), so the
++        // written text can be specified. Same calls, same order, same result.
++        write_chunks(self.bytes, self.ascii_set, formatter)
++    }
++}
++
++// AENEAS PATCH: helper for `Display`; see above.
++fn write_chunks<W: fmt::Write + ?Sized>(bytes: &[u8], set: &AsciiSet, sink: &mut W) -> fmt::Result {
++    let mut rest = bytes;
++    let mut result = Ok(());
++    let mut done = false;
++    while !done {
++        match next_chunk(rest, set) {
++            Some((chunk, remaining)) => {
++                rest = remaining;
++                if let Err(e) = sink.write_str(chunk) {
++                    result = Err(e);
++                    done = true;
++                }
++            }
++            None => done = true,
+         }
+-        Ok(())
+     }
++    result
+ }
+ 
+ #[cfg(feature = "alloc")]
+@@ -261,13 +295,15 @@
+     type Item = u8;
+ 
+     fn next(&mut self) -> Option<u8> {
+-        self.bytes.next().map(|&byte| {
+-            if byte == b'%' {
++        // AENEAS PATCH: `Option::map` with a closure is replaced by a `match`.
++        match self.bytes.next() {
++            Some(&byte) => Some(if byte == b'%' {
+                 after_percent_sign(&mut self.bytes).unwrap_or(byte)
+             } else {
+                 byte
+-            }
+-        })
++            }),
++            None => None,
++        }
+     }
+ 
+     fn size_hint(&self) -> (usize, Option<usize>) {
+@@ -290,20 +326,13 @@
+     /// If the percent-decoding is different from the input, return it as a new bytes vector.
+     #[cfg(feature = "alloc")]
+     fn if_any(&self) -> Option<Vec<u8>> {
+-        let mut bytes_iter = self.bytes.clone();
+-        while bytes_iter.any(|&b| b == b'%') {
+-            if let Some(decoded_byte) = after_percent_sign(&mut bytes_iter) {
+-                let initial_bytes = self.bytes.as_slice();
+-                let unchanged_bytes_len = initial_bytes.len() - bytes_iter.len() - 3;
+-                let mut decoded = initial_bytes[..unchanged_bytes_len].to_owned();
+-                decoded.push(decoded_byte);
+-                decoded.extend(PercentDecode { bytes: bytes_iter });
+-                return Some(decoded);
+-            }
+-        }
+-        // Nothing to decode
+-        None
++        // AENEAS PATCH: the body moved to `decode_if_any` (below), which takes
++        // the remaining input as a slice.
++        decode_if_any(self.bytes.as_slice())
+     }
++}
++
++impl<'a> PercentDecode<'a> {
+ 
+     /// Decode the result of percent-decoding as UTF-8.
+     ///
+@@ -332,6 +361,66 @@
+     }
+ }
+ 
++// AENEAS PATCH: body of `PercentDecode::if_any`. The original
++// `while bytes_iter.any(|&b| b == b'%')` with an early `return` is rewritten
++// as a loop over the remaining slice with flags. `any` consumes bytes up to and
++// including the first `%`, so the iterator restarts just after it, as here.
++#[cfg(feature = "alloc")]
++fn decode_if_any(initial_bytes: &[u8]) -> Option<Vec<u8>> {
++    let mut rest = initial_bytes;
++    let mut result = None;
++    let mut done = false;
++    while !done {
++        match position_of_percent(rest) {
++            // Nothing to decode
++            None => done = true,
++            Some(i) => {
++                match decode_from_percent(initial_bytes, &rest[i + 1..]) {
++                    Some(decoded) => {
++                        result = Some(decoded);
++                        done = true;
++                    }
++                    // `after_percent_sign` failed and consumed nothing.
++                    None => rest = &rest[i + 1..],
++                }
++            }
++        }
++    }
++    result
++}
++
++// AENEAS PATCH: one step of `decode_if_any`, for a `%` followed by `after`
++// (a suffix of `initial_bytes`). If two hex digits follow, returns the full
++// decoding.
++#[cfg(feature = "alloc")]
++fn decode_from_percent(initial_bytes: &[u8], after: &[u8]) -> Option<Vec<u8>> {
++    let mut bytes_iter = after.iter();
++    match after_percent_sign(&mut bytes_iter) {
++        Some(decoded_byte) => {
++            let unchanged_bytes_len = initial_bytes.len() - bytes_iter.len() - 3;
++            let mut decoded = initial_bytes[..unchanged_bytes_len].to_owned();
++            decoded.push(decoded_byte);
++            decoded.extend(PercentDecode { bytes: bytes_iter });
++            Some(decoded)
++        }
++        None => None,
++    }
++}
++
++// AENEAS PATCH: index of the first `%` in `bytes`, as a `while` loop.
++#[cfg(feature = "alloc")]
++fn position_of_percent(bytes: &[u8]) -> Option<usize> {
++    let mut i = 0;
++    while i < bytes.len() && bytes[i] != b'%' {
++        i += 1;
++    }
++    if i < bytes.len() {
++        Some(i)
++    } else {
++        None
++    }
++}
++
+ // std::ptr::addr_eq was stabilized in rust 1.76. Once we upgrade
+ // the MSRV we can remove this lint override.
+ #[cfg(feature = "alloc")]
+@@ -349,9 +438,11 @@
+                     // to allocate a new owned string to back the Cow so it could
+                     // replace invalid bytes with a placeholder.
+ 
+-                    // First we do a debug_assert to confirm our description above.
+-                    let raw_utf8: *const [u8] = utf8.as_bytes();
+-                    debug_assert!(core::ptr::eq(raw_utf8, &*bytes));
++                    // AENEAS PATCH: the debug-only pointer-equality assertion
++                    // `debug_assert!(core::ptr::eq(utf8.as_bytes(), &*bytes))`
++                    // is removed; Aeneas has no raw pointers. It never changes
++                    // the result in release builds.
++                    let _ = utf8;
+ 
+                     // Given we know the original input bytes are valid UTF-8,
+                     // and we have ownership of those bytes, we re-use them and

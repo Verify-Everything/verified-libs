@@ -1,0 +1,269 @@
+# Per-function claims for crc32fast (read by vpipe). Every function: label, theorems, and a fix
+# patch where the code was changed. Theorem names are per variant (see the note).
+
+[[function]]
+id = "src/baseline.rs:fold_16"
+theorems = ["fold_16_eq"]
+label = "full-correctness"
+note = "16 bytes at a time with the slice-by-16 table = spec"
+
+[[function]]
+id = "src/baseline.rs:update_fast_16"
+theorems = ["update_fast_16_eq"]
+label = "full-correctness"
+note = "any length"
+
+[[function]]
+id = "src/baseline.rs:update_slow"
+theorems = ["update_slow_eq"]
+label = "full-correctness"
+note = "any length"
+
+[[function]]
+id = "src/combine.rs:multiply"
+theorems = ["multiply_eq"]
+label = "full-correctness"
+note = "carry-less multiply mod P = mulSpec"
+
+[[function]]
+id = "src/combine.rs:combine"
+theorems = ["combine_eq"]
+label = "full-correctness"
+note = "any len2: pads crc1 with len2 zero bytes, XORs crc2"
+
+[[function]]
+id = "src/lib.rs:hash"
+theorems = ["hash_eq"]
+label = "full-correctness"
+note = "every variant, whichever kernel"
+
+[[function]]
+id = "src/lib.rs:Hasher::new"
+theorems = ["new_eq"]
+label = "full-correctness"
+
+[[function]]
+id = "src/lib.rs:Hasher::new_with_initial"
+theorems = ["new_with_initial_eq"]
+label = "full-correctness"
+
+[[function]]
+id = "src/lib.rs:Hasher::new_with_initial_len"
+theorems = ["new_with_initial_len_eq"]
+label = "full-correctness"
+
+[[function]]
+id = "src/lib.rs:Hasher::internal_new_baseline"
+theorems = ["internal_new_baseline_eq"]
+label = "full-correctness"
+
+[[function]]
+id = "src/lib.rs:Hasher::internal_new_specialized"
+theorems = ["internal_new_specialized_eq"]
+label = "full-correctness"
+
+[[function]]
+id = "src/lib.rs:Hasher::update"
+theorems = ["update_eq_any", "amount_after", "update_update_any", "update_update_eq_hash"]
+label = "full-correctness"
+status = "fixed"
+fix = "patches/0001-hasher-wrapping-add.patch"
+note = "upstream panics in debug builds when the u64 byte count overflows (e.g. new_with_initial_len(_, u64::MAX) then update); fixed with wrapping_add, proved for every input"
+
+[[function]]
+id = "src/lib.rs:Hasher::total_len"
+theorems = ["total_len_eq"]
+label = "full-correctness"
+
+[[function]]
+id = "src/lib.rs:Hasher::finalize"
+theorems = ["finalize_eq"]
+label = "full-correctness"
+
+[[function]]
+id = "src/lib.rs:Hasher::reset"
+theorems = ["reset_eq"]
+label = "full-correctness"
+
+[[function]]
+id = "src/lib.rs:Hasher::combine"
+theorems = ["hasher_combine_exact", "hasher_combine_eq", "combine_eq_hash"]
+label = "full-correctness"
+status = "fixed"
+fix = "patches/0001-hasher-wrapping-add.patch"
+note = "same u64 overflow as update (amount += other.amount); fixed with wrapping_add"
+
+[[function]]
+id = "src/lib.rs:fmt::Debug for Hasher::fmt"
+theorems = ["fmt_eq"]
+label = "full-correctness"
+note = "writes exactly `crc32fast::Hasher`"
+
+[[function]]
+id = "src/lib.rs:Default for Hasher::default"
+theorems = ["default_eq", "new_eq"]
+label = "full-correctness"
+
+[[function]]
+id = "src/lib.rs:hash::Hasher for Hasher::write"
+theorems = ["write_eq", "update_eq_any"]
+label = "full-correctness"
+note = "is Hasher::update"
+
+[[function]]
+id = "src/lib.rs:hash::Hasher for Hasher::finish"
+theorems = ["finish_eq"]
+label = "full-correctness"
+
+[[function]]
+id = "src/specialized/aarch64.rs:State::new@L8"
+theorems = ["state_new_eq"]
+label = "full-correctness"
+note = "variant aarch64 (no_std, compile-time cfg)"
+
+[[function]]
+id = "src/specialized/aarch64.rs:State::new@L19"
+theorems = ["state_new_eq"]
+label = "full-correctness"
+note = "variant aarch64-std (runtime detection, either answer)"
+
+[[function]]
+id = "src/specialized/aarch64.rs:State::update"
+theorems = ["state_update_eq"]
+label = "full-correctness"
+note = "variant aarch64"
+
+[[function]]
+id = "src/specialized/aarch64.rs:calculate"
+theorems = ["calculate_eq"]
+label = "full-correctness"
+note = "variant aarch64: any length, any align_to split, 1-stream and 3-stream paths"
+
+[[function]]
+id = "src/specialized/aarch64.rs:split_quads"
+lean = "specialized.aarch64.split_quads"  # kept opaque in extraction; modelled in External/FunsExternal.lean, checked against the CPU by crosscheck/models.sh
+theorems = ["split_eq", "calculate_eq"]
+label = "full-correctness"
+note = "helper added by patch 0002 around align_to; std model: prefix ++ u64s (little endian) ++ suffix for any split"
+
+[[function]]
+id = "src/specialized/aarch64.rs:crc_quads"
+theorems = ["crc_quads_eq"]
+label = "full-correctness"
+note = "variant aarch64"
+
+[[function]]
+id = "src/specialized/aarch64.rs:crc_bytes"
+theorems = ["crc_bytes_eq"]
+label = "full-correctness"
+note = "variant aarch64"
+
+[[function]]
+id = "src/specialized/mod.rs:State::new"
+theorems = ["state_new_eq"]
+label = "full-correctness"
+note = "variant riscv64-portable: no kernel"
+
+[[function]]
+id = "src/specialized/mod.rs:State::update"
+theorems = ["state_update_eq"]
+label = "full-correctness"
+note = "variant riscv64-portable: State has no values"
+
+[[function]]
+id = "src/specialized/pclmulqdq.rs:State::detect@L42"
+theorems = ["detect_eq", "state_new_eq"]
+label = "full-correctness"
+note = "variant x86_64-std: runtime detection, any CPU answer"
+
+[[function]]
+id = "src/specialized/pclmulqdq.rs:State::detect@L65"
+theorems = ["detect_eq", "state_new_eq"]
+label = "full-correctness"
+note = "variant x86_64 (no_std, compile-time cfg)"
+
+[[function]]
+id = "src/specialized/pclmulqdq.rs:State::new"
+theorems = ["state_new_eq"]
+label = "full-correctness"
+note = "variants x86_64, x86_64-std"
+
+[[function]]
+id = "src/specialized/pclmulqdq.rs:State::update"
+theorems = ["state_update_eq"]
+label = "full-correctness"
+note = "all three kernels"
+
+[[function]]
+id = "src/specialized/pclmulqdq.rs:calculate"
+theorems = ["calculate_eq"]
+label = "full-correctness"
+note = "variant x86_64: SSE4.1 + PCLMULQDQ, any length"
+
+[[function]]
+id = "src/specialized/pclmulqdq.rs:calculate_avx2"
+theorems = ["calculate_avx2_eq"]
+label = "full-correctness"
+note = "AVX2 + VPCLMULQDQ, any length"
+
+[[function]]
+id = "src/specialized/pclmulqdq.rs:calculate_avx512"
+theorems = ["calculate_avx512_eq"]
+label = "full-correctness"
+note = "AVX-512 + VPCLMULQDQ, any length"
+
+[[function]]
+id = "src/specialized/pclmulqdq.rs:reduce_128_to_crc"
+theorems = ["r128_eq"]
+label = "full-correctness"
+
+[[function]]
+id = "src/specialized/pclmulqdq.rs:reduce128"
+theorems = ["reduce128_eq"]
+label = "full-correctness"
+
+[[function]]
+id = "src/specialized/pclmulqdq.rs:reduce256"
+theorems = ["reduce256_eq"]
+label = "full-correctness"
+
+[[function]]
+id = "src/specialized/pclmulqdq.rs:reduce512"
+theorems = ["reduce512_eq"]
+label = "full-correctness"
+
+[[function]]
+id = "src/specialized/pclmulqdq.rs:load128"
+lean = "specialized.pclmulqdq.load128"  # kept opaque in extraction; modelled in External/FunsExternal.lean, checked against the CPU by crosscheck/models.sh
+theorems = ["get_eq"]
+label = "full-correctness"
+note = "helper added by patch 0002 around _mm_loadu_si128; intrinsic model, used only with >= 16 bytes (proved at every call)"
+
+[[function]]
+id = "src/specialized/pclmulqdq.rs:load256"
+lean = "specialized.pclmulqdq.load256"  # kept opaque in extraction; modelled in External/FunsExternal.lean, checked against the CPU by crosscheck/models.sh
+theorems = ["get256_eq"]
+label = "full-correctness"
+note = "helper added by patch 0002; intrinsic model, used only with >= 32 bytes"
+
+[[function]]
+id = "src/specialized/pclmulqdq.rs:load512"
+lean = "specialized.pclmulqdq.load512"  # kept opaque in extraction; modelled in External/FunsExternal.lean, checked against the CPU by crosscheck/models.sh
+theorems = ["get512_eq"]
+label = "full-correctness"
+note = "helper added by patch 0002; intrinsic model, used only with >= 64 bytes"
+
+[[function]]
+id = "src/specialized/pclmulqdq.rs:get"
+theorems = ["get_eq"]
+label = "full-correctness"
+
+[[function]]
+id = "src/specialized/pclmulqdq.rs:get256"
+theorems = ["get256_eq"]
+label = "full-correctness"
+
+[[function]]
+id = "src/specialized/pclmulqdq.rs:get512"
+theorems = ["get512_eq"]
+label = "full-correctness"

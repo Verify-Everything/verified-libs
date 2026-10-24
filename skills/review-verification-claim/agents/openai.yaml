@@ -1,0 +1,5 @@
+# Codex UI metadata (developers.openai.com/codex/skills#optional-metadata). Other agents ignore it.
+interface:
+  display_name: "Review a verification claim"
+  short_description: "Adversarially review an entry and pick planted bugs"
+  default_prompt: "Use $review-verification-claim to review this verified-libs pull request."

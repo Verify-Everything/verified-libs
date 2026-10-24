@@ -1,0 +1,9 @@
+{
+  "name": "verify-everything",
+  "version": "0.1.0",
+  "description": "Skills for formally verifying open-source libraries: pick a target, set up Lean/Aeneas/Frama-C/CBMC, write proofs, and submit results to Verify-Everything/verified-libs.",
+  "author": { "name": "Verify-Everything" },
+  "homepage": "https://github.com/Verify-Everything/verified-libs",
+  "repository": "https://github.com/Verify-Everything/verified-libs",
+  "keywords": ["formal-verification", "lean", "aeneas", "frama-c", "cbmc"]
+}

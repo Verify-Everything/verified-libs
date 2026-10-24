@@ -1,0 +1,88 @@
+# Adopted 2026-10-24 from the "Verify percent-encoding in Lean" thread (bundle:
+# verification-notes/percent-encoding/, see proofs/percent-encoding/README-from-thread.md).
+name = "percent-encoding"
+lang = "rust"
+tool = "lean-aeneas"
+upstream = "https://github.com/servo/rust-url.git"
+commit = "00a6ce58d02f4e0d43c5ca0702c0bedb8b1ebf3a"   # percent-encoding 2.3.2
+version = "2.3.2"
+archive_sha256 = "42645e863db93f5da119118a8337f4e09c545794ad0cfefafca4dc8aac6f3286"
+thread = "Verify percent-encoding in Lean"
+
+[patches]
+# Aeneas-friendly rewrites: early return in loop -> index search, closures -> match, loop bodies moved
+# into slice helpers (next_chunk, write_chunks, decode_if_any), debug_assert!(ptr::eq) dropped. Checked by
+# the upstream tests and a differential test below.
+files = ["rust/aeneas-friendly.patch"]
+dir = "."
+subtree = "percent_encoding"   # crate leaves the rust-url workspace, as in the thread runner
+
+[test]
+commands = [
+  '''sed -i 's/^name = "percent-encoding"/name = "percent-encoding-aeneas"/' {tree}/percent_encoding/Cargo.toml && printf '\n[lib]\nname = "percent_encoding"\n' >> {tree}/percent_encoding/Cargo.toml''',
+  '''cd {tree}/percent_encoding && cargo +stable test --quiet''',
+  '''rm -rf {tree}/../difftest && cp -r {proj}/rust/difftest {tree}/../difftest && cd {tree}/../difftest && sed -i "s#../../../rust-url/percent_encoding#{src}/percent_encoding#; s#../percent_encoding_patched#{tree}/percent_encoding#" Cargo.toml && cargo +stable run --release --quiet -- 2000000''',
+]
+
+[extract]
+crate_dir = "percent_encoding"
+module = "PercentEncoding"
+subdir = "PercentEncoding"          # thread layout: generated files sit at PercentEncoding/*.lean
+externals_dir = "external"          # hand-written FunsExternal.lean (std models as defs)
+charon_args = ["--preset=aeneas"]
+aeneas_args = ["-max-recdepth", "16384"]
+postprocess = ["scripts/postprocess.py"]   # U32.rem and Iterator.size_hint gaps in the Aeneas library
+allowed_errors = ["Unimplemented"]   # only the derived Debug for PercentDecode (&slice::Iter -> &dyn Debug)
+strict_externals = true
+
+[proofs]
+dirs = ["Proofs"]
+
+[scope]
+# Default features (alloc + std) are extracted and proved.
+summary = "percent_encode/utf8_percent_encode escape exactly the bytes in the set (plus all non-ASCII) as %XX and pass the rest through; percent_decode/percent_decode_str decode every %XX with two hex digits and keep everything else; the Cow, if_any, decode_utf8 and decode_utf8_lossy wrappers return those bytes, borrowing exactly when nothing changed; AsciiSet operations are set operations on 0..=127."
+spec_files = ["Proofs/Spec.lean"]
+test_vectors = ["WHATWG URL Standard, percent-encoding (https://url.spec.whatwg.org/#percent-encoded-bytes): percent-encode a byte, percent-decode; upstream unit tests pass on the patched crate"]
+written = "2026-10-24 (Proofs/Spec.lean, written before the proofs in the percent-encoding thread)"
+reviewed_by = ""
+properties = [
+  "percent_encode / PercentEncode::next match the spec: allowed bytes pass through, others become %XX; chunks are ASCII",
+  "percent_decode / PercentDecode::next match the spec, no overflow",
+  "decode(encode(x)) == x when the set contains '%'",
+  "AsciiSet ops (contains, add, remove, union, complement, +, !, ==) match set semantics; add/remove panic for bytes >= 128",
+  "size_hint bounds are correct for both iterators",
+  "Cow<str> from PercentEncode = encode; if_any / decode_utf8 / decode_utf8_lossy / Cow<[u8]> correct incl. Borrowed vs Owned",
+  "Display writes exactly the encoded chunks to any sink; Debug for AsciiSet and PercentEncode returns Ok",
+]
+exclusions = [
+  "Derived Debug for PercentDecode: Aeneas cannot translate it (Unimplemented); checked by the differential test only",
+  "Debug output text is modelled by Aeneas's Formatter, not as a string; Display text is proved against a generic sink",
+  "Source rewrites in rust/aeneas-friendly.patch (tested against upstream, 18.8M differential cases)",
+  "std models in external/FunsExternal.lean are trusted definitions (from_utf8_lossy's replacement text is opaque)",
+]
+
+[coverage]
+# Features: default = std = alloc. `std` only adds `extern crate std` (no functions); without
+# `alloc` the crate is a strict subset of the same code. No target-specific code; Aeneas leaves the
+# width of usize abstract (32 or 64 bit), so the proofs hold on every target.
+targets = ["default features (std, alloc)", "no_std without alloc (subset of the same functions)", "all targets (no arch code; usize width abstract)"]
+
+[trust]
+models = []      # no axioms remain; std models are definitions in external/FunsExternal.lean
+axioms = []
+std_models = "external/FunsExternal.lean (31 functions), differential-tested against real std by tests/ModelTest.lean (rust/modeltest: 744k vectors incl. every UTF-8 input up to 2 bytes)"
+tool_assumptions = "Charon and Aeneas translate the (patched) Rust faithfully; cross-checked by tests/CrossCheck.lean against the compiled upstream crate"
+unsafe = "two str::from_utf8_unchecked calls and one String::from_utf8_unchecked: their models fail on invalid UTF-8, so the proofs show each call gets valid UTF-8"
+
+[crosscheck]
+# {proj} = this folder, {build} = the local Lean build; {build}/../src is the pristine upstream checkout
+# ({tree} is the patched tree, whose crate is renamed percent-encoding-aeneas).
+commands = [
+  "rm -rf {build}/../modeltest && cp -r {proj}/rust/modeltest {build}/../modeltest && cd {build}/../modeltest && cargo +stable run --release --quiet -- 200000 > {build}/../model-vectors.txt && cd {build} && lake env lean --run {proj}/tests/ModelTest.lean {build}/../model-vectors.txt",
+  "rm -rf {build}/../crosscheck && cp -r {proj}/rust/crosscheck {build}/../crosscheck && cd {build}/../crosscheck && sed -i 's#../../../rust-url/percent_encoding#{build}/../src/percent_encoding#' Cargo.toml && cargo +stable run --release --quiet -- 10000 2>/dev/null > {build}/../cross-vectors.txt && cd {build} && lake env lean --run {proj}/tests/CrossCheck.lean {build}/../cross-vectors.txt",
+]
+
+[review]
+author = "percent-encoding thread (Claude)"
+maintainer = ""
+adversarial = ""

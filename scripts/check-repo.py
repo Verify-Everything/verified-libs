@@ -1,0 +1,117 @@
+#!/usr/bin/env python3
+"""Fast checks that need no provers: skill frontmatter, manifests parse, scripts parse,
+no build outputs committed. Run in CI and before a PR: python3 scripts/check-repo.py"""
+import json, os, re, subprocess, sys, tomllib
+from pathlib import Path
+R = Path(__file__).resolve().parent.parent
+bad = []
+for f in sorted((R / "skills").glob("*/SKILL.md")):
+    m = re.match(r"^---\n(.*?)\n---\n", f.read_text(), re.S)
+    if not m:
+        bad.append(f"{f}: missing frontmatter"); continue
+    fm = dict(l.split(":", 1) for l in m.group(1).splitlines() if ":" in l)
+    name, desc = fm.get("name", "").strip(), fm.get("description", "").strip()
+    if name != f.parent.name:
+        bad.append(f"{f}: name {name!r} != folder {f.parent.name!r}")
+    if not (20 <= len(desc) <= 1024):
+        bad.append(f"{f}: description length {len(desc)} (want 20..1024)")
+    for link in re.findall(r"\]\(((?:references|templates)/[^)#]*)\)", f.read_text()):
+        if not (f.parent / link).exists():
+            bad.append(f"{f}: broken link {link}")
+    oy = f.parent / "agents/openai.yaml"  # Codex UI metadata
+    if not oy.exists() or not re.search(r"^interface:\n(\s+\w+: .+\n)*\s+display_name: ", oy.read_text(), re.M):
+        bad.append(f"{oy}: missing, or no interface.display_name")
+# One skills folder, packaged for every agent (docs/installation.md#agents).
+if not (R / ".agents/skills").is_symlink() or os.readlink(R / ".agents/skills") != "../skills":
+    bad.append(".agents/skills must be a symlink to ../skills (Codex and Gemini CLI read it)")
+for f, key in [(".claude-plugin/plugin.json", "name"), (".claude-plugin/marketplace.json", "name"),
+               ("plugin.json", "name"), (".agents/plugins/marketplace.json", "name"),
+               ("gemini-extension.json", "name")]:
+    try:
+        d = json.loads((R / f).read_text())
+        if not d.get(key):
+            bad.append(f"{f}: missing {key}")
+        ctx = d.get("contextFileName")
+        if ctx and not (R / ctx).exists():
+            bad.append(f"{f}: contextFileName {ctx} does not exist")
+    except Exception as e:
+        bad.append(f"{f}: {e}")
+for f in ("CLAUDE.md", "GEMINI.md"):
+    if "AGENTS.md" not in (R / f).read_text():
+        bad.append(f"{f}: must import AGENTS.md")
+for f in sorted((R / "libraries").glob("*/vpipe.toml")) + sorted((R / "libraries").glob("*.toml")):
+    try:
+        m = tomllib.loads(f.read_text())
+        for k in ("name", "lang", "tool", "upstream", "commit"):
+            if k not in m:
+                bad.append(f"{f}: missing {k}")
+        if not re.fullmatch(r"[0-9a-f]{40}", m.get("commit", "")):
+            bad.append(f"{f}: commit must be a full 40-hex sha")
+    except Exception as e:
+        bad.append(f"{f}: {e}")
+for f in list(R.glob("*.sh")) + list(R.glob("scripts/*.sh")) + list(R.glob("skills/*/templates/*.sh")) + list(R.glob("toolchain/*.sh")):
+    if subprocess.run(["bash", "-n", str(f)]).returncode:
+        bad.append(f"{f}: bash syntax error")
+for f in [R / "bin/vkit.py", R / "bin/vpipe.py", R / "bin/standards.py", R / "self/gate.py"]:
+    if subprocess.run([sys.executable, "-m", "py_compile", str(f)]).returncode:
+        bad.append(f"{f}: python syntax error")
+REQUIRED = ["status:", "## Success criteria", "## Code", "## Specification", "## Proof",
+            "## Trusted base", "## Not covered", "## Review"]
+# Forbidden in hand-written Lean (STANDARDS.md). Generated Extracted/ and *_Template files
+# are skipped; the engine's axiom audit covers what they contribute.
+LEAN_FORBIDDEN = re.compile(r"\b(sorry|admit|native_decide|bv_decide|implemented_by)\b|@\[extern|^\s*axiom\b|"
+                            r"^\s*(private\s+)?unsafe\s|set_option\s+debug\.skipKernelTC", re.M)
+warn = []
+for d in sorted(p for p in (R / "libraries").iterdir() if p.is_dir()):
+    c = d / "CLAIM.md"
+    verified = False
+    if not c.exists():
+        warn.append(f"{d.name}: no CLAIM.md (required for admission, STANDARDS.md)")
+    else:
+        t = c.read_text()
+        for h in REQUIRED:
+            if h not in t:
+                bad.append(f"{c}: missing {h!r}")
+        verified = bool(re.search(r"^status:\s*verified\b", t, re.M))
+        if verified:
+            if re.search(r"<[a-z][^>]*>", t):
+                bad.append(f"{c}: Status verified but placeholders remain")
+            nc = t.split("## Not covered", 1)[1].split("\n## ", 1)[0] if "## Not covered" in t else ""
+            if re.search(r"^\s*-\s*\S", nc, re.M):
+                bad.append(f"{c}: Status verified but 'Not covered' is not empty")
+            if not re.search(r"Maintainer sign-off:\s*[^<\s]", t) or not re.search(r"Adversarial review:\s*[^<\s]", t):
+                bad.append(f"{c}: Status verified without both review sign-offs")
+    for f in d.rglob("*.lean"):
+        rel = f.relative_to(d)
+        raw = f.read_text()
+        if ".lake" in rel.parts or "_Template" in f.name:
+            continue
+        if "FunsExternal" in f.name:
+            # Hand-written std models: allowed only if each is named in CLAIM.md's trusted base.
+            for name in re.findall(r"^\s*axiom\s+([^\s:({]+)", raw, re.M):
+                if verified and name.split(".")[-1] not in c.read_text():
+                    bad.append(f"{f.relative_to(R)}: model axiom {name} not listed in CLAIM.md")
+                elif not verified:
+                    warn.append(f"{f.relative_to(R)}: model axiom {name} (must be listed and tested for admission)")
+            continue
+        if "Extracted" in rel.parts or raw.startswith("-- THIS FILE WAS AUTOMATICALLY GENERATED BY AENEAS"):
+            # Generated code: a `sorry` here means Aeneas could not translate a function, which the
+            # engine already reports as open. Still flag it so reviewers see it.
+            if re.search(r"\bsorry\b", raw):
+                (bad if verified else warn).append(f"{f.relative_to(R)}: generated code contains sorry (untranslated function)")
+            continue
+        txt = re.sub(r"/-.*?-/", "", raw, flags=re.S)
+        txt = "\n".join(l.split("--")[0] for l in txt.splitlines())
+        for m in LEAN_FORBIDDEN.finditer(txt):
+            line = txt[:m.start()].count("\n") + 1
+            (bad if verified else warn).append(f"{f.relative_to(R)}:{line}: forbidden construct {m.group(0).strip()!r}")
+print("\n".join("warning: " + w for w in warn))
+try:
+    tracked = subprocess.run(["git", "-C", str(R), "ls-files"], capture_output=True, text=True).stdout.split()
+    for t in tracked:
+        if re.search(r"(^|/)(\.lake|target)/|\.tar\.(zst|gz)$", t):
+            bad.append(f"build output tracked: {t}")
+except FileNotFoundError:
+    pass
+print("\n".join(bad) or "check-repo: ok")
+sys.exit(1 if bad else 0)

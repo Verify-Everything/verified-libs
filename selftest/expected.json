@@ -1,0 +1,4 @@
+{
+  "framac": {"proved": 13, "total": 13},
+  "rust": {"extracted": ["Funs.lean", "Types.lean"], "proved": 1}
+}

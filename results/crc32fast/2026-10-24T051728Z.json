@@ -1,0 +1,975 @@
+{
+ "library": "crc32fast",
+ "commit": "d2363eab95ebc85fcf726d1c8fa845148e474591",
+ "version": "1.5.3",
+ "tool": "lean-aeneas",
+ "started": "2026-10-24T05:16:33Z",
+ "pipeline_version": "0.1.2",
+ "toolchain": {
+  "aeneas": "nightly-2026.10.23-fdebf20",
+  "charon_rust": "nightly-2026-09-17",
+  "lean": "4.35.0",
+  "aeneas_dir": "/root/.vpipe/aeneas-nightly-2026.10.23-fdebf20"
+ },
+ "source": {
+  "patches": [],
+  "tests": []
+ },
+ "extract": {
+  "ok": true,
+  "stage": "aeneas",
+  "aeneas_rc": 0,
+  "postprocess": [],
+  "unexpected_errors": [],
+  "unsupported": [],
+  "assumed_axioms": [
+   "core.fmt.builders.DebugStruct.finish",
+   "core.fmt.Formatter.debug_struct",
+   "core.fmt.builders.DebugStruct"
+  ],
+  "external_template_changes": [],
+  "warnings": [
+   "When retrieving the builtin information for trait decl 'core::iter::range::Step', could not find the information for item 'forward_overflowing'. The model defined in the Lean library seems to be missing the corresponding field.",
+   "When retrieving the builtin information for trait decl 'core::iter::range::Step', could not find the information for item 'backward_overflowing'. The model defined in the Lean library seems to be missing the corresponding field."
+  ],
+  "log": "[Info ] Imported: /root/vpipe-work/crc32fast/crc32fast.llbc\n[Warn ] When retrieving the builtin information for trait decl 'core::iter::range::Step', could not find the information for item 'forward_overflowing'. The model defined in the Lean library seems to be missing the corresponding field.\nSource: '/rustc/library/core/src/iter/range.rs', lines 35:0-35:64\nCompiler source: extract/Extract.ml, line 2866\n\n[Warn ] When retrieving the builtin information for trait decl 'core::iter::range::Step', could not find the information for item 'backward_overflowing'. The model defined in the Lean library seems to be missing the corresponding field.\nSource: '/rustc/library/core/src/iter/range.rs', lines 35:0-35:64\nCompiler source: extract/Extract.ml, line 2866\n\n[Info ] Creating missing directory: /root/vpipe-work/crc32fast/proj/Crc32fast/Extracted\n[Info ] Generated: /root/vpipe-work/crc32fast/proj/Crc32fast/Extracted/TypesExternal_Template.lean\n[Info ] Generated: /root/vpipe-work/crc32fast/proj/Crc32fast/Extracted/Types.lean\n[Info ] Generated: /root/vpipe-work/crc32fast/proj/Crc32fast/Extracted/FunsExternal_Template.lean\n[Info ] Generated: /root/vpipe-work/crc32fast/proj/Crc32fast/Extracted/Funs.lean\n[Info ] Total execution time: 2.352176 seconds\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+ },
+ "prove": {
+  "ok": true,
+  "seconds": 47,
+  "theorems": [
+   {
+    "name": "fromLE4",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 14,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "Slice.index_usize_ok",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 23,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "Slice.index_usize_ofNat",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 27,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "Array.index_usize_ok",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 33,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "tbl_entry",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 37,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "update_slow_loop_unfold",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 46,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "U32.shr_ok",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 57,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "cast_usize_val_lt",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 63,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "table_index",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 71,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "table_lookup",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 75,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "update_slow_body_some",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 94,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "update_slow_body_none",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 104,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "update_slow_loop_eq",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 110,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "update_slow_eq",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 128,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "U32.shr_8",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 135,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "U32.shr_16",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 137,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "U32.shr_24",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 139,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "table_index_ofNat",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 142,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "table_lookup32",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 147,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "table_lookup_shr24",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 162,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "table_lookup_and255",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 167,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "from_le_bytes_make4",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 179,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "bytes_getElem!",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 190,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "fold_16_eq",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 194,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "range_next_usize_lt",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 212,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "range_next_usize_ge",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 224,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "index_from16",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 235,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "P_fold",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 242,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "len_drop16",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 250,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "inner_unfold",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 253,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "inner_body_none",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 264,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "inner_body_some",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 269,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "inner_eq",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 282,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "bytes_at_once",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 301,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "unroll_val",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 310,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "outer_body_ge",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 313,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "outer_body_lt",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 326,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "outer_unfold",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 333,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "outer_eq",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 344,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "tail_body_ge",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 357,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "tail_body_lt",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 366,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "tail_unfold",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 371,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "tail_eq",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 382,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "update_fast_16_eq",
+    "file": "Crc32fast/Baseline.lean",
+    "line": 396,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "and1",
+    "file": "Crc32fast/Bits.lean",
+    "line": 22,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "and1_64",
+    "file": "Crc32fast/Bits.lean",
+    "line": 29,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "shr_shr1",
+    "file": "Crc32fast/Bits.lean",
+    "line": 36,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "range_next_i32_lt",
+    "file": "Crc32fast/Combine.lean",
+    "line": 17,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "range_next_i32_ge",
+    "file": "Crc32fast/Combine.lean",
+    "line": 28,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "range_next_u32_lt",
+    "file": "Crc32fast/Combine.lean",
+    "line": 34,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "range_next_u32_ge",
+    "file": "Crc32fast/Combine.lean",
+    "line": 45,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "bitStep_code",
+    "file": "Crc32fast/Combine.lean",
+    "line": 51,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "mask_code",
+    "file": "Crc32fast/Combine.lean",
+    "line": 56,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "I32.sub_ok",
+    "file": "Crc32fast/Combine.lean",
+    "line": 66,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "multiply_body_some",
+    "file": "Crc32fast/Combine.lean",
+    "line": 77,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "multiply_body_none",
+    "file": "Crc32fast/Combine.lean",
+    "line": 124,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "multiply_unfold",
+    "file": "Crc32fast/Combine.lean",
+    "line": 131,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "multiply_loop_eq",
+    "file": "Crc32fast/Combine.lean",
+    "line": 142,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "multiply_eq",
+    "file": "Crc32fast/Combine.lean",
+    "line": 160,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "x2n_table_eq",
+    "file": "Crc32fast/Combine.lean",
+    "line": 165,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "x2n_index",
+    "file": "Crc32fast/Combine.lean",
+    "line": 169,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "U64.shr_u32_ok",
+    "file": "Crc32fast/Combine.lean",
+    "line": 197,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "bit_test",
+    "file": "Crc32fast/Combine.lean",
+    "line": 202,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "combine_body_some",
+    "file": "Crc32fast/Combine.lean",
+    "line": 214,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "combine_body_none",
+    "file": "Crc32fast/Combine.lean",
+    "line": 241,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "combine_unfold",
+    "file": "Crc32fast/Combine.lean",
+    "line": 248,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "combine_loop_eq",
+    "file": "Crc32fast/Combine.lean",
+    "line": 259,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "U32.sub_ok",
+    "file": "Crc32fast/Combine.lean",
+    "line": 281,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "lz_val",
+    "file": "Crc32fast/Combine.lean",
+    "line": 286,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "combine_eq",
+    "file": "Crc32fast/Combine.lean",
+    "line": 302,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "hasher_combine_eq",
+    "file": "Crc32fast/Combine.lean",
+    "line": 336,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "combine_eq_hash",
+    "file": "Crc32fast/Combine.lean",
+    "line": 357,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "IsLin.map_zero",
+    "file": "Crc32fast/CombineSpec.lean",
+    "line": 21,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "Zn_lin",
+    "file": "Crc32fast/CombineSpec.lean",
+    "line": 27,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "Zn_zero",
+    "file": "Crc32fast/CombineSpec.lean",
+    "line": 29,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "Zn_comm_Z",
+    "file": "Crc32fast/CombineSpec.lean",
+    "line": 31,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "crcRaw_split",
+    "file": "Crc32fast/CombineSpec.lean",
+    "line": 39,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "not_eq_xor",
+    "file": "Crc32fast/CombineSpec.lean",
+    "line": 48,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "update_eq_Zn_xor",
+    "file": "Crc32fast/CombineSpec.lean",
+    "line": 51,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "mulLoop_lin",
+    "file": "Crc32fast/CombineSpec.lean",
+    "line": 76,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "mulSpec_lin",
+    "file": "Crc32fast/CombineSpec.lean",
+    "line": 86,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "getLsbD_e",
+    "file": "Crc32fast/CombineSpec.lean",
+    "line": 99,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "rebuild_range",
+    "file": "Crc32fast/CombineSpec.lean",
+    "line": 113,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "getLsbD_rb",
+    "file": "Crc32fast/CombineSpec.lean",
+    "line": 121,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "rebuild_eq",
+    "file": "Crc32fast/CombineSpec.lean",
+    "line": 139,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "lin_rebuild",
+    "file": "Crc32fast/CombineSpec.lean",
+    "line": 146,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "lin_ext",
+    "file": "Crc32fast/CombineSpec.lean",
+    "line": 158,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "x2n_zero_basis",
+    "file": "Crc32fast/CombineSpec.lean",
+    "line": 185,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "x2n_square_basis",
+    "file": "Crc32fast/CombineSpec.lean",
+    "line": 189,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "Zn_two_pow_succ",
+    "file": "Crc32fast/CombineSpec.lean",
+    "line": 193,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "lin_comp",
+    "file": "Crc32fast/CombineSpec.lean",
+    "line": 196,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "mulSpec_x2n",
+    "file": "Crc32fast/CombineSpec.lean",
+    "line": 200,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "new_with_initial_len_eq",
+    "file": "Crc32fast/Hasher.lean",
+    "line": 15,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "new_eq",
+    "file": "Crc32fast/Hasher.lean",
+    "line": 26,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "U64.add_ok",
+    "file": "Crc32fast/Hasher.lean",
+    "line": 30,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "update_eq",
+    "file": "Crc32fast/Hasher.lean",
+    "line": 43,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "hash_eq",
+    "file": "Crc32fast/Hasher.lean",
+    "line": 63,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "slice_len_le_u64",
+    "file": "Crc32fast/Hasher.lean",
+    "line": 82,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "update_update_eq_hash",
+    "file": "Crc32fast/Hasher.lean",
+    "line": 94,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "crcRaw_nil",
+    "file": "Crc32fast/Spec.lean",
+    "line": 54,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "crcRaw_cons",
+    "file": "Crc32fast/Spec.lean",
+    "line": 56,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "crcRaw_append",
+    "file": "Crc32fast/Spec.lean",
+    "line": 59,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "update_append",
+    "file": "Crc32fast/Spec.lean",
+    "line": 64,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "update_nil",
+    "file": "Crc32fast/Spec.lean",
+    "line": 68,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "bitStep_xor",
+    "file": "Crc32fast/SpecLemmas.lean",
+    "line": 33,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "s8_xor",
+    "file": "Crc32fast/SpecLemmas.lean",
+    "line": 38,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "byteStep_s8",
+    "file": "Crc32fast/SpecLemmas.lean",
+    "line": 39,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "Z_s8",
+    "file": "Crc32fast/SpecLemmas.lean",
+    "line": 40,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "B_s8",
+    "file": "Crc32fast/SpecLemmas.lean",
+    "line": 41,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "byteStep_split",
+    "file": "Crc32fast/SpecLemmas.lean",
+    "line": 44,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "Z_xor",
+    "file": "Crc32fast/SpecLemmas.lean",
+    "line": 47,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "Z_zero",
+    "file": "Crc32fast/SpecLemmas.lean",
+    "line": 49,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "Zn_xor",
+    "file": "Crc32fast/SpecLemmas.lean",
+    "line": 51,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "Zn_add",
+    "file": "Crc32fast/SpecLemmas.lean",
+    "line": 56,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "zext_xor",
+    "file": "Crc32fast/SpecLemmas.lean",
+    "line": 61,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "B_xor",
+    "file": "Crc32fast/SpecLemmas.lean",
+    "line": 65,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "Z_zext",
+    "file": "Crc32fast/SpecLemmas.lean",
+    "line": 67,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "bitStep_shr",
+    "file": "Crc32fast/SpecLemmas.lean",
+    "line": 69,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "Z_low_zero",
+    "file": "Crc32fast/SpecLemmas.lean",
+    "line": 75,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "tbl_xor",
+    "file": "Crc32fast/SpecLemmas.lean",
+    "line": 91,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "byteStep_table",
+    "file": "Crc32fast/SpecLemmas.lean",
+    "line": 95,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "Z_shl8",
+    "file": "Crc32fast/SpecLemmas.lean",
+    "line": 104,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "Z_shl16",
+    "file": "Crc32fast/SpecLemmas.lean",
+    "line": 107,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "Z_shl24",
+    "file": "Crc32fast/SpecLemmas.lean",
+    "line": 110,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "split_bytes",
+    "file": "Crc32fast/SpecLemmas.lean",
+    "line": 113,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "Z4_bytes",
+    "file": "Crc32fast/SpecLemmas.lean",
+    "line": 120,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "crcRaw16",
+    "file": "Crc32fast/SpecLemmas.lean",
+    "line": 139,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "getLsbD_le32",
+    "file": "Crc32fast/SpecLemmas.lean",
+    "line": 147,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "le32_xor_bytes",
+    "file": "Crc32fast/SpecLemmas.lean",
+    "line": 163,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "Zn16_bytes",
+    "file": "Crc32fast/SpecLemmas.lean",
+    "line": 171,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "fold16_eq",
+    "file": "Crc32fast/SpecLemmas.lean",
+    "line": 178,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "table_eq",
+    "file": "Crc32fast/Table.lean",
+    "line": 12,
+    "axioms": [],
+    "status": "proved"
+   }
+  ],
+  "proved": 132,
+  "total": 132,
+  "sorries": 0,
+  "axiom_thms": 0,
+  "unaudited": 0,
+  "errors": [],
+  "log": "instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Baseline.lean:240:6: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Baseline.lean:238:43: This simp argument is unused:\n  core.slice.index.SliceIndexRangeFromUsizeSlice\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [core.slice.index.Slice.index, core.slice.index.SliceIndexRangeFromUsizeSlice.index]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Crc32fast/Baseline.lean:242:45: Variable name `h` is not explicitly referenced.\n\nHint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:\n  [apply] _h\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`\nwarning: Crc32fast/Baseline.lean:247:20: This simp argument is unused:\n  Slice.length\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [bytes]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Crc32fast/Baseline.lean:307:6: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Baseline.lean:322:6: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Baseline.lean:331:6: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Crc32fast/Baseline.lean:361:6: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Baseline.lean:369:6: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\n\u26a0 [1808/1810] Replayed Crc32fast.Hasher\nwarning: Crc32fast/Hasher.lean:21:4: This simp argument is unused:\n  Hasher.new_with_initial_len.closure.Insts.CoreOpsFunctionFnOnceTupleHasher\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [Hasher.new_with_initial_len, Hasher.internal_new_specialized, specialized.State.new,\n    core.option.Option.Insts.CoreOpsTry_traitTry.branch,\n    core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual, core.option.Option.unwrap_or_else,\n    Hasher.new_with_initial_len.closure.Insts.CoreOpsFunctionFnOnceTupleHasher.call_once, Hasher.internal_new_baseline,\n    bind_ok, bind_tc_ok]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Crc32fast/Hasher.lean:23:43: This simp argument is unused:\n  bind_tc_ok\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [Hasher.new_with_initial_len, Hasher.internal_new_specialized, specialized.State.new,\n    core.option.Option.Insts.CoreOpsTry_traitTry.branch,\n    core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual, core.option.Option.unwrap_or_else,\n    Hasher.new_with_initial_len.closure.Insts.CoreOpsFunctionFnOnceTupleHasher,\n    Hasher.new_with_initial_len.closure.Insts.CoreOpsFunctionFnOnceTupleHasher.call_once, Hasher.internal_new_baseline,\n    bind_ok]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Crc32fast/Hasher.lean:37:6: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Hasher.lean:67:37: This simp argument is unused:\n  UScalar.max\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [Usize.max, U64.max]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\n\u26a0 [1809/1810] Replayed Crc32fast.Combine\nwarning: Crc32fast/Combine.lean:26:6: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Combine.lean:43:6: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Combine.lean:74:6: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Combine.lean:85:52: This simp argument is unused:\n  IScalar.toNat\n\nHint: Omit it from the simp argument list.\n  [apply] simp [hd]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Crc32fast/Combine.lean:200:6: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Combine.lean:230:27: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Combine.lean:230:39: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Combine.lean:239:28: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Crc32fast/Combine.lean:239:46: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Crc32fast/Combine.lean:284:6: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Crc32fast/Combine.lean:295:6: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Crc32fast/Combine.lean:307:8: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Combine.lean:307:19: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Combine.lean:310:8: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Crc32fast/Combine.lean:310:19: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Crc32fast/Combine.lean:350:8: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Combine.lean:354:8: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nBuild completed successfully (1810 jobs).\nwarning: aeneas: repository has local changes:\n  /root/vpipe-work/crc32fast/proj/.lake/packages/aeneas\nwarning: mathlib: repository has local changes:\n  /root/vpipe-work/crc32fast/proj/.lake/packages/mathlib\nwarning: plausible: repository has local changes:\n  /root/vpipe-work/crc32fast/proj/.lake/packages/plausible\nwarning: LeanSearchClient: repository has local changes:\n  /root/vpipe-work/crc32fast/proj/.lake/packages/LeanSearchClient\nwarning: importGraph: repository has local changes:\n  /root/vpipe-work/crc32fast/proj/.lake/packages/importGraph\nwarning: proofwidgets: repository has local changes:\n  /root/vpipe-work/crc32fast/proj/.lake/packages/proofwidgets\nwarning: aesop: repository has local changes:\n  /root/vpipe-work/crc32fast/proj/.lake/packages/aesop\nwarning: Qq: repository has local changes:\n  /root/vpipe-work/crc32fast/proj/.lake/packages/Qq\nwarning: batteries: repository has local changes:\n  /root/vpipe-work/crc32fast/proj/.lake/packages/batteries\nwarning: Cli: repository has local changes:\n  /root/vpipe-work/crc32fast/proj/.lake/packages/Cli\n"
+ },
+ "finished": "2026-10-24T05:17:28Z"
+}

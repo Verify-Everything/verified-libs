@@ -1,0 +1,10 @@
+.lake/
+target/
+__pycache__/
+*.part
+cache/*
+!cache/.keep
+self/snapshots/*
+!self/snapshots/.keep
+self/.*.lock
+*.tar.zst

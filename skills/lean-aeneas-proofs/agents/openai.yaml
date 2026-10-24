@@ -1,0 +1,5 @@
+# Codex UI metadata (developers.openai.com/codex/skills#optional-metadata). Other agents ignore it.
+interface:
+  display_name: "Lean proofs over Aeneas"
+  short_description: "Write Lean specs and proofs for extracted Rust"
+  default_prompt: "Use $lean-aeneas-proofs to prove the next open function in this library."

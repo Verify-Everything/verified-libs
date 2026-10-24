@@ -1,16 +1,27 @@
 {
  "library": "semver",
+ "entry": "semver",
  "commit": "280ebcb6edac3aa4cdc545dbff8a26c5ac4861fe",
  "version": "1.0.28",
  "tool": "lean-aeneas",
- "started": "2026-10-24T05:58:19Z",
- "pipeline_version": "0.1.4",
+ "started": "2026-10-24T11:18:10Z",
+ "pipeline_version": "0.2.11",
  "toolchain": {
   "aeneas": "nightly-2026.10.23-fdebf20",
   "charon_rust": "nightly-2026-09-17",
   "lean": "4.35.0",
-  "aeneas_dir": "/root/.vpipe/aeneas-nightly-2026.10.23-fdebf20"
+  "aeneas_dir": "/home/runner/.vpipe/aeneas-nightly-2026.10.23-fdebf20",
+  "frama_c": "33.0 (Arsenic)",
+  "cbmc": "6.11.0 (n/a)",
+  "why3_provers": "CVC5 ;CVC5  (counterexamples);CVC5  (strings);CVC5  (strings+counterexamples);Z3 5.1.0;Z3 5.1.0 (counterexamples);Z3 5.1.0 (noBV);",
+  "nixpkgs": "https://releases.nixos.org/nixpkgs/nixpkgs-26.11pre1097770.5adc50831c25/nixexprs.tar.zst?narHash=sha256-hVMDyAXU0kxRuG3GygbZkzf5x%2BaBNEC0NYEJ6KwHtD4%3D"
  },
+ "clean": false,
+ "toolchain_digest": "sha256:4c13b9af415895d410093b482e740a334b2d55ed2b76dc58a79f9aa440284f1f",
+ "container_digest": null,
+ "ci_run": "https://github.com/Verify-Everything/verified-libs/actions/runs/40085700990",
+ "agent_cli": null,
+ "archive_sha256": "ccd7b1baee6ac4acc4a56a80c78c0397d94af4ad15c2f8fe722c509bba9bcf73",
  "source": {
   "patches": [
    "rust/model.patch"
@@ -19,7 +30,7 @@
    {
     "cmd": "cd model && cargo test --release --features debug --quiet",
     "ok": true,
-    "tail": "\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 1 test\n.\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.71s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n"
+    "tail": "\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 1 test\n.\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.48s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n"
    }
   ]
  },
@@ -28,16 +39,49 @@
   "stage": "aeneas",
   "aeneas_rc": 0,
   "postprocess": [],
+  "translator": {
+   "patched": false
+  },
   "unexpected_errors": [],
   "unsupported": [],
   "assumed_axioms": [],
   "external_template_changes": [],
   "warnings": [],
-  "log": "[Info ] Imported: /root/vpipe-work/semver/semver.llbc\n[Info ] Generated: /root/vpipe-work/semver/proj/SemverModel/Code/Types.lean\n[Info ] Generated: /root/vpipe-work/semver/proj/SemverModel/Code/Funs.lean\n[Info ] Total execution time: 2.451335 seconds\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+  "log": "[Info ] Imported: /home/runner/vpipe-work/semver/semver.llbc\n[Info ] Generated: /home/runner/vpipe-work/semver/proj/SemverModel/Code/Types.lean\n[Info ] Generated: /home/runner/vpipe-work/semver/proj/SemverModel/Code/Funs.lean\n[Info ] Total execution time: 2.512266 seconds\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
  },
  "prove": {
   "ok": true,
-  "seconds": 267,
+  "seconds": 286,
+  "replay": {
+   "ok": true,
+   "tool": "leanchecker",
+   "modules": 14,
+   "failed": [],
+   "peak_gb": [
+    [
+     "SemverModel",
+     11.84
+    ],
+    [
+     "SemverModel.Proofs.RefineParse",
+     2.23
+    ],
+    [
+     "SemverModel.Proofs.RefineVersion",
+     2.23
+    ],
+    [
+     "SemverModel.Proofs.RoundTrip",
+     2.23
+    ],
+    [
+     "SemverModel.Proofs.Main",
+     2.22
+    ]
+   ],
+   "seconds": 134,
+   "log": ""
+  },
   "theorems": [
    {
     "name": "parse_version_total",
@@ -1062,11 +1106,11 @@
   "axiom_thms": 0,
   "unaudited": 0,
   "errors": [],
-  "log": "\u2714 [1796/1810] Built SemverModel.Code.Types (4.5s)\n\u26a0 [1797/1810] Built SemverModel.Spec.Mirror (6.7s)\nwarning: SemverModel/Spec/Mirror.lean:47:39: This simp argument is unused:\n  List.getElem!_eq_getElem?_getD\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h1, h2, ha, hb, List.getElem?_eq_getElem]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Spec/Mirror.lean:47:71: This simp argument is unused:\n  List.getElem?_eq_getElem\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h1, h2, ha, hb, List.getElem!_eq_getElem?_getD]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Spec/Mirror.lean:51:31: `if_false` has been deprecated: Use `ite_false` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335f\u0335a\u0335l\u0335s\u0335e\u0335i\u0332t\u0332e\u0332_\u0332f\u0332a\u0332l\u0332s\u0332e\u0332\nwarning: SemverModel/Spec/Mirror.lean:64:32: This simp argument is unused:\n  List.getElem!_eq_getElem?_getD\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h1, ha, List.getElem?_eq_getElem]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Spec/Mirror.lean:64:64: This simp argument is unused:\n  List.getElem?_eq_getElem\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h1, ha, List.getElem!_eq_getElem?_getD]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Spec/Mirror.lean:108:5: Variable name `hi` is not explicitly referenced.\n\nHint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:\n  [apply] _hi\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`\n\u2714 [1798/1810] Built SemverModel.Code.Funs (5.5s)\n\u26a0 [1799/1810] Built SemverModel.Spec.Lists (5.8s)\nwarning: SemverModel/Spec/Lists.lean:290:29: This simp argument is unused:\n  ite_true\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [hle, hre, ite_false]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\n\u2714 [1800/1810] Built SemverModel.Spec.ParseMirror (7.5s)\n\u2714 [1801/1810] Built SemverModel.Spec.Order (7.5s)\n\u26a0 [1802/1810] Built SemverModel.Proofs.RefineCmp (17s)\nwarning: SemverModel/Proofs/RefineCmp.lean:156:47: This simp argument is unused:\n  eq_comm (a := Ordering.eq)\n\nHint: Omit it from the simp argument list.\n  [apply] simp only at *\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Proofs/RefineCmp.lean:144:31: Unused tactic linter: `(try simp only [eq_comm (a := Ordering.eq)] at *)` does nothing.\n\nNote: This linter can be disabled with `set_option linter.unusedTactic false`\nwarning: SemverModel/Proofs/RefineCmp.lean:190:41: This simp argument is unused:\n  eq_comm (a := Ordering.eq)\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [eq_comm (a := Ordering.lt), eq_comm (a := Ordering.gt)] at *\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\n\u2714 [1803/1810] Built SemverModel.Proofs.Order (4.6s)\n\u26a0 [1804/1810] Built SemverModel.Proofs.RefinePrint (14s)\nwarning: SemverModel/Proofs/RefinePrint.lean:87:47: This simp argument is unused:\n  ite_false\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [*, List.append_assoc, ite_true, List.nil_append]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Proofs/RefinePrint.lean:87:58: This simp argument is unused:\n  List.nil_append\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [*, List.append_assoc, ite_true, ite_false]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Proofs/RefinePrint.lean:94:18: This simp argument is unused:\n  List.append_assoc\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [*, ite_true, ite_false, List.nil_append]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Proofs/RefinePrint.lean:94:37: This simp argument is unused:\n  ite_true\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [*, List.append_assoc, ite_false, List.nil_append]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Proofs/RefinePrint.lean:111:88: Unused tactic linter: `done` does nothing.\n\nNote: This linter can be disabled with `set_option linter.unusedTactic false`\n\u26a0 [1805/1810] Built SemverModel.Proofs.RefineParse (112s)\nwarning: SemverModel/Proofs/RefineParse.lean:61:62: Unused tactic linter: `<;>` should be replaced with `;` or be removed.\n\nNote: This linter can be disabled with `set_option linter.unusedTactic false`\n\u26a0 [1806/1810] Built SemverModel.Proofs.RefineVersion (55s)\nwarning: SemverModel/Proofs/RefineVersion.lean:158:6: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: SemverModel/Proofs/RefineVersion.lean:158:18: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\n\u2714 [1807/1810] Built SemverModel.Proofs.RoundTrip (9.1s)\n\u2714 [1808/1810] Built SemverModel.Proofs.Main (3.9s)\n\u2714 [1809/1810] Built SemverModel (4.2s)\nBuild completed successfully (1810 jobs).\n"
+  "log": "\u2714 [1761/1775] Built SemverModel.Code.Types (1.6s)\n\u26a0 [1762/1775] Built SemverModel.Spec.Mirror (2.8s)\nwarning: SemverModel/Spec/Mirror.lean:47:39: This simp argument is unused:\n  List.getElem!_eq_getElem?_getD\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h1, h2, ha, hb, List.getElem?_eq_getElem]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Spec/Mirror.lean:47:71: This simp argument is unused:\n  List.getElem?_eq_getElem\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h1, h2, ha, hb, List.getElem!_eq_getElem?_getD]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Spec/Mirror.lean:51:31: `if_false` has been deprecated: Use `ite_false` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335f\u0335a\u0335l\u0335s\u0335e\u0335i\u0332t\u0332e\u0332_\u0332f\u0332a\u0332l\u0332s\u0332e\u0332\nwarning: SemverModel/Spec/Mirror.lean:64:32: This simp argument is unused:\n  List.getElem!_eq_getElem?_getD\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h1, ha, List.getElem?_eq_getElem]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Spec/Mirror.lean:64:64: This simp argument is unused:\n  List.getElem?_eq_getElem\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h1, ha, List.getElem!_eq_getElem?_getD]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Spec/Mirror.lean:108:5: Variable name `hi` is not explicitly referenced.\n\nHint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:\n  [apply] _hi\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`\n\u2714 [1763/1775] Built SemverModel.Code.Funs (3.2s)\n\u26a0 [1764/1775] Built SemverModel.Spec.Lists (3.5s)\nwarning: SemverModel/Spec/Lists.lean:290:29: This simp argument is unused:\n  ite_true\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [hle, hre, ite_false]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\n\u2714 [1765/1775] Built SemverModel.Spec.Order (3.4s)\n\u2714 [1766/1775] Built SemverModel.Spec.ParseMirror (5.0s)\n\u26a0 [1767/1775] Built SemverModel.Proofs.RefineCmp (12s)\nwarning: SemverModel/Proofs/RefineCmp.lean:156:47: This simp argument is unused:\n  eq_comm (a := Ordering.eq)\n\nHint: Omit it from the simp argument list.\n  [apply] simp only at *\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Proofs/RefineCmp.lean:144:31: Unused tactic linter: `(try simp only [eq_comm (a := Ordering.eq)] at *)` does nothing.\n\nNote: This linter can be disabled with `set_option linter.unusedTactic false`\nwarning: SemverModel/Proofs/RefineCmp.lean:190:41: This simp argument is unused:\n  eq_comm (a := Ordering.eq)\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [eq_comm (a := Ordering.lt), eq_comm (a := Ordering.gt)] at *\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\n\u2714 [1768/1775] Built SemverModel.Proofs.Order (3.1s)\n\u26a0 [1769/1775] Built SemverModel.Proofs.RefinePrint (10s)\nwarning: SemverModel/Proofs/RefinePrint.lean:87:47: This simp argument is unused:\n  ite_false\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [*, List.append_assoc, ite_true, List.nil_append]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Proofs/RefinePrint.lean:87:58: This simp argument is unused:\n  List.nil_append\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [*, List.append_assoc, ite_true, ite_false]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Proofs/RefinePrint.lean:94:18: This simp argument is unused:\n  List.append_assoc\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [*, ite_true, ite_false, List.nil_append]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Proofs/RefinePrint.lean:94:37: This simp argument is unused:\n  ite_true\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [*, List.append_assoc, ite_false, List.nil_append]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Proofs/RefinePrint.lean:111:88: Unused tactic linter: `done` does nothing.\n\nNote: This linter can be disabled with `set_option linter.unusedTactic false`\n\u26a0 [1770/1775] Built SemverModel.Proofs.RefineParse (70s)\nwarning: SemverModel/Proofs/RefineParse.lean:61:62: Unused tactic linter: `<;>` should be replaced with `;` or be removed.\n\nNote: This linter can be disabled with `set_option linter.unusedTactic false`\n\u26a0 [1771/1775] Built SemverModel.Proofs.RefineVersion (33s)\nwarning: SemverModel/Proofs/RefineVersion.lean:158:6: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: SemverModel/Proofs/RefineVersion.lean:158:18: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\n\u2714 [1772/1775] Built SemverModel.Proofs.RoundTrip (5.5s)\n\u2714 [1773/1775] Built SemverModel.Proofs.Main (2.0s)\n\u2714 [1774/1775] Built SemverModel (1.9s)\nBuild completed successfully (1775 jobs).\n"
  },
  "functions": {
-  "total": 92,
-  "verified": 4,
+  "total": 116,
+  "verified": 28,
   "fixed": 0,
   "open": 88,
   "complete": false,
@@ -1079,7 +1123,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/display.rs:Display for VersionReq::fmt",
@@ -1089,7 +1134,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/display.rs:Display for Comparator::fmt",
@@ -1099,7 +1145,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/display.rs:Display for Prerelease::fmt",
@@ -1109,7 +1156,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/display.rs:Display for BuildMetadata::fmt",
@@ -1119,7 +1167,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/display.rs:Debug for Version::fmt",
@@ -1129,7 +1178,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/display.rs:Debug for Prerelease::fmt",
@@ -1139,7 +1189,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/display.rs:Debug for BuildMetadata::fmt",
@@ -1149,7 +1200,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/display.rs:pad",
@@ -1159,7 +1211,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/display.rs:digits",
@@ -1169,7 +1222,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/error.rs:Display for Error::fmt",
@@ -1179,7 +1233,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/error.rs:Display for Position::fmt",
@@ -1189,7 +1244,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/error.rs:Debug for Error::fmt",
@@ -1199,7 +1255,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/error.rs:Display for QuotedChar::fmt",
@@ -1209,7 +1266,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/eval.rs:matches_req",
@@ -1219,7 +1277,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/eval.rs:matches_comparator",
@@ -1229,7 +1288,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/eval.rs:matches_impl",
@@ -1239,7 +1299,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/eval.rs:matches_exact",
@@ -1249,7 +1310,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/eval.rs:matches_greater",
@@ -1259,7 +1321,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/eval.rs:matches_less",
@@ -1269,7 +1332,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/eval.rs:matches_tilde",
@@ -1279,7 +1343,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/eval.rs:matches_caret",
@@ -1289,7 +1354,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/eval.rs:pre_is_compatible",
@@ -1299,7 +1365,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/identifier.rs:Identifier::empty",
@@ -1309,7 +1376,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/identifier.rs:Identifier::new_unchecked",
@@ -1319,7 +1387,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/identifier.rs:Identifier::is_empty",
@@ -1329,7 +1398,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/identifier.rs:Identifier::is_inline",
@@ -1339,7 +1409,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/identifier.rs:Identifier::is_empty_or_inline",
@@ -1349,7 +1420,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/identifier.rs:Identifier::as_str",
@@ -1359,7 +1431,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/identifier.rs:Identifier::ptr_eq",
@@ -1369,7 +1442,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/identifier.rs:Clone for Identifier::clone",
@@ -1379,7 +1453,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/identifier.rs:Drop for Identifier::drop",
@@ -1389,7 +1464,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/identifier.rs:PartialEq for Identifier::eq",
@@ -1399,7 +1475,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/identifier.rs:ptr_to_repr",
@@ -1409,7 +1486,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/identifier.rs:repr_to_ptr",
@@ -1419,7 +1497,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/identifier.rs:repr_to_ptr_mut",
@@ -1429,7 +1508,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/identifier.rs:inline_len",
@@ -1439,7 +1519,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/identifier.rs:inline_as_str",
@@ -1449,7 +1530,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/identifier.rs:decode_len",
@@ -1459,7 +1541,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/identifier.rs:decode_len_cold",
@@ -1469,7 +1552,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/identifier.rs:ptr_as_str",
@@ -1479,7 +1563,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/identifier.rs:bytes_for_varint",
@@ -1489,7 +1574,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/impls.rs:Default for Identifier::default",
@@ -1499,7 +1585,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/impls.rs:Hash for Identifier::hash",
@@ -1509,7 +1596,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/impls.rs:Deref for Prerelease::deref",
@@ -1519,7 +1607,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/impls.rs:Deref for BuildMetadata::deref",
@@ -1529,7 +1618,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/impls.rs:PartialOrd for Prerelease::partial_cmp",
@@ -1539,7 +1629,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/impls.rs:PartialOrd for BuildMetadata::partial_cmp",
@@ -1549,7 +1640,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/impls.rs:Ord for Prerelease::cmp",
@@ -1559,7 +1651,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/impls.rs:Ord for BuildMetadata::cmp",
@@ -1569,7 +1662,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/impls.rs:FromIterator for VersionReq::from_iter",
@@ -1579,7 +1673,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/lib.rs:Version::new",
@@ -1589,7 +1684,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/lib.rs:Version::parse",
@@ -1599,7 +1695,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/lib.rs:Version::cmp_precedence",
@@ -1610,7 +1707,8 @@
     "theorems": [
      "push_u64_spec"
     ],
-    "status": "verified"
+    "status": "verified",
+    "label": "unlabelled"
    },
    {
     "id": "src/lib.rs:VersionReq::parse",
@@ -1620,7 +1718,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/lib.rs:VersionReq::matches",
@@ -1630,7 +1729,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/lib.rs:Default for VersionReq::default",
@@ -1640,7 +1740,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/lib.rs:Comparator::parse",
@@ -1650,7 +1751,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/lib.rs:Comparator::matches",
@@ -1660,7 +1762,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/lib.rs:Prerelease::new",
@@ -1670,7 +1773,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/lib.rs:Prerelease::as_str",
@@ -1680,7 +1784,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/lib.rs:Prerelease::is_empty",
@@ -1690,7 +1795,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/lib.rs:BuildMetadata::new",
@@ -1700,7 +1806,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/lib.rs:BuildMetadata::as_str",
@@ -1710,7 +1817,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/lib.rs:BuildMetadata::is_empty",
@@ -1720,7 +1828,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/parse.rs:FromStr for Version::from_str",
@@ -1730,7 +1839,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/parse.rs:FromStr for VersionReq::from_str",
@@ -1740,7 +1850,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/parse.rs:FromStr for Comparator::from_str",
@@ -1750,7 +1861,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/parse.rs:FromStr for Prerelease::from_str",
@@ -1760,7 +1872,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/parse.rs:FromStr for BuildMetadata::from_str",
@@ -1770,7 +1883,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/parse.rs:Error::new",
@@ -1780,7 +1894,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/parse.rs:numeric_identifier",
@@ -1793,7 +1908,8 @@
      "numeric_identifier_spec",
      "numeric_identifier_spec'"
     ],
-    "status": "verified"
+    "status": "verified",
+    "label": "unlabelled"
    },
    {
     "id": "src/parse.rs:wildcard",
@@ -1803,7 +1919,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/parse.rs:dot",
@@ -1821,7 +1938,8 @@
      "segEnd_dot",
      "segEnd_nodot"
     ],
-    "status": "verified"
+    "status": "verified",
+    "label": "unlabelled"
    },
    {
     "id": "src/parse.rs:prerelease_identifier",
@@ -1831,7 +1949,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/parse.rs:build_identifier",
@@ -1841,7 +1960,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/parse.rs:identifier",
@@ -1857,7 +1977,8 @@
      "identifier_spec",
      "numeric_identifier_spec'"
     ],
-    "status": "verified"
+    "status": "verified",
+    "label": "unlabelled"
    },
    {
     "id": "src/parse.rs:op",
@@ -1867,7 +1988,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/parse.rs:comparator",
@@ -1877,7 +1999,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/parse.rs:version_req",
@@ -1887,7 +2010,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/serde.rs:Serialize for Version::serialize",
@@ -1897,7 +2021,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/serde.rs:Serialize for VersionReq::serialize",
@@ -1907,7 +2032,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/serde.rs:Serialize for Comparator::serialize",
@@ -1917,7 +2043,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/serde.rs:Deserialize for Version::deserialize",
@@ -1927,7 +2054,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/serde.rs:Visitor for VersionVisitor::expecting",
@@ -1937,7 +2065,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/serde.rs:Visitor for VersionVisitor::visit_str",
@@ -1947,7 +2076,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/serde.rs:Deserialize for VersionReq::deserialize",
@@ -1957,7 +2087,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/serde.rs:Visitor for VersionReqVisitor::expecting",
@@ -1967,7 +2098,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/serde.rs:Visitor for VersionReqVisitor::visit_str",
@@ -1977,7 +2109,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/serde.rs:Deserialize for Comparator::deserialize",
@@ -1987,7 +2120,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/serde.rs:Visitor for ComparatorVisitor::expecting",
@@ -1997,7 +2131,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/serde.rs:Visitor for ComparatorVisitor::visit_str",
@@ -2007,10 +2142,402 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/lib.rs:is_digit",
+    "file": "src/lib.rs",
+    "line": 64,
+    "name": "is_digit",
+    "added_by_patch": true,
+    "lean": "is_digit",
+    "theorems": [
+     "is_digit_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:segment_end",
+    "file": "src/lib.rs",
+    "line": 69,
+    "name": "segment_end",
+    "added_by_patch": true,
+    "lean": "segment_end",
+    "theorems": [
+     "segment_end_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:all_digits",
+    "file": "src/lib.rs",
+    "line": 81,
+    "name": "all_digits",
+    "added_by_patch": true,
+    "lean": "all_digits",
+    "theorems": [
+     "all_digits_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:cmp_bytes",
+    "file": "src/lib.rs",
+    "line": 93,
+    "name": "cmp_bytes",
+    "added_by_patch": true,
+    "lean": "cmp_bytes",
+    "theorems": [
+     "cmp_bytes_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:cmp_usize",
+    "file": "src/lib.rs",
+    "line": 117,
+    "name": "cmp_usize",
+    "added_by_patch": true,
+    "lean": "cmp_usize",
+    "theorems": [
+     "cmp_usize_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:cmp_u64",
+    "file": "src/lib.rs",
+    "line": 127,
+    "name": "cmp_u64",
+    "added_by_patch": true,
+    "lean": "cmp_u64",
+    "theorems": [
+     "cmp_u64_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:skip_zeros",
+    "file": "src/lib.rs",
+    "line": 138,
+    "name": "skip_zeros",
+    "added_by_patch": true,
+    "lean": "skip_zeros",
+    "theorems": [
+     "skip_zeros_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:pre_segment_cmp",
+    "file": "src/lib.rs",
+    "line": 155,
+    "name": "pre_segment_cmp",
+    "added_by_patch": true,
+    "lean": "pre_segment_cmp",
+    "theorems": [
+     "pre_segment_cmp_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:build_segment_cmp",
+    "file": "src/lib.rs",
+    "line": 167,
+    "name": "build_segment_cmp",
+    "added_by_patch": true,
+    "lean": "build_segment_cmp",
+    "theorems": [
+     "build_segment_cmp_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:cmp_segments",
+    "file": "src/lib.rs",
+    "line": 188,
+    "name": "cmp_segments",
+    "added_by_patch": true,
+    "lean": "cmp_segments",
+    "theorems": [
+     "cmp_segments_loop_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:prerelease_cmp",
+    "file": "src/lib.rs",
+    "line": 229,
+    "name": "prerelease_cmp",
+    "added_by_patch": true,
+    "lean": "prerelease_cmp",
+    "theorems": [
+     "prerelease_cmp_ok",
+     "prerelease_cmp_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:build_cmp",
+    "file": "src/lib.rs",
+    "line": 245,
+    "name": "build_cmp",
+    "added_by_patch": true,
+    "lean": "build_cmp",
+    "theorems": [
+     "build_cmp_ok",
+     "build_cmp_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:version_cmp",
+    "file": "src/lib.rs",
+    "line": 255,
+    "name": "version_cmp",
+    "added_by_patch": true,
+    "lean": "version_cmp",
+    "theorems": [
+     "version_cmp_ok",
+     "version_cmp_eq_versionOrd",
+     "version_cmp_total_order",
+     "version_cmp_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:numeric_identifier",
+    "file": "src/lib.rs",
+    "line": 280,
+    "name": "numeric_identifier",
+    "added_by_patch": true,
+    "lean": "numeric_identifier",
+    "theorems": [
+     "numeric_identifier_loop_spec",
+     "numeric_identifier_spec",
+     "numeric_identifier_spec'"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:dot",
+    "file": "src/lib.rs",
+    "line": 309,
+    "name": "dot",
+    "added_by_patch": true,
+    "lean": "dot",
+    "theorems": [
+     "dot_spec",
+     "dotM_ok",
+     "dot_spec'",
+     "dotM_read",
+     "dotM_at",
+     "nd_dot",
+     "segEnd_dot",
+     "segEnd_nodot"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:is_ident_char_nondigit",
+    "file": "src/lib.rs",
+    "line": 319,
+    "name": "is_ident_char_nondigit",
+    "added_by_patch": true,
+    "lean": "is_ident_char_nondigit",
+    "theorems": [
+     "is_ident_char_nondigit_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:identifier",
+    "file": "src/lib.rs",
+    "line": 327,
+    "name": "identifier",
+    "added_by_patch": true,
+    "lean": "identifier",
+    "theorems": [
+     "numeric_identifier_loop_spec",
+     "numeric_identifier_spec",
+     "identifier_loop_spec",
+     "identifier_spec0",
+     "identifier_spec",
+     "numeric_identifier_spec'"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:push_all",
+    "file": "src/lib.rs",
+    "line": 366,
+    "name": "push_all",
+    "added_by_patch": true,
+    "lean": "push_all",
+    "theorems": [
+     "push_all_loop_spec",
+     "push_all_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:copy_range",
+    "file": "src/lib.rs",
+    "line": 374,
+    "name": "copy_range",
+    "added_by_patch": true,
+    "lean": "copy_range",
+    "theorems": [
+     "copy_range_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:parse_version",
+    "file": "src/lib.rs",
+    "line": 381,
+    "name": "parse_version",
+    "added_by_patch": true,
+    "lean": "parse_version",
+    "theorems": [
+     "parse_version_total",
+     "parse_then_print",
+     "print_then_parse",
+     "parse_version_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:parse_prerelease",
+    "file": "src/lib.rs",
+    "line": 443,
+    "name": "parse_prerelease",
+    "added_by_patch": true,
+    "lean": "parse_prerelease",
+    "theorems": [
+     "parse_prerelease_accepts",
+     "parse_prerelease_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:parse_build",
+    "file": "src/lib.rs",
+    "line": 453,
+    "name": "parse_build",
+    "added_by_patch": true,
+    "lean": "parse_build",
+    "theorems": [
+     "parse_build_accepts",
+     "parse_build_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:push_u64",
+    "file": "src/lib.rs",
+    "line": 467,
+    "name": "push_u64",
+    "added_by_patch": true,
+    "lean": "push_u64",
+    "theorems": [
+     "push_u64_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:version_to_bytes",
+    "file": "src/lib.rs",
+    "line": 475,
+    "name": "version_to_bytes",
+    "added_by_patch": true,
+    "lean": "version_to_bytes",
+    "theorems": [
+     "parse_then_print",
+     "print_then_parse",
+     "version_to_bytes_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
    }
   ],
   "overrides_not_found": []
  },
- "finished": "2026-10-24T06:02:56Z"
+ "crosscheck": [],
+ "forbidden": [],
+ "model_crate": true,
+ "finished": "2026-10-24T11:23:01Z",
+ "admission": {
+  "status": "candidate",
+  "label": "unlabelled",
+  "gates": {
+   "real_code": {
+    "pass": false,
+    "detail": "upstream archive SHA-256 not pinned in vpipe.toml (this run: ccd7b1baee6ac4acc4a56a80c78c0397d94af4ad15c2f8fe722c509bba9bcf73)"
+   },
+   "every_function": {
+    "pass": false,
+    "detail": "28/116 functions verified or fixed; targets/features covered not declared in [coverage]"
+   },
+   "all_inputs": {
+    "pass": true,
+    "detail": "no bounded-only evidence"
+   },
+   "full_strength": {
+    "pass": false,
+    "detail": "entry strength unlabelled"
+   },
+   "spec_first": {
+    "pass": false,
+    "detail": "need [scope].properties, [scope].written (date) and [scope].reviewed_by"
+   },
+   "not_vacuous": {
+    "pass": false,
+    "detail": "no planted-bug run on this commit (`vpipe mutate`); [scope].test_vectors missing"
+   },
+   "trusted_base": {
+    "pass": true,
+    "detail": "clean; kernel replay passed"
+   },
+   "cross_check": {
+    "pass": false,
+    "detail": "no [crosscheck] commands"
+   },
+   "reproducible": {
+    "pass": false,
+    "detail": "0 matching clean run(s) on this toolchain; no container digest pinned in toolchain/versions.toml [container]"
+   },
+   "two_reviews": {
+    "pass": false,
+    "detail": "need [review].maintainer and [review].adversarial"
+   }
+  },
+  "passed": 2,
+  "soundness_bugs": [],
+  "admitted": false
+ }
 }

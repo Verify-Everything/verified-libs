@@ -11,9 +11,9 @@ Strength = weakest per-function label (full-correctness > safety-contracts > no-
 
 | Library | Tool | Version | Proved | Sorries | Extra-axiom thms | Axioms | Skipped | Functions | Progress | Strength | Entry | Run |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| crc32fast | lean-aeneas | 1.5.3 | 1151/1151 | 0 | 0 | 0 | 0 | 46/46 | complete | full-correctness | candidate (4/10) | 2026-10-24T09:01:06Z |
-| percent-encoding | lean-aeneas | 2.3.2 | 123/123 | 0 | 0 | 0 | 1 | 28/33 | open: 5 functions | unlabelled | candidate (2/10) | 2026-10-24T07:57:29Z |
-| semver | lean-aeneas | 1.0.28 | 145/145 | 0 | 0 | 0 | 0 | 4/92 | open: 88 functions | - | - (0/10) | 2026-10-24T06:02:56Z |
+| crc32fast | lean-aeneas | 1.5.3 | 1151/1151 | 0 | 0 | 0 | 0 | 46/46 | complete | full-correctness | candidate (4/10) | 2026-10-24T11:09:34Z |
+| percent-encoding | lean-aeneas | 2.3.2 | 123/123 | 0 | 0 | 0 | 1 | 28/33 | open: 5 functions | unlabelled | candidate (2/10) | 2026-10-24T11:18:09Z |
+| semver | lean-aeneas | 1.0.28 | 145/145 | 0 | 0 | 0 | 0 | 28/116 | open: 88 functions | unlabelled | candidate (2/10) | 2026-10-24T11:23:01Z |
 
 ## percent-encoding: open functions (5 of 33)
 
@@ -25,7 +25,7 @@ Strength = weakest per-function label (full-correctness > safety-contracts > no-
 | `src/lib.rs:PercentDecode::if_any` | proved only on the patched body; the patch is not yet proved equivalent to the original (admission gate 1) |
 | `src/lib.rs:decode_utf8_lossy` | proved only on the patched body; the patch is not yet proved equivalent to the original (admission gate 1) |
 
-## semver: open functions (88 of 92)
+## semver: open functions (88 of 116)
 
 | Function | Why open |
 |---|---|

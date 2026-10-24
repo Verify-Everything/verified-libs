@@ -628,9 +628,24 @@ def prove_framac(m, src, proj, mutant=None, tag="annotated", clean=False, only=N
                     "annotation_diffs": [], "seconds": 0, "log": ((r.stdout or "") + (r.stderr or ""))[-4000:]}
     if mutant:
         apply_mutant(tree, mutant)
-    honesty = annotation_only(src, proj / "src") if (proj / "src").exists() else []
+    # Tool patches (Neovim): statements rewritten so WP can read them. The annotated code must equal
+    # upstream with exactly these rewrites, and each rewrite needs an equivalence harness that passes.
+    ref, tps = src, []
+    if f.get("tool_patch"):
+        ref = WORK / m["name"] / f"upstream-tool-patched-{tag}"
+        shutil.rmtree(ref, ignore_errors=True)
+        shutil.copytree(src, ref, ignore=shutil.ignore_patterns(".git"))
+        for tp in f["tool_patch"]:
+            rec = {"id": tp.get("id"), "file": tp.get("file")}
+            try:
+                apply_mutant(ref, {"file": tp["file"], "find": tp["original"], "replace": tp["rewritten"]})
+                rec.update(run_cbmc({"harness": tp.get("harness", ""), "harness_files": tp.get("harness_files", [])}, tree))
+            except (KeyError, ValueError) as e:
+                rec.update(ok=False, why=str(e))
+            tps.append(rec)
+    honesty = annotation_only(ref, proj / "src") if (proj / "src").exists() else []
     if f.get("annotate") and not mutant:
-        honesty += [x for x in annotation_only_files(src, tree, f.get("files", [])) if x not in honesty]
+        honesty += [x for x in annotation_only_files(ref, tree, f.get("files", [])) if x not in honesty]
     wp_args = f.get("wp_args", ["-wp-rte", "-wp-literals"])
     session = WORK / m["name"] / f"wp-session-{tag}"
     if clean or mutant:  # no cached proof results: clean runs and planted-bug runs prove from scratch
@@ -670,8 +685,8 @@ def prove_framac(m, src, proj, mutant=None, tag="annotated", clean=False, only=N
         e["total"] += 1
         e["proved"] += 1 if g.get("passed") else 0
     rc_bad = [n for n, r, _ in runs if r.returncode != 0]
-    return {"ok": not rc_bad and not failed and bool(goals) and not honesty,
-            "annotation_diffs": honesty, "wp_args": wp_args, "runs": len(runs), "failed_runs": rc_bad[:50],
+    return {"ok": not rc_bad and not failed and bool(goals) and not honesty and all(t["ok"] for t in tps),
+            "annotation_diffs": honesty, "wp_args": wp_args, "tool_patches": tps, "runs": len(runs), "failed_runs": rc_bad[:50],
             "per_function": dict(sorted(per_fn.items())),
             "seconds": (dt.datetime.now() - t0).seconds, "proved": len(goals) - len(failed),
             "total": len(goals), "failed": failed[:200],
@@ -962,7 +977,17 @@ def run_cbmc(ov, tree):
     r = sh(cmd.format(tree=tree), cwd=tree, check=False, capture=True, timeout=6 * 3600)
     out = (r.stdout or "") + (r.stderr or "")
     ok = r.returncode == 0 and "VERIFICATION SUCCESSFUL" in out
-    return {"ok": ok, "cmd": cmd, "why": "" if ok else f"exit {r.returncode}, no VERIFICATION SUCCESSFUL", "tail": out[-1500:]}
+    # complete = true claims the harness covers every input (straight-line or fixed loops, inputs over
+    # their whole type, no size limits). Machine part: listed harness files contain no __CPROVER_assume.
+    # The reviewer checks the rest of the claim.
+    assumes = []
+    for hf in ov.get("harness_files", []):
+        t = (Path(str(tree)) / hf) if not Path(hf).is_absolute() else Path(hf)
+        if t.exists() and "__CPROVER_assume" in t.read_text(errors="replace"):
+            assumes.append(hf)
+    complete = bool(ov.get("complete")) and bool(ov.get("harness_files")) and not assumes
+    return {"ok": ok, "cmd": cmd, "why": "" if ok else f"exit {r.returncode}, no VERIFICATION SUCCESSFUL",
+            "complete": complete, "assume_in": assumes, "tail": out[-1500:]}
 
 
 # ---------------------------------------------------------------- work queue

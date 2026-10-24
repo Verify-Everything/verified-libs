@@ -75,3 +75,16 @@ Snapshots for rollback are in self/snapshots/.
   CLAIM.md written, entry status candidate with 1/10 gates (correct: nothing pinned or reviewed
   yet). Planted bug `^`->`&` in fold_16 was caught. Fixture tests: annotate hook (dishonest
   annotation rejected), per-function WP 17/17, CBMC pass/fail/no-unwinding cases, take/next.
+
+## 2026-10-24T07:25Z v0.2.1 Frama-C tool patches and complete CBMC harnesses (Neovim thread)
+- what: [[framac.tool_patch]] (id, file, original, rewritten, harness, harness_files): statements
+  rewritten so WP can read them. The annotation check compares against upstream with exactly these
+  rewrites, and each rewrite's CBMC equivalence harness must pass with --unwinding-assertions;
+  otherwise the run fails and gate 1 (real code) fails. CBMC evidence with complete = true and
+  harness_files free of __CPROVER_assume keeps its declared label (e.g. full-correctness) instead of
+  bounded; the reviewer checks the completeness claim.
+- why: the standard forbids admit; Neovim base64 needs 4 rewrites WP's memory model can read.
+- check: fixture tests (undeclared rewrite rejected, declared rewrite with passing harness accepted
+  13/13, harness without unwinding assertions refused, complete vs bounded labels); quick gate passed.
+- not done: Codex/Gemini agent CLIs (toolkit request). The change was blocked by this session's
+  safety check; waiting for Yerin.

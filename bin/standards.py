@@ -78,8 +78,8 @@ def function_label(fn, tool, override):
     declared = override.get("label")
     if fn["status"] == "open":
         return "none"
-    if override.get("verified_by") == "cbmc" and not override.get("unbounded"):
-        return "bounded"
+    if override.get("verified_by") == "cbmc" and not (fn.get("cbmc") or {}).get("complete"):
+        return "bounded"  # a complete harness (complete = true, no __CPROVER_assume) may keep its declared label
     if tool == "framac" and not fn.get("has_ensures", True):
         return "no-ub"
     if declared not in LABELS:
@@ -122,6 +122,9 @@ def gates(m, res, overrides, history, mutants, container=None):
                           if not sha_pin else f"upstream archive SHA-256 changed: pinned {sha_pin}, got {sha_now}"}
     elif model and not (trust.get("model_equivalence") and set(trust["model_equivalence"]) <= proved):
         g["real_code"] = {"pass": False, "detail": "proofs are about a model crate with no proved model-to-code equivalence"}
+    elif [t for t in (res.get("prove") or {}).get("tool_patches", []) if not t.get("ok")]:
+        g["real_code"] = {"pass": False, "detail": "tool patches without a passing equivalence harness: "
+                          + str([t["id"] for t in res["prove"]["tool_patches"] if not t.get("ok")])}
     elif unproved_tool_patches:
         g["real_code"] = {"pass": False, "detail": f"tool-only patches without a proved equivalence: {unproved_tool_patches}"}
     else:

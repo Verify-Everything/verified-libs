@@ -33,10 +33,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
+      - name: Read the container pin (toolchain/versions.toml [container])
+        id: pin
+        run: |
+          python3 - >> "$GITHUB_OUTPUT" <<'PY'
+          import tomllib
+          c = tomllib.load(open("toolchain/versions.toml", "rb")).get("container", {})
+          print("image=" + c.get("image", "ghcr.io/verify-everything/verified-libs-toolchain"))
+          print("digest=" + c.get("digest", ""))
+          PY
+      - name: Free disk for the toolchain image (about 19 GB unpacked)
+        if: steps.pin.outputs.digest != ''
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache /usr/share/swift
+      # Without a pinned image (gate 9 then fails for every entry), install the tools on the runner.
       - uses: actions/setup-python@v5
+        if: steps.pin.outputs.digest == ''
         with: { python-version: "3.12" }
       - uses: cachix/install-nix-action@v31
+        if: steps.pin.outputs.digest == ''
       - name: Cache toolchains and mathlib
+        if: steps.pin.outputs.digest == ''
         uses: actions/cache@v4
         with:
           path: |
@@ -45,33 +61,34 @@ jobs:
             ~/.rustup
           key: tools-${{ hashFiles('toolchain/versions.toml') }}
       - name: Install
+        if: steps.pin.outputs.digest == ''
         run: |
           bash install.sh --yes --agents none --tools lean,framac,cbmc
           echo "$HOME/.vpipe/bin" >> "$GITHUB_PATH"
-      - run: vkit doctor || true
-      - name: Engine gate
-        run: python3 self/gate.py --full
-      - name: Pick libraries
+      - name: Pick libraries and entries
         id: libs
         run: |
           if [ "${{ github.event_name }}" = pull_request ]; then
-            libs=$(git diff --name-only "${{ github.event.pull_request.base.sha }}" HEAD \
-                   | sed -nE 's#^libraries/([^/]+)/.*#\1#p' | sort -u | tr '\n' ' ')
+            changed=$(git diff --name-only "${{ github.event.pull_request.base.sha }}" HEAD)
+            libs=$( { echo "$changed" | sed -nE 's#^libraries/([^/]+)/.*#\1#p'
+                      echo "$changed" | sed -nE 's#^(candidates|libs)/([^/]+/[^/]+)/.*#\2#p'; } | sort -u | tr '\n' ' ')
           else
-            libs=$(ls libraries | tr '\n' ' ')
+            libs=$( { ls libraries; ls -d candidates/*/*/ libs/*/*/ 2>/dev/null | sed -E 's#^[^/]+/##; s#/$##'; } | tr '\n' ' ')
           fi
           echo "libs=$libs" >> "$GITHUB_OUTPUT"
-      - name: Run
+      - name: Gate and runs
+        env:
+          IMAGE: ${{ steps.pin.outputs.image }}
+          DIGEST: ${{ steps.pin.outputs.digest }}
+          VPIPE_CI_RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          fail=0
-          for l in ${{ steps.libs.outputs.libs }}; do
-            [ -f "libraries/$l/vpipe.toml" ] || continue
-            vkit run "$l" || fail=1
-            rm -rf "$HOME/vpipe-work/$l"   # keep runner disk free
-          done
-          vkit report
+          if [ -n "$DIGEST" ]; then
+            docker run --rm -v "$PWD:/work" -e VPIPE_CONTAINER_DIGEST="$DIGEST" -e VPIPE_CI_RUN \
+              "$IMAGE@$DIGEST" bash scripts/ci-run.sh ${{ steps.libs.outputs.libs }}
+          else
+            bash scripts/ci-run.sh ${{ steps.libs.outputs.libs }}
+          fi
           cat results/SUMMARY.md >> "$GITHUB_STEP_SUMMARY"
-          exit $fail
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: results, path: results/ }

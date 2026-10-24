@@ -68,6 +68,21 @@ choose "Reopen in Container". `postCreateCommand` runs the installer with all to
 devcontainer up --workspace-folder .
 ```
 
+## Pinned toolchain container
+`container/Dockerfile` is the image CI re-checks every entry in (admission gate 9). It holds only
+the tools; mount a checkout at `/work`:
+```bash
+docker pull ghcr.io/verify-everything/verified-libs-toolchain@<digest from toolchain/versions.toml>
+docker run --rm -v "$PWD:/work" ghcr.io/verify-everything/verified-libs-toolchain@<digest> \
+  python3 bin/vpipe.py run crc32fast
+```
+To build it yourself: `docker build -f container/Dockerfile -t verified-libs-toolchain .`. It is
+big: about 19 GB unpacked (mathlib, Lean, Rust nightly, the Nix closure of Frama-C), so leave
+30 GB free disk. Installing the tools and running the full engine gate inside it took 6 minutes
+on 2026-10-24; writing the layer took longer. Behind a TLS-intercepting proxy add
+`--secret id=ca,src=<ca.pem> --build-arg HTTPS_PROXY --build-arg APT_HTTPS=1`; the CA is used
+during the build and not kept in the image.
+
 ## Restricted networks
 Some sandboxes block hosts. `vkit doctor` shows which. Workarounds the engine already uses:
 - `release.lean-lang.org`: Lean comes from the GitHub release instead.

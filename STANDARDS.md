@@ -90,6 +90,12 @@ current entries there are candidates).
   `full-correctness` with both sign-offs under `libs/`; "Not covered" empty for `verified`.
 - `scripts/check-repo.py`: CLAIM.md present with the required sections; forbidden Lean constructs
   in hand-written proof files; "verified" status with placeholders or a non-empty "Not covered".
-- Engine: every-function inventory (Functions N/M) and the Lean axiom audit.
-- Not yet automated (tracked for the engine): lean4checker replay, container digests, archive
-  SHA-256, two-run reproducibility, FunsExternal model tests. Until automated, reviewers check them.
+- Engine (vpipe 0.2): every-function inventory (Functions N/M), the Lean axiom audit,
+  forbidden-construct scan, `leanchecker` kernel replay, archive SHA-256 check, toolchain digest,
+  two matching `--clean` runs, planted-bug runs (`vpipe mutate`), stale marking
+  (`vpipe check-upstream`), and the ten gates written into each generated CLAIM.md.
+- Pinned container (gate 9): `container/Dockerfile` holds every tool; the `toolchain-image`
+  workflow builds it and pushes it to `ghcr.io/verify-everything/verified-libs-toolchain` on main.
+  Once its digest is set in `toolchain/versions.toml` `[container]`, the verify job runs inside
+  `image@digest` and passes the digest to the engine. Until then no entry can pass gate 9.
+- Not yet automated: FunsExternal model tests. Until automated, reviewers check them.

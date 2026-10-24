@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <title>verified-libs</title>
+  <rect width="512" height="512" fill="#0E1726"/>
+  <g transform="translate(-13 -1)">
+    <!-- A library package (cube) ... -->
+    <g fill="none" stroke="#C9D4E3" stroke-width="26" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M205 75 L318 140 L318 270 L205 335 L92 270 L92 140 Z"/>
+      <path d="M92 140 L205 205 L318 140 M205 205 L205 335"/>
+    </g>
+    <!-- ... carrying the Verify Everything seal. -->
+    <circle cx="360" cy="352" r="100" fill="#0E1726"/>
+    <circle cx="360" cy="352" r="86" fill="#5EEAA8"/>
+    <g transform="translate(360 354) scale(0.39) translate(-256 -250)" fill="none" stroke="#0E1726" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M134 190 L232 396 L378 104" stroke-width="50"/>
+      <path d="M168 268 L300 268" stroke-width="34" stroke-linecap="butt"/>
+    </g>
+  </g>
+</svg>

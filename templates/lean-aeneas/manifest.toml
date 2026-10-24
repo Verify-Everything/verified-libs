@@ -5,6 +5,7 @@ tool = "{tool}"
 upstream = "{upstream}"
 commit = "{commit}"          # pin exactly; bump to re-verify a new release
 version = "{version}"
+archive_sha256 = ""          # SHA-256 of `git archive <commit>`; copy it from the first run's CLAIM.md
 thread = ""                  # project thread working on it, if any
 
 [extract]
@@ -18,10 +19,36 @@ cargo_args = []
 # cargo_lock = "Cargo.lock"   # reviewed lockfile in libraries/<lib>/; if present, cargo runs --locked
 aeneas_args = []
 
+# ---- Admission standard (verified-libs). `vpipe card` shows which of the ten gates pass. ----
+
 [scope]
-# What "verified" means for this library. The agent and the report both read this.
-properties = []              # e.g. "decode(encode(x)) == x for all byte strings"
-exclusions = []              # e.g. "SIMD path", "functions using unsafe"
+summary = ""                 # what the library promises, in plain words (CLAIM.md "Plain words")
+properties = []              # success criteria; vpipe refuses to prove while this is empty
+spec_files = []              # formal spec files, relative to proof/
+test_vectors = []            # published vectors or the standard the spec matches (e.g. "RFC 3986 2.1")
+written = ""                 # date the criteria were written (before proof work)
+reviewed_by = ""             # maintainer who reviewed them (not the proof author)
+exclusions = []              # recorded for history only: no exclusion counts toward admission
+
+[coverage]
+targets = []                 # every Cargo feature / build option and target covered, e.g. ["x86_64 std", "no_std"]
+
+[trust]
+models = []                  # std or library models (axioms) the proofs rely on, each with its test
+axioms = []                  # any other assumption the checker reports
+tool_assumptions = ""
+unsafe = ""                  # unsafe / FFI boundaries and how each is proved
+# model_crate = false        # true if proofs are about a hand-written model of the code
+# model_equivalence = []     # proved theorems that the model equals the real code
+
+[crosscheck]
+commands = []                # differential tests of the translation vs the compiled upstream library;
+                             # {{tree}} {{proj}} {{build}} expand
+
+[review]
+author = ""                  # proof author (cannot review)
+maintainer = ""              # name, date
+adversarial = ""             # review session/report link, date
 
 # Optional. Source rewrites that make the crate Aeneas-friendly, applied to a fresh copy of the
 # pinned checkout before Charon. Keep them small, state them in the report, and test them below.

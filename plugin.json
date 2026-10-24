@@ -1,0 +1,25 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "verify-everything",
+  "version": "0.1.0",
+  "description": "Skills for formally verifying open-source libraries: pick a target, set up Lean/Aeneas/Frama-C/CBMC, write proofs, and submit results to Verify-Everything/verified-libs.",
+  "author": { "name": "Verify-Everything", "url": "https://github.com/Verify-Everything" },
+  "homepage": "https://github.com/Verify-Everything/verified-libs",
+  "repository": "https://github.com/Verify-Everything/verified-libs",
+  "keywords": ["formal-verification", "lean", "aeneas", "frama-c", "cbmc"],
+  "extensions": {
+    "com.openai": {
+      "onboardingSkill": "./skills/verification-setup/SKILL.md",
+      "interface": {
+        "displayName": "Verify Everything",
+        "shortDescription": "Formally verify open-source libraries",
+        "developerName": "Verify-Everything",
+        "category": "Coding",
+        "defaultPrompt": [
+          "Use Verify Everything to pick a small, widely used Rust crate and verify it in Lean.",
+          "Use Verify Everything to run vkit doctor and fix my toolchain."
+        ]
+      }
+    }
+  }
+}

@@ -41,7 +41,8 @@ Work: /mnt/project-files/helix-verify/selection/ (model/, lean/, difftest/, axio
 - In progress: proof that the real helix-core code equals the model (Charon reads real helix-core; Aeneas fails only on the fn-item `Range::from` used as a closure and on update_positions).
 - O: Debug impls (Range, Selection), `unicode-lines` feature, map_no_normalize size cap (model needs 2*len <= usize::MAX), ropey/smallvec/unicode-segmentation/regex/tree-house behaviour (trusted until those crates are verified).
 - Findings (not filed): transform_iter keeps a stale primary_index (panics if 2 <= count <= pi; invalid selection if count < 2); Selection::new with bad primary index and 1 range returns an invalid selection; is_subset / Selection::contains doc comments not exact ([0,3] vs point 3 gives false); LineRangeIter::next underflows on unsorted selections (reachable via primary_mut / map_no_normalize); merge_consecutive_ranges does not sort.
-- position.rs: model proofs in progress (worker), bridge to real code not started.
+- position.rs: MODEL-PROVED all 17 functions + derives except Debug (23 theorems, std axioms; difftest 120k-240k cases each). Bridge to real code in progress (helix-verify/position/real/). O: Debug, `unicode-lines`, size caps to classify. Details: helix-verify/position/STATUS.md.
+- position.rs findings (not filed): pos_at_coords(limit=false) panics when row > len_lines; tab_width = 0 divides by zero; softwrapped_dimensions truncates with `as u16` (70000 chars -> 4464); Position Sub is componentwise ((1,0)-(0,1) panics in debug, wraps in release); visual_offset_from_anchor `anchor_line + max_rows` overflows for max_rows = usize::MAX. doc_formatter (other thread): loops forever when the wrap indicator is wider than viewport minus retained indent (e.g. viewport 12, indicator "->->->->-> ").
 ### Parsers/utilities thread ("Verify Helix parsers": command_line, snippets/*, uri, fuzzy, diff, editor_config, config, diagnostic)
 Work dirs: helix-verify/command_line/, helix-verify/snippets_parse/, helix-verify/snippets_render/, helix-verify/utils/ (each has STATUS.md).
 - BUG editor_config.rs `is_glob_relative`: `idx = ... |close| idx + close` should be `open + close`.
@@ -61,6 +62,19 @@ Shared layer (text.rs: categorize_char, graphemes, lines, Range::cursor/put_curs
 ### Editing helpers (thread "Verify Helix editing helpers", started 2026-10-24)
 history.rs, auto_pairs.rs, comment.rs, indent.rs, increment/*, text_annotations.rs, doc_formatter.rs. Work in /mnt/project-files/helix-verify/helpers/<module>/.
 - O all (in progress)
+
+### graphemes.rs, line_ending.rs, chars.rs, case_conversion.rs, rope_reader.rs, wrap.rs — thread "Verify Helix text helpers"
+Work: /mnt/project-files/helix-verify/text/ (model/, lean/ = model proofs, gen/ = Unicode table generator, difftest/, real/ = real-code extraction).
+- MODEL-PROVED, counts only as `tested`: chars.rs (all 5), case_conversion.rs (all), rope_reader.rs, line_ending.rs 19 of 22
+  (open: auto_detect_line_ending, rope_is_line_ending, detectable helper). Unicode facts come from generated Lean tables
+  (Rust 1.90 std / Unicode 16, unicode-width 0.1.12, unicode-general-category 1.1.0). Difftest vs upstream: 0 mismatches.
+- REAL CODE (2026-10-24): Charon+Aeneas read the unmodified upstream modules. 77 functions translate; 8 come out as sorry
+  (from_char, char_is_whitespace, Grapheme::is_whitespace/is_word_boundary, nth_prev/next_grapheme_boundary, RopeReader::read,
+  reflow_hard_wrap); rope_is_line_ending and get_line_ending_of_str crash Aeneas and need another route. Details: text/real/EXTRACT.md.
+- Next: replace the 69 external axioms with definitions (std models + difftests; ropey/unicode-segmentation/etc. as open
+  assumptions), then re-prove the model specs on the real extraction.
+- Findings (not filed): tab_width 0 panics (tab_width_at, Grapheme::new); Grapheme::new("") then width() panics;
+  GraphemeStr::from panics at >= 2^31 bytes; to_camel_case on "_ab" gives "aB".
 
 ### All other helix-core modules: O
 command_line.rs 40, movement.rs 29, indent.rs 27, graphemes.rs 26, text_annotations.rs 24,
@@ -82,8 +96,10 @@ search 4, editor_config 4, fuzzy 3, diagnostic 3, rope_reader 2, wrap 1, complet
 - Each finished check goes into the vpipe pipeline so it re-runs on demand.
 
 ## Open external assumptions (non-std crates Helix code reaches; see helix-method.md rule)
+Decision (Yerin, 2026-10-24): verify the used parts of ropey, smartstring and smallvec as separate entries on their real code. Helix stays candidate until then.
 - ropey 1.6.1 (Rope, RopeSlice: len_chars, slice, insert, remove, chars, ...) — used by transaction.rs, selection.rs, most modules
 - smartstring 1.0.1 (Tendril) — transaction.rs
 - smallvec 1.15 — selection.rs, transaction.rs
 - unicode-segmentation, unicode-width, regex, tree-house — selection.rs, graphemes, movement
+- unicode-general-category 1.1, str_indices, textwrap 0.16.2 — chars.rs, graphemes.rs, wrap.rs (text helpers thread)
 - log 0.4 — logging only

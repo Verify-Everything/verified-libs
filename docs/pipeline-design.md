@@ -1,6 +1,6 @@
 # Verification pipeline design
 
-Owner: analysis thread "Streamline the verification pipeline". Status: **v1, built and tested** (2026-10-24 ~04:45 UTC).
+Owner: analysis thread "Streamline the verification pipeline". Status: **v2, admission standard built in** (2026-10-24 ~07:20 UTC, pipeline 0.2.0).
 The pipeline itself lives in `/mnt/project-files/pipeline/` (start with its README.md).
 
 ## 1. What the threads repeat (evidence from notes so far)
@@ -124,7 +124,37 @@ Still needed (backlog):
   result JSON schema is the one in results/*/latest.json (library, commit, toolchain, extract, prove,
   functions).
 
+## 8. Admission standard in the engine (approved by Yerin 2026-10-24 06:51)
+Standard: https://claude.ai/artifact/1tqQsrMgXckaNZQJVXPWvp. Code: `pipeline/bin/standards.py`.
+- **Layout:** `candidates/<name>/<version>/` until admitted, `libs/<name>/<version>/` after. Each entry:
+  `vpipe.toml`, `CLAIM.md` (generated, with the front matter `scripts/check_structure.py` reads),
+  `proof/` (Lean project or annotated C, plus functions.toml), `spec/`, `pipeline/run.sh`,
+  and the reviewer's `mutants.toml`. Older `libraries/<lib>/` folders still work;
+  `vpipe export <lib> --dest <verified-libs clone>` copies one into the repo layout.
+- **Every run** computes the ten gates and writes CLAIM.md: archive SHA-256 must match the pin in
+  vpipe.toml; every function verified and [coverage].targets declared; no bounded-only evidence;
+  entry strength (weakest function label) = full-correctness; [scope] written + reviewed before
+  proving (vpipe refuses to prove with no properties); reviewer-chosen planted bugs, at least 10, all
+  caught, plus test vectors; forbidden-construct scan + axiom audit + `leanchecker` kernel replay,
+  every axiom/model listed in [trust]; [crosscheck] commands pass; two matching clean runs in the
+  pinned container; maintainer and adversarial sign-offs, neither the author.
+- **Status:** candidates are always `candidate` (or `stale` when the manifest moved to an unproved
+  commit); `vpipe admit` moves an entry to libs/ only when all gates pass. Under libs/: `verified`,
+  or `broken` when a gate fails, there is no clean green run in 14 days, or a tool version is in
+  toolchain/soundness.toml; `revoked` by hand ([status] revoked = "..."). A newer upstream release
+  (`vpipe check-upstream`) is recorded as stale for the new version; `--scaffold` makes its
+  candidate folder.
+- **Labels:** `label = ...` per function in functions.toml, capped by evidence (CBMC = bounded, C
+  without ensures = no-ub). No label = unlabelled, which blocks admission.
+- **Not yet possible here:** a container digest (gate 9) needs a published image; until the toolkit
+  makes one, `[container].digest` in toolchain/versions.toml stays empty and no entry can pass gate 9.
+  The toolchain digest (sha256 over the pinned versions and the tool binaries) is recorded meanwhile.
+- **Today:** crc32fast passes 1/10 gates (all-inputs). The rest need the threads and Yerin: pin the
+  archive hash, labels in functions.toml, [coverage], [trust] models, test vectors, mutants.toml
+  from a reviewer, a cross-check command, the container, and the two sign-offs.
+
 ## Changelog
+- v2 (07:20): admission standard built into the engine (pipeline 0.2.0); candidates/libs layout; Neovim swarm features.
 - v1.5 (06:00): every-function completion rule enforced; repo layout for verified-libs; contributor install needs; one folder per library; shared mathlib.
 - v1.4 (05:35): inih and Neovim Frama-C lessons folded in (v0.1.4); Helix thread noted, using the same model-crate method as semver.
 - v1.3 (05:25): percent-encoding runs natively in vpipe (49/49, tests and differential test included); pipeline v0.1.3 adds patches, test commands, fix-up hooks.

@@ -1,0 +1,1147 @@
+{
+ "library": "percent-encoding",
+ "commit": "00a6ce58d02f4e0d43c5ca0702c0bedb8b1ebf3a",
+ "version": "2.3.2",
+ "tool": "lean-aeneas",
+ "started": "2026-10-24T06:44:56Z",
+ "pipeline_version": "0.1.5",
+ "toolchain": {
+  "aeneas": "nightly-2026.10.23-fdebf20",
+  "charon_rust": "nightly-2026-09-17",
+  "lean": "4.35.0",
+  "aeneas_dir": "/root/.vpipe/aeneas-nightly-2026.10.23-fdebf20"
+ },
+ "source": {
+  "patches": [
+   "rust/aeneas-friendly.patch"
+  ],
+  "tests": [
+   {
+    "cmd": "sed -i 's/^name = \"percent-encoding\"/name = \"percent-encoding-aeneas\"/' {tree}/percent_encoding/Cargo.toml && printf '\\n[lib]\\nname = \"percent_encoding\"\\n' >> {tree}/percent_encoding/Cargo.toml",
+    "ok": true,
+    "tail": ""
+   },
+   {
+    "cmd": "cd {tree}/percent_encoding && cargo +stable test --quiet",
+    "ok": true,
+    "tail": "\nrunning 18 tests\n..................\ntest result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 6 tests\n......\ntest result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.25s\n\n"
+   },
+   {
+    "cmd": "rm -rf {tree}/../difftest && cp -r {proj}/rust/difftest {tree}/../difftest && cd {tree}/../difftest && sed -i \"s#../../../rust-url/percent_encoding#{src}/percent_encoding#; s#../percent_encoding_patched#{tree}/percent_encoding#\" Cargo.toml && cargo +stable run --release --quiet -- 2000000",
+    "ok": true,
+    "tail": "difftest OK: 18777216 cases (exhaustive up to length 2 for 3 sets, length 3 for CONTROLS, plus random)\n"
+   }
+  ]
+ },
+ "extract": {
+  "ok": true,
+  "stage": "aeneas",
+  "aeneas_rc": 1,
+  "postprocess": [
+   {
+    "script": "scripts/postprocess.py",
+    "ok": true,
+    "out": "postprocess: replaced 1 U32.rem, removed 2 size_hint fields, qualified 1 decode_utf8_lossy call\n"
+   }
+  ],
+  "unexpected_errors": [],
+  "unsupported": [
+   {
+    "error": "Unimplemented",
+    "source": "'src/lib.rs', lines 283:4-283:30; this code is generated from a macro invocation at: 'src/lib.rs', lines 281:16-281:21"
+   }
+  ],
+  "assumed_axioms": [
+   "core.intrinsics.transmute",
+   "core.iter.traits.iterator.Iterator.size_hint.default"
+  ],
+  "external_template_changes": [],
+  "warnings": [
+   "Could not translate the body of function 'percent_encoding::{impl core::fmt::Debug for percent_encoding::PercentDecode<'a>}::fmt because of previous error",
+   "When retrieving the builtin information for trait decl 'core::iter::traits::iterator::Iterator', could not find the information for item 'size_hint'. The model defined in the Lean library seems to be missing the corresponding field."
+  ],
+  "log": "[Info ] Imported: /root/vpipe-work/percent-encoding/percent-encoding.llbc\n[Error] Unimplemented\nSource: 'src/lib.rs', lines 283:4-283:30; this code is generated from a macro invocation at: 'src/lib.rs', lines 281:16-281:21\n[Warn ] Could not translate the body of function 'percent_encoding::{impl core::fmt::Debug for percent_encoding::PercentDecode<'a>}::fmt because of previous error\nName pattern: 'percent_encoding::{core::fmt::Debug<percent_encoding::PercentDecode<'a>>}::fmt'\nDefinition span: 'src/lib.rs', lines 281:16-281:21\nSource: 'src/lib.rs', lines 283:4-283:30; this code is generated from a macro invocation at: 'src/lib.rs', lines 281:16-281:21\nCompiler source: interp/Interp.ml, line 682\n\n[Warn ] When retrieving the builtin information for trait decl 'core::iter::traits::iterator::Iterator', could not find the information for item 'size_hint'. The model defined in the Lean library seems to be missing the corresponding field.\nSource: '/rustc/library/core/src/iter/traits/iterator.rs', lines 42:0-42:24\nCompiler source: extract/Extract.ml, line 2866\n\n[Info ] Generated the partial file (because of 1 errors, including 1 unique errors): /root/vpipe-work/percent-encoding/proj/PercentEncoding/TypesExternal_Template.lean\n[Info ] Generated the partial file (because of 1 errors, including 1 unique errors): /root/vpipe-work/percent-encoding/proj/PercentEncoding/Types.lean\n[Info ] Generated the partial file (because of 1 errors, including 1 unique errors): /root/vpipe-work/percent-encoding/proj/PercentEncoding/FunsExternal_Template.lean\n[Info ] Generated the partial file (because of 1 errors, including 1 unique errors): /root/vpipe-work/percent-encoding/proj/PercentEncoding/Funs.lean\n[Info ] Total execution time: 1.081537 seconds\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+ },
+ "prove": {
+  "ok": false,
+  "seconds": 657,
+  "theorems": [
+   {
+    "name": "decode_no_pct",
+    "file": "Proofs/Alloc.lean",
+    "line": 16,
+    "status": "error"
+   },
+   {
+    "name": "decode_append_noescape",
+    "file": "Proofs/Alloc.lean",
+    "line": 24,
+    "status": "error"
+   },
+   {
+    "name": "decode_shorter",
+    "file": "Proofs/Alloc.lean",
+    "line": 41,
+    "status": "error"
+   },
+   {
+    "name": "decode_eq_self_iff",
+    "file": "Proofs/Alloc.lean",
+    "line": 80,
+    "status": "error"
+   },
+   {
+    "name": "position_of_percent_loop_spec",
+    "file": "Proofs/Alloc.lean",
+    "line": 93,
+    "status": "error"
+   },
+   {
+    "name": "position_of_percent_spec",
+    "file": "Proofs/Alloc.lean",
+    "line": 116,
+    "status": "error"
+   },
+   {
+    "name": "vec_extend_decode_spec",
+    "file": "Proofs/Alloc.lean",
+    "line": 141,
+    "status": "error"
+   },
+   {
+    "name": "remBytes_iter0",
+    "file": "Proofs/Alloc.lean",
+    "line": 171,
+    "status": "error"
+   },
+   {
+    "name": "decode_from_percent_spec",
+    "file": "Proofs/Alloc.lean",
+    "line": 177,
+    "status": "error"
+   },
+   {
+    "name": "decode_of_noesc",
+    "file": "Proofs/Alloc.lean",
+    "line": 246,
+    "status": "error"
+   },
+   {
+    "name": "bytes_drop",
+    "file": "Proofs/Alloc.lean",
+    "line": 258,
+    "status": "error"
+   },
+   {
+    "name": "decode_if_any_spec",
+    "file": "Proofs/Alloc.lean",
+    "line": 262,
+    "status": "error"
+   },
+   {
+    "name": "as_slice_bytes",
+    "file": "Proofs/Alloc.lean",
+    "line": 357,
+    "status": "error"
+   },
+   {
+    "name": "if_any_spec",
+    "file": "Proofs/Alloc.lean",
+    "line": 365,
+    "status": "error"
+   },
+   {
+    "name": "cow_from_decode_spec",
+    "file": "Proofs/Alloc.lean",
+    "line": 380,
+    "status": "error"
+   },
+   {
+    "name": "u8_eq_of_val",
+    "file": "Proofs/Alloc.lean",
+    "line": 401,
+    "status": "error"
+   },
+   {
+    "name": "stringBytes_ofValid",
+    "file": "Proofs/Alloc.lean",
+    "line": 403,
+    "status": "error"
+   },
+   {
+    "name": "stringBytes_append",
+    "file": "Proofs/Alloc.lean",
+    "line": 413,
+    "status": "error"
+   },
+   {
+    "name": "cowSliceBytes_eq",
+    "file": "Proofs/Alloc.lean",
+    "line": 426,
+    "status": "error"
+   },
+   {
+    "name": "decode_utf8_spec",
+    "file": "Proofs/Alloc.lean",
+    "line": 433,
+    "status": "error"
+   },
+   {
+    "name": "decode_utf8_lossy_spec",
+    "file": "Proofs/Alloc.lean",
+    "line": 475,
+    "status": "error"
+   },
+   {
+    "name": "utf8Valid_of_ascii",
+    "file": "Proofs/Alloc.lean",
+    "line": 518,
+    "status": "error"
+   },
+   {
+    "name": "strBytes_ascii_u8",
+    "file": "Proofs/Alloc.lean",
+    "line": 538,
+    "status": "error"
+   },
+   {
+    "name": "push_str_ascii_spec",
+    "file": "Proofs/Alloc.lean",
+    "line": 541,
+    "status": "error"
+   },
+   {
+    "name": "string_extend_encode_spec",
+    "file": "Proofs/Alloc.lean",
+    "line": 550,
+    "status": "error"
+   },
+   {
+    "name": "toStr_empty_val",
+    "file": "Proofs/Alloc.lean",
+    "line": 582,
+    "status": "error"
+   },
+   {
+    "name": "cow_from_encode_spec",
+    "file": "Proofs/Alloc.lean",
+    "line": 586,
+    "status": "error"
+   },
+   {
+    "name": "write_chunks_spec",
+    "file": "Proofs/Alloc.lean",
+    "line": 633,
+    "status": "error"
+   },
+   {
+    "name": "write_chunks_buffer",
+    "file": "Proofs/Alloc.lean",
+    "line": 689,
+    "status": "error"
+   },
+   {
+    "name": "write_chunks_ok",
+    "file": "Proofs/Alloc.lean",
+    "line": 698,
+    "status": "error"
+   },
+   {
+    "name": "display_fmt_spec",
+    "file": "Proofs/Alloc.lean",
+    "line": 734,
+    "status": "error"
+   },
+   {
+    "name": "asciiSet_debug_call",
+    "file": "Proofs/Alloc.lean",
+    "line": 749,
+    "status": "error"
+   },
+   {
+    "name": "asciiSet_debug_ok",
+    "file": "Proofs/Alloc.lean",
+    "line": 754,
+    "status": "error"
+   },
+   {
+    "name": "percentEncode_debug_call",
+    "file": "Proofs/Alloc.lean",
+    "line": 758,
+    "status": "error"
+   },
+   {
+    "name": "percentEncode_debug_ok",
+    "file": "Proofs/Alloc.lean",
+    "line": 767,
+    "status": "error"
+   },
+   {
+    "name": "and_two_pow_ne_zero",
+    "file": "Proofs/Code.lean",
+    "line": 10,
+    "status": "error"
+   },
+   {
+    "name": "size_of_u32_spec",
+    "file": "Proofs/Code.lean",
+    "line": 26,
+    "status": "error"
+   },
+   {
+    "name": "BITS_PER_CHUNK_spec",
+    "file": "Proofs/Code.lean",
+    "line": 30,
+    "status": "error"
+   },
+   {
+    "name": "contains_spec",
+    "file": "Proofs/Code.lean",
+    "line": 35,
+    "status": "error"
+   },
+   {
+    "name": "is_ascii_spec",
+    "file": "Proofs/Code.lean",
+    "line": 61,
+    "status": "error"
+   },
+   {
+    "name": "should_percent_encode_spec",
+    "file": "Proofs/Code.lean",
+    "line": 65,
+    "status": "error"
+   },
+   {
+    "name": "from_utf8_unchecked_spec",
+    "file": "Proofs/Code.lean",
+    "line": 72,
+    "status": "error"
+   },
+   {
+    "name": "enc_table_slices",
+    "file": "Proofs/Code.lean",
+    "line": 79,
+    "status": "error"
+   },
+   {
+    "name": "percent_encode_byte_spec",
+    "file": "Proofs/Code.lean",
+    "line": 86,
+    "status": "error"
+   },
+   {
+    "name": "split_first_spec",
+    "file": "Proofs/Code.lean",
+    "line": 100,
+    "status": "error"
+   },
+   {
+    "name": "encode_next_loop_spec",
+    "file": "Proofs/Code.lean",
+    "line": 114,
+    "status": "error"
+   },
+   {
+    "name": "lt128_of_not_should",
+    "file": "Proofs/Code.lean",
+    "line": 136,
+    "status": "error"
+   },
+   {
+    "name": "encByte_ascii",
+    "file": "Proofs/Code.lean",
+    "line": 141,
+    "status": "error"
+   },
+   {
+    "name": "take_not_should",
+    "file": "Proofs/Code.lean",
+    "line": 151,
+    "status": "error"
+   },
+   {
+    "name": "next_chunk_spec",
+    "file": "Proofs/Code.lean",
+    "line": 171,
+    "status": "error"
+   },
+   {
+    "name": "encode_next_spec",
+    "file": "Proofs/Code.lean",
+    "line": 208,
+    "status": "error"
+   },
+   {
+    "name": "encodeCollect_spec",
+    "file": "Proofs/Code.lean",
+    "line": 237,
+    "status": "error"
+   },
+   {
+    "name": "iter_clone_spec",
+    "file": "Proofs/Code.lean",
+    "line": 250,
+    "status": "error"
+   },
+   {
+    "name": "try_branch_spec",
+    "file": "Proofs/Code.lean",
+    "line": 255,
+    "status": "error"
+   },
+   {
+    "name": "from_residual_spec",
+    "file": "Proofs/Code.lean",
+    "line": 264,
+    "status": "error"
+   },
+   {
+    "name": "char_from_u8_spec",
+    "file": "Proofs/Code.lean",
+    "line": 270,
+    "status": "error"
+   },
+   {
+    "name": "to_digit_16_spec",
+    "file": "Proofs/Code.lean",
+    "line": 279,
+    "status": "error"
+   },
+   {
+    "name": "slice_iter_next_spec",
+    "file": "Proofs/Code.lean",
+    "line": 290,
+    "status": "error"
+   },
+   {
+    "name": "after_percent_sign_spec",
+    "file": "Proofs/Code.lean",
+    "line": 308,
+    "status": "error"
+   },
+   {
+    "name": "remBytes_drop",
+    "file": "Proofs/Code.lean",
+    "line": 322,
+    "status": "error"
+   },
+   {
+    "name": "decode_next_spec",
+    "file": "Proofs/Code.lean",
+    "line": 329,
+    "status": "error"
+   },
+   {
+    "name": "decodeCollect_spec",
+    "file": "Proofs/Code.lean",
+    "line": 388,
+    "status": "error"
+   },
+   {
+    "name": "percent_encode_correct",
+    "file": "Proofs/Code.lean",
+    "line": 401,
+    "status": "error"
+   },
+   {
+    "name": "percent_decode_correct",
+    "file": "Proofs/Code.lean",
+    "line": 412,
+    "status": "error"
+   },
+   {
+    "name": "percent_encode_output_allowed",
+    "file": "Proofs/Code.lean",
+    "line": 423,
+    "status": "error"
+   },
+   {
+    "name": "percent_roundtrip",
+    "file": "Proofs/Code.lean",
+    "line": 439,
+    "status": "error"
+   },
+   {
+    "name": "testBit_or_two_pow",
+    "file": "Proofs/Sets.lean",
+    "line": 15,
+    "status": "error"
+   },
+   {
+    "name": "add_spec",
+    "file": "Proofs/Sets.lean",
+    "line": 21,
+    "status": "error"
+   },
+   {
+    "name": "inSet_eq_map",
+    "file": "Proofs/Sets.lean",
+    "line": 63,
+    "status": "error"
+   },
+   {
+    "name": "CONTROLS_spec",
+    "file": "Proofs/Sets.lean",
+    "line": 74,
+    "status": "error"
+   },
+   {
+    "name": "NON_ALPHANUMERIC_spec",
+    "file": "Proofs/Sets.lean",
+    "line": 93,
+    "status": "error"
+   },
+   {
+    "name": "NON_ALPHANUMERIC_should",
+    "file": "Proofs/Sets.lean",
+    "line": 105,
+    "status": "error"
+   },
+   {
+    "name": "roundtrip_NON_ALPHANUMERIC",
+    "file": "Proofs/Sets.lean",
+    "line": 113,
+    "status": "error"
+   },
+   {
+    "name": "CONTROLS_no_roundtrip",
+    "file": "Proofs/Sets.lean",
+    "line": 124,
+    "status": "error"
+   },
+   {
+    "name": "inSet_eq_chunk",
+    "file": "Proofs/Sets.lean",
+    "line": 139,
+    "status": "error"
+   },
+   {
+    "name": "u32_not_testBit",
+    "file": "Proofs/Sets.lean",
+    "line": 142,
+    "status": "error"
+   },
+   {
+    "name": "u32_not_testBit'",
+    "file": "Proofs/Sets.lean",
+    "line": 149,
+    "status": "error"
+   },
+   {
+    "name": "mask_getElem!",
+    "file": "Proofs/Sets.lean",
+    "line": 153,
+    "status": "error"
+   },
+   {
+    "name": "chunk_cases",
+    "file": "Proofs/Sets.lean",
+    "line": 157,
+    "status": "error"
+   },
+   {
+    "name": "remove_spec",
+    "file": "Proofs/Sets.lean",
+    "line": 162,
+    "status": "error"
+   },
+   {
+    "name": "union_spec",
+    "file": "Proofs/Sets.lean",
+    "line": 208,
+    "status": "error"
+   },
+   {
+    "name": "add_op_spec",
+    "file": "Proofs/Sets.lean",
+    "line": 219,
+    "status": "error"
+   },
+   {
+    "name": "complement_spec",
+    "file": "Proofs/Sets.lean",
+    "line": 228,
+    "status": "error"
+   },
+   {
+    "name": "not_op_spec",
+    "file": "Proofs/Sets.lean",
+    "line": 240,
+    "status": "error"
+   },
+   {
+    "name": "hexVal_hexDigit",
+    "file": "Proofs/SpecLemmas.lean",
+    "line": 10,
+    "status": "error"
+   },
+   {
+    "name": "hexDigit_lt",
+    "file": "Proofs/SpecLemmas.lean",
+    "line": 13,
+    "status": "error"
+   },
+   {
+    "name": "encode_append",
+    "file": "Proofs/SpecLemmas.lean",
+    "line": 16,
+    "status": "error"
+   },
+   {
+    "name": "encode_of_not_should",
+    "file": "Proofs/SpecLemmas.lean",
+    "line": 22,
+    "status": "error"
+   },
+   {
+    "name": "decode_cons_of_ne",
+    "file": "Proofs/SpecLemmas.lean",
+    "line": 30,
+    "status": "error"
+   },
+   {
+    "name": "decode_escape",
+    "file": "Proofs/SpecLemmas.lean",
+    "line": 37,
+    "status": "error"
+   },
+   {
+    "name": "decode_pct",
+    "file": "Proofs/SpecLemmas.lean",
+    "line": 47,
+    "status": "error"
+   },
+   {
+    "name": "hexVal_lt",
+    "file": "Proofs/SpecLemmas.lean",
+    "line": 60,
+    "status": "error"
+   },
+   {
+    "name": "decode_encode",
+    "file": "Proofs/SpecLemmas.lean",
+    "line": 66,
+    "status": "error"
+   },
+   {
+    "name": "hexDigit_isEscapeChar",
+    "file": "Proofs/SpecLemmas.lean",
+    "line": 85,
+    "status": "error"
+   },
+   {
+    "name": "encode_output_allowed",
+    "file": "Proofs/SpecLemmas.lean",
+    "line": 90,
+    "status": "error"
+   },
+   {
+    "name": "allM_zip_eq",
+    "file": "Proofs/Traits.lean",
+    "line": 12,
+    "status": "error"
+   },
+   {
+    "name": "allM_zip_ne_eq",
+    "file": "Proofs/Traits.lean",
+    "line": 29,
+    "status": "error"
+   },
+   {
+    "name": "asciiSet_eq_iff",
+    "file": "Proofs/Traits.lean",
+    "line": 37,
+    "status": "error"
+   },
+   {
+    "name": "asciiSet_eq_spec",
+    "file": "Proofs/Traits.lean",
+    "line": 44,
+    "status": "error"
+   },
+   {
+    "name": "asciiSet_eq_iff_inSet",
+    "file": "Proofs/Traits.lean",
+    "line": 56,
+    "status": "error"
+   },
+   {
+    "name": "slice_u8_eq_spec",
+    "file": "Proofs/Traits.lean",
+    "line": 81,
+    "status": "error"
+   },
+   {
+    "name": "percentEncode_eq_spec",
+    "file": "Proofs/Traits.lean",
+    "line": 97,
+    "status": "error"
+   },
+   {
+    "name": "asciiSet_assert_fields_are_eq",
+    "file": "Proofs/Traits.lean",
+    "line": 111,
+    "status": "error"
+   },
+   {
+    "name": "percentEncode_assert_fields_are_eq",
+    "file": "Proofs/Traits.lean",
+    "line": 113,
+    "status": "error"
+   },
+   {
+    "name": "percentEncode_clone_spec",
+    "file": "Proofs/Traits.lean",
+    "line": 119,
+    "status": "error"
+   },
+   {
+    "name": "percentDecode_clone_spec",
+    "file": "Proofs/Traits.lean",
+    "line": 123,
+    "status": "error"
+   },
+   {
+    "name": "utf8_percent_encode_spec",
+    "file": "Proofs/Traits.lean",
+    "line": 128,
+    "status": "error"
+   },
+   {
+    "name": "percent_decode_str_spec",
+    "file": "Proofs/Traits.lean",
+    "line": 133,
+    "status": "error"
+   },
+   {
+    "name": "utf8_percent_encode_correct",
+    "file": "Proofs/Traits.lean",
+    "line": 138,
+    "status": "error"
+   },
+   {
+    "name": "percent_decode_str_correct",
+    "file": "Proofs/Traits.lean",
+    "line": 144,
+    "status": "error"
+   },
+   {
+    "name": "EMPTY_spec",
+    "file": "Proofs/Traits.lean",
+    "line": 151,
+    "status": "error"
+   },
+   {
+    "name": "decode_length_bounds",
+    "file": "Proofs/Traits.lean",
+    "line": 160,
+    "status": "error"
+   },
+   {
+    "name": "remBytes_length",
+    "file": "Proofs/Traits.lean",
+    "line": 176,
+    "status": "error"
+   },
+   {
+    "name": "decode_size_hint_spec",
+    "file": "Proofs/Traits.lean",
+    "line": 185,
+    "status": "error"
+   },
+   {
+    "name": "encodeCount_spec",
+    "file": "Proofs/Traits.lean",
+    "line": 219,
+    "status": "error"
+   },
+   {
+    "name": "encode_size_hint_val",
+    "file": "Proofs/Traits.lean",
+    "line": 237,
+    "status": "error"
+   },
+   {
+    "name": "encode_size_hint_spec",
+    "file": "Proofs/Traits.lean",
+    "line": 254,
+    "status": "error"
+   },
+   {
+    "name": "spec_eq_ok",
+    "file": "Proofs/Traits.lean",
+    "line": 271,
+    "status": "error"
+   },
+   {
+    "name": "bind_eq_fail_of_spec",
+    "file": "Proofs/Traits.lean",
+    "line": 278,
+    "status": "error"
+   },
+   {
+    "name": "add_nonascii_panics",
+    "file": "Proofs/Traits.lean",
+    "line": 285,
+    "status": "error"
+   },
+   {
+    "name": "remove_nonascii_panics",
+    "file": "Proofs/Traits.lean",
+    "line": 307,
+    "status": "error"
+   }
+  ],
+  "proved": 0,
+  "total": 121,
+  "generated_sorries": 0,
+  "sorries": 0,
+  "axiom_thms": 0,
+  "unaudited": 0,
+  "errors": [
+   "Basic.lean:6",
+   "BigOperators.lean:6",
+   "Pi.lean:6",
+   "Sum.lean:6"
+  ],
+  "log": ".vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/mathlib/.lake/build/ir/Mathlib/Data/Finsupp/Basic.c --setup /root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/mathlib/.lake/build/ir/Mathlib/Data/Finsupp/Basic.setup.json --json\nerror: Mathlib/Data/Finsupp/Basic.lean:6:0: failed to read file '/root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/mathlib/.lake/build/lib/lean/Mathlib/Algebra/BigOperators/Pi.olean', invalid header\n\u2714 [1528/1544] Built Mathlib.Tactic.Order.CollectFacts (5.1s)\n\u2714 [1530/1549] Built Mathlib.Order.Interval.Finset.Fin (7.9s)\n\u2714 [1532/1549] Built Mathlib.Tactic.Order.Graph.Basic (1.8s)\n\u2714 [1533/1549] Built Mathlib.RingTheory.Multiplicity (7.5s)\n\u2714 [1534/1549] Built Mathlib.Tactic.Order.Preprocessing (2.2s)\n\u2714 [1535/1554] Built Mathlib.Tactic.Order.Graph.Tarjan (2.4s)\n\u2714 [1536/1554] Built Mathlib.Tactic.Order.ToInt (2.6s)\n\u2714 [1537/1554] Built Mathlib.Order.Disjointed (2.9s)\n\u2714 [1539/1559] Built Mathlib.Tactic.Order (3.3s)\n\u2714 [1540/1571] Built Mathlib.LinearAlgebra.TensorProduct.Map (15s)\n\u2714 [1552/1572] Built Mathlib.Order.Interval.Set.Disjoint (3.7s)\n\u2714 [1553/1572] Built Mathlib.Order.Filter.Defs (3.0s)\n\u2714 [1554/1572] Built Mathlib.Logic.Equiv.Fin.Basic (2.6s)\n\u2714 [1555/1573] Built Mathlib.LinearAlgebra.Quotient.Defs (3.8s)\n\u26a0 [1556/1575] Built Mathlib.Algebra.BigOperators.Intervals (4.8s)\nwarning: /root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/mathlib/.lake/build/lib/lean/Mathlib/Algebra/BigOperators/Intervals.trace: offset 0: unexpected end of input\n\u2716 [1557/1575] Building Mathlib.Data.Nat.Choose.Sum (796ms)\ntrace: .> LEAN_PATH=/root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/Cli/.lake/build/lib/lean:/root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/batteries/.lake/build/lib/lean:/root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/Qq/.lake/build/lib/lean:/root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/aesop/.lake/build/lib/lean:/root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/proofwidgets/.lake/build/lib/lean:/root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/importGraph/.lake/build/lib/lean:/root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/plausible/.lake/build/lib/lean:/root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/mathlib/.lake/build/lib/lean:/root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/aeneas/backends/lean/.lake/build/lib/lean:/root/vpipe-work/percent-encoding/proj/.lake/build/lib/lean /home/claude/toolchains/lean-4.35.0-linux/bin/lean /root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/mathlib/Mathlib/Data/Nat/Choose/Sum.lean -o /root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/mathlib/.lake/build/lib/lean/Mathlib/Data/Nat/Choose/Sum.olean -i /root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/mathlib/.lake/build/lib/lean/Mathlib/Data/Nat/Choose/Sum.ilean -c /root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/mathlib/.lake/build/ir/Mathlib/Data/Nat/Choose/Sum.c --setup /root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/mathlib/.lake/build/ir/Mathlib/Data/Nat/Choose/Sum.setup.json --json\nerror: Mathlib/Data/Nat/Choose/Sum.lean:6:0: failed to read file '/root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/mathlib/.lake/build/lib/lean/Mathlib/Algebra/BigOperators/NatAntidiagonal.olean', invalid header\n\u2714 [1562/1580] Built Mathlib.Data.Set.Finite.Lemmas (2.3s)\n\u2714 [1564/1588] Built Mathlib.Order.Filter.Basic (7.1s)\n\u2714 [1565/1588] Built Mathlib.Tactic.Algebraize (4.4s)\n\u2714 [1566/1591] Built Mathlib.LinearAlgebra.Prod (11s)\n\u2716 [1568/1591] Building Mathlib.LinearAlgebra.Pi (365ms)\ntrace: .> LEAN_PATH=/root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/Cli/.lake/build/lib/lean:/root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/batteries/.lake/build/lib/lean:/root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/Qq/.lake/build/lib/lean:/root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/aesop/.lake/build/lib/lean:/root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/proofwidgets/.lake/build/lib/lean:/root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/importGraph/.lake/build/lib/lean:/root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/plausible/.lake/build/lib/lean:/root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/mathlib/.lake/build/lib/lean:/root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/aeneas/backends/lean/.lake/build/lib/lean:/root/vpipe-work/percent-encoding/proj/.lake/build/lib/lean /home/claude/toolchains/lean-4.35.0-linux/bin/lean /root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/mathlib/Mathlib/LinearAlgebra/Pi.lean -o /root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/mathlib/.lake/build/lib/lean/Mathlib/LinearAlgebra/Pi.olean -i /root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/mathlib/.lake/build/lib/lean/Mathlib/LinearAlgebra/Pi.ilean -c /root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/mathlib/.lake/build/ir/Mathlib/LinearAlgebra/Pi.c --setup /root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/mathlib/.lake/build/ir/Mathlib/LinearAlgebra/Pi.setup.json --json\nerror: Mathlib/LinearAlgebra/Pi.lean:6:0: failed to read file '/root/.vpipe/lake/aeneas-fdebf20-lean-4.35.0/.lake/packages/mathlib/.lake/build/lib/lean/Mathlib/Algebra/BigOperators/Pi.olean', invalid header\n\u2714 [1569/1592] Built Mathlib.Order.Filter.AtTopBot.Defs (2.4s)\n\u2714 [1570/1592] Built Mathlib.Data.BitVec (2.3s)\n\u2714 [1572/1592] Built Mathlib.Order.Filter.Map (4.4s)\n\u2714 [1573/1592] Built Mathlib.Order.Filter.AtTopBot.Disjoint (1.3s)\n\u2714 [1574/1608] Built Mathlib.RingTheory.UniqueFactorizationDomain.Defs (2.2s)\n\u2714 [1577/1616] Built Mathlib.GroupTheory.FreeGroup.Basic (11s)\n\u2714 [1578/1616] Built Mathlib.Data.List.GetD (1.6s)\n\u2714 [1582/1617] Built Mathlib.Order.Filter.Tendsto (2.3s)\n\u2714 [1583/1662] Built Mathlib.Order.Filter.Bases.Basic (4.3s)\n\u2714 [1609/1672] Built Mathlib.Order.Filter.AtTopBot.Tendsto (1.0s)\n\u2714 [1610/1672] Built Mathlib.Control.Monad.Writer (1.8s)\n\u2714 [1611/1675] Built Mathlib.Control.Lawful (923ms)\n\u2714 [1613/1813] Built Mathlib.Data.Nat.Bitwise (3.6s)\n\u2714 [1668/1813] Built Mathlib.Control.Monad.Cont (1.6s)\n\u2714 [1670/1813] Built Mathlib.Order.Filter.AtTopBot.Basic (2.6s)\n\u2714 [1671/1813] Built Mathlib.GroupTheory.Finiteness (6.8s)\n\u2714 [1672/1813] Built Mathlib.RingTheory.Finiteness.Defs (1.6s)\nSome required targets logged failures:\n- Mathlib.Algebra.Module.BigOperators\n- Mathlib.Data.Finsupp.Basic\n- Mathlib.Data.Nat.Choose.Sum\n- Mathlib.LinearAlgebra.Pi\nwarning: aeneas: repository has local changes:\n  /root/vpipe-work/percent-encoding/proj/.lake/packages/aeneas\nwarning: mathlib: repository has local changes:\n  /root/vpipe-work/percent-encoding/proj/.lake/packages/mathlib\ninfo: LeanSearchClient: materializing new dependency\ninfo: LeanSearchClient: fetching revision 'd6b4c7be5be75ec4917c873ac50c756dc1436372' from https://github.com/leanprover-community/LeanSearchClient\ninfo: LeanSearchClient: checking out revision 'd6b4c7be5be75ec4917c873ac50c756dc1436372'\ninfo: importGraph: materializing new dependency\ninfo: importGraph: fetching revision 'a41f0e9a4dea23188ea9cc1c41ac9f8bbafe0b93' from https://github.com/leanprover-community/import-graph\ninfo: importGraph: checking out revision 'a41f0e9a4dea23188ea9cc1c41ac9f8bbafe0b93'\ninfo: aesop: materializing new dependency\ninfo: aesop: fetching revision '4a174c490d8707121c4a9290800489f105d85e07' from https://github.com/leanprover-community/aesop\ninfo: aesop: checking out revision '4a174c490d8707121c4a9290800489f105d85e07'\ninfo: Cli: materializing new dependency\ninfo: Cli: fetching revision 'c24fe6078c630e89b489bffe59b3e20ac30d12c8' from https://github.com/leanprover/lean4-cli\ninfo: Cli: checking out revision 'c24fe6078c630e89b489bffe59b3e20ac30d12c8'\nerror: build failed\n"
+ },
+ "functions": {
+  "total": 26,
+  "verified": 0,
+  "fixed": 0,
+  "open": 26,
+  "complete": false,
+  "functions": [
+   {
+    "id": "src/ascii_set.rs:AsciiSet::contains",
+    "file": "src/ascii_set.rs",
+    "line": 46,
+    "name": "contains",
+    "lean": "ascii_set.AsciiSet.contains",
+    "theorems": [
+     "contains_spec"
+    ],
+    "status": "open",
+    "why": "theorems not proved: ['contains_spec']"
+   },
+   {
+    "id": "src/ascii_set.rs:AsciiSet::should_percent_encode",
+    "file": "src/ascii_set.rs",
+    "line": 52,
+    "name": "should_percent_encode",
+    "lean": "ascii_set.AsciiSet.should_percent_encode",
+    "theorems": [
+     "should_percent_encode_spec"
+    ],
+    "status": "open",
+    "why": "theorems not proved: ['should_percent_encode_spec']"
+   },
+   {
+    "id": "src/ascii_set.rs:AsciiSet::add",
+    "file": "src/ascii_set.rs",
+    "line": 56,
+    "name": "add",
+    "lean": "ascii_set.AsciiSet.add",
+    "theorems": [
+     "add_spec",
+     "add_nonascii_panics"
+    ],
+    "status": "open",
+    "why": "theorems not proved: ['add_nonascii_panics', 'add_spec']"
+   },
+   {
+    "id": "src/ascii_set.rs:AsciiSet::remove",
+    "file": "src/ascii_set.rs",
+    "line": 62,
+    "name": "remove",
+    "lean": "ascii_set.AsciiSet.remove",
+    "theorems": [
+     "remove_spec",
+     "remove_nonascii_panics"
+    ],
+    "status": "open",
+    "why": "theorems not proved: ['remove_nonascii_panics', 'remove_spec']"
+   },
+   {
+    "id": "src/ascii_set.rs:AsciiSet::union",
+    "file": "src/ascii_set.rs",
+    "line": 69,
+    "name": "union",
+    "lean": "ascii_set.AsciiSet.union",
+    "theorems": [
+     "union_spec"
+    ],
+    "status": "open",
+    "why": "theorems not proved: ['union_spec']"
+   },
+   {
+    "id": "src/ascii_set.rs:AsciiSet::complement",
+    "file": "src/ascii_set.rs",
+    "line": 80,
+    "name": "complement",
+    "lean": "ascii_set.AsciiSet.complement",
+    "theorems": [
+     "complement_spec"
+    ],
+    "status": "open",
+    "why": "theorems not proved: ['complement_spec']"
+   },
+   {
+    "id": "src/ascii_set.rs:ops::Add for AsciiSet::add",
+    "file": "src/ascii_set.rs",
+    "line": 89,
+    "name": "add",
+    "lean": "ascii_set.AsciiSet.Insts.CoreOpsArithAddAsciiSetAsciiSet.add",
+    "theorems": [
+     "add_op_spec"
+    ],
+    "status": "open",
+    "why": "theorems not proved: ['add_op_spec']"
+   },
+   {
+    "id": "src/ascii_set.rs:ops::Not for AsciiSet::not",
+    "file": "src/ascii_set.rs",
+    "line": 97,
+    "name": "not",
+    "lean": "ascii_set.AsciiSet.Insts.CoreOpsBitNotAsciiSet.not",
+    "theorems": [
+     "not_op_spec"
+    ],
+    "status": "open",
+    "why": "theorems not proved: ['not_op_spec']"
+   },
+   {
+    "id": "src/ascii_set.rs:_static_assert",
+    "file": "src/ascii_set.rs",
+    "line": 118,
+    "name": "_static_assert",
+    "lean": "ascii_set._static_assert",
+    "theorems": [],
+    "status": "open",
+    "why": "no theorem about it"
+   },
+   {
+    "id": "src/lib.rs:percent_encode_byte",
+    "file": "src/lib.rs",
+    "line": 73,
+    "name": "percent_encode_byte",
+    "lean": "percent_encode_byte",
+    "theorems": [
+     "enc_table_slices",
+     "percent_encode_byte_spec"
+    ],
+    "status": "open",
+    "why": "theorems not proved: ['enc_table_slices', 'percent_encode_byte_spec']"
+   },
+   {
+    "id": "src/lib.rs:percent_encode",
+    "file": "src/lib.rs",
+    "line": 117,
+    "name": "percent_encode",
+    "lean": "percent_encode",
+    "theorems": [
+     "should_percent_encode_spec",
+     "enc_table_slices",
+     "percent_encode_byte_spec",
+     "percent_encode_correct",
+     "percent_encode_output_allowed",
+     "utf8_percent_encode_spec",
+     "utf8_percent_encode_correct"
+    ],
+    "status": "open",
+    "why": "theorems not proved: ['enc_table_slices', 'percent_encode_byte_spec', 'percent_encode_correct', 'percent_encode_output_allowed', 'should_percent_encode_spec', 'utf8_percent_encode_correct', 'utf8_percent_encode_spec']"
+   },
+   {
+    "id": "src/lib.rs:utf8_percent_encode",
+    "file": "src/lib.rs",
+    "line": 136,
+    "name": "utf8_percent_encode",
+    "lean": "utf8_percent_encode",
+    "theorems": [
+     "utf8_percent_encode_spec",
+     "utf8_percent_encode_correct"
+    ],
+    "status": "open",
+    "why": "theorems not proved: ['utf8_percent_encode_correct', 'utf8_percent_encode_spec']"
+   },
+   {
+    "id": "src/lib.rs:Iterator for PercentEncode::next",
+    "file": "src/lib.rs",
+    "line": 150,
+    "name": "next",
+    "lean": "next_chunk",
+    "theorems": [
+     "encode_next_loop_spec",
+     "next_chunk_spec"
+    ],
+    "status": "open",
+    "why": "theorems not proved: ['encode_next_loop_spec', 'next_chunk_spec']"
+   },
+   {
+    "id": "src/lib.rs:Iterator for PercentEncode::size_hint",
+    "file": "src/lib.rs",
+    "line": 175,
+    "name": "size_hint",
+    "lean": "PercentEncode.Insts.CoreIterTraitsIteratorIteratorSharedAStr.next",
+    "theorems": [
+     "encode_next_spec"
+    ],
+    "status": "open",
+    "why": "theorems not proved: ['encode_next_spec']"
+   },
+   {
+    "id": "src/lib.rs:fmt::Display for PercentEncode::fmt",
+    "file": "src/lib.rs",
+    "line": 185,
+    "name": "fmt",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+   },
+   {
+    "id": "src/lib.rs:From for Cow::from@L195",
+    "file": "src/lib.rs",
+    "line": 195,
+    "name": "from",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+   },
+   {
+    "id": "src/lib.rs:percent_decode_str",
+    "file": "src/lib.rs",
+    "line": 217,
+    "name": "percent_decode_str",
+    "lean": "percent_decode_str",
+    "theorems": [
+     "percent_decode_str_spec",
+     "percent_decode_str_correct"
+    ],
+    "status": "open",
+    "why": "theorems not proved: ['percent_decode_str_correct', 'percent_decode_str_spec']"
+   },
+   {
+    "id": "src/lib.rs:percent_decode",
+    "file": "src/lib.rs",
+    "line": 240,
+    "name": "percent_decode",
+    "lean": "percent_decode",
+    "theorems": [
+     "percent_decode_correct",
+     "percent_roundtrip",
+     "roundtrip_NON_ALPHANUMERIC",
+     "percent_decode_str_spec",
+     "percent_decode_str_correct"
+    ],
+    "status": "open",
+    "why": "theorems not proved: ['percent_decode_correct', 'percent_decode_str_correct', 'percent_decode_str_spec', 'percent_roundtrip', 'roundtrip_NON_ALPHANUMERIC']"
+   },
+   {
+    "id": "src/lib.rs:after_percent_sign",
+    "file": "src/lib.rs",
+    "line": 252,
+    "name": "after_percent_sign",
+    "lean": "percent_decode_str",
+    "theorems": [
+     "percent_decode_str_spec",
+     "percent_decode_str_correct"
+    ],
+    "status": "open",
+    "why": "theorems not proved: ['percent_decode_str_correct', 'percent_decode_str_spec']"
+   },
+   {
+    "id": "src/lib.rs:Iterator for PercentDecode::next",
+    "file": "src/lib.rs",
+    "line": 263,
+    "name": "next",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+   },
+   {
+    "id": "src/lib.rs:Iterator for PercentDecode::size_hint",
+    "file": "src/lib.rs",
+    "line": 273,
+    "name": "size_hint",
+    "lean": "percent_decode",
+    "theorems": [
+     "percent_decode_correct",
+     "percent_roundtrip",
+     "roundtrip_NON_ALPHANUMERIC",
+     "percent_decode_str_spec",
+     "percent_decode_str_correct"
+    ],
+    "status": "open",
+    "why": "theorems not proved: ['percent_decode_correct', 'percent_decode_str_correct', 'percent_decode_str_spec', 'percent_roundtrip', 'roundtrip_NON_ALPHANUMERIC']"
+   },
+   {
+    "id": "src/lib.rs:From for Cow::from@L281",
+    "file": "src/lib.rs",
+    "line": 281,
+    "name": "from",
+    "lean": "PercentDecode.Insts.CoreCloneClone.clone",
+    "theorems": [
+     "percentDecode_clone_spec"
+    ],
+    "status": "open",
+    "why": "theorems not proved: ['percentDecode_clone_spec']"
+   },
+   {
+    "id": "src/lib.rs:PercentDecode::if_any",
+    "file": "src/lib.rs",
+    "line": 292,
+    "name": "if_any",
+    "lean": "PercentDecode.if_any",
+    "theorems": [
+     "if_any_spec"
+    ],
+    "status": "open",
+    "why": "theorems not proved: ['if_any_spec']"
+   },
+   {
+    "id": "src/lib.rs:PercentDecode::decode_utf8",
+    "file": "src/lib.rs",
+    "line": 312,
+    "name": "decode_utf8",
+    "lean": "PercentDecode.Insts.CoreIterTraitsIteratorIteratorU8.size_hint",
+    "theorems": [
+     "decode_size_hint_spec"
+    ],
+    "status": "open",
+    "why": "theorems not proved: ['decode_size_hint_spec']"
+   },
+   {
+    "id": "src/lib.rs:PercentDecode::decode_utf8_lossy",
+    "file": "src/lib.rs",
+    "line": 330,
+    "name": "decode_utf8_lossy",
+    "lean": "PercentDecode.if_any",
+    "theorems": [
+     "if_any_spec"
+    ],
+    "status": "open",
+    "why": "theorems not proved: ['if_any_spec']"
+   },
+   {
+    "id": "src/lib.rs:decode_utf8_lossy",
+    "file": "src/lib.rs",
+    "line": 339,
+    "name": "decode_utf8_lossy",
+    "lean": "PercentDecode.decode_utf8",
+    "theorems": [
+     "decode_utf8_spec",
+     "decode_utf8_lossy_spec"
+    ],
+    "status": "open",
+    "why": "theorems not proved: ['decode_utf8_lossy_spec', 'decode_utf8_spec']"
+   }
+  ],
+  "overrides_not_found": []
+ },
+ "finished": "2026-10-24T06:57:40Z"
+}

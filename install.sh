@@ -11,13 +11,14 @@ agents="" tools="" yes=false dry=false path_edit=true
 
 usage() {
   cat <<'EOF'
-Usage: install.sh [--agents claude,codex|none] [--tools lean,framac,cbmc|all|none]
+Usage: install.sh [--agents claude,codex,gemini|none] [--tools lean,framac,cbmc|all|none]
                   [--dir PATH] [--yes] [--dry-run] [--no-path]
 
 Installs the verification toolkit:
   1. clones the repo (or uses the checkout this script is in)
   2. puts `vkit` and `vpipe` in ~/.vpipe/bin and adds that to PATH
-  3. copies the agent skills into your agent's skills folder
+  3. copies the agent skills into your agents' skills folders
+     (Claude Code: ~/.claude/skills; Codex and Gemini CLI: ~/.agents/skills)
   4. optionally installs the pinned provers (`vkit setup`)
 It prints the plan and asks before changing anything. Nothing is installed system-wide
 except what you approve in step 4 (rustup, zstd, CBMC .deb, Nix packages).
@@ -61,6 +62,7 @@ if [ -z "$agents" ]; then
   det=()
   { command -v claude >/dev/null || [ -d "$HOME/.claude" ]; } && det+=(claude)
   { command -v codex >/dev/null || [ -d "$HOME/.codex" ]; } && det+=(codex)
+  { command -v gemini >/dev/null || [ -d "$HOME/.gemini" ]; } && det+=(gemini)
   if $yes; then agents=$(IFS=,; echo "${det[*]:-none}")
   elif [ ${#det[@]} -gt 0 ]; then
     read -r -p "Install skills for which agents? [${det[*]// /,}] (or none) " a </dev/tty || a=""

@@ -1,16 +1,22 @@
 {
  "library": "percent-encoding",
+ "entry": "percent-encoding",
  "commit": "00a6ce58d02f4e0d43c5ca0702c0bedb8b1ebf3a",
  "version": "2.3.2",
  "tool": "lean-aeneas",
- "started": "2026-10-24T05:55:14Z",
- "pipeline_version": "0.1.4",
+ "started": "2026-10-24T07:06:02Z",
+ "pipeline_version": "0.1.6",
  "toolchain": {
   "aeneas": "nightly-2026.10.23-fdebf20",
   "charon_rust": "nightly-2026-09-17",
   "lean": "4.35.0",
   "aeneas_dir": "/root/.vpipe/aeneas-nightly-2026.10.23-fdebf20"
  },
+ "clean": false,
+ "toolchain_digest": "sha256:388575708c786f2ce7f6abfed8f16c48c0b7e574e227f5b6605bb1805086f620",
+ "container_digest": null,
+ "ci_run": null,
+ "archive_sha256": "42645e863db93f5da119118a8337f4e09c545794ad0cfefafca4dc8aac6f3286",
  "source": {
   "patches": [
    "rust/aeneas-friendly.patch"
@@ -24,7 +30,7 @@
    {
     "cmd": "cd {tree}/percent_encoding && cargo +stable test --quiet",
     "ok": true,
-    "tail": "\nrunning 18 tests\n..................\ntest result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 6 tests\n......\ntest result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.34s\n\n"
+    "tail": "\nrunning 18 tests\n..................\ntest result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 6 tests\n......\ntest result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.22s\n\n"
    },
    {
     "cmd": "rm -rf {tree}/../difftest && cp -r {proj}/rust/difftest {tree}/../difftest && cd {tree}/../difftest && sed -i \"s#../../../rust-url/percent_encoding#{src}/percent_encoding#; s#../percent_encoding_patched#{tree}/percent_encoding#\" Cargo.toml && cargo +stable run --release --quiet -- 2000000",
@@ -41,38 +47,294 @@
    {
     "script": "scripts/postprocess.py",
     "ok": true,
-    "out": "postprocess: replaced 1 U32.rem, removed 2 size_hint fields\n"
+    "out": "postprocess: replaced 1 U32.rem, removed 2 size_hint fields, qualified 1 decode_utf8_lossy call\n"
    }
   ],
   "unexpected_errors": [],
   "unsupported": [
    {
-    "error": "Joining region abstractions containing shared loans whose shared value contains borrows is not supported yet",
-    "source": "'src/lib.rs', lines 185:8-189:5"
-   },
-   {
     "error": "Unimplemented",
-    "source": "'src/lib.rs', lines 248:4-248:30; this code is generated from a macro invocation at: 'src/lib.rs', lines 246:16-246:21"
+    "source": "'src/lib.rs', lines 283:4-283:30; this code is generated from a macro invocation at: 'src/lib.rs', lines 281:16-281:21"
    }
   ],
-  "assumed_axioms": [
-   "Slice.Insts.CoreFmtDebug.fmt",
-   "core.intrinsics.transmute",
-   "core.iter.traits.iterator.Iterator.size_hint.default",
-   "core.slice.iter.Iter.Insts.CoreFmtDebug.fmt"
-  ],
+  "assumed_axioms": [],
   "external_template_changes": [],
   "warnings": [
-   "Could not translate the body of function 'percent_encoding::{impl core::fmt::Display for percent_encoding::PercentEncode<'_0>}::fmt because of previous error",
    "Could not translate the body of function 'percent_encoding::{impl core::fmt::Debug for percent_encoding::PercentDecode<'a>}::fmt because of previous error",
    "When retrieving the builtin information for trait decl 'core::iter::traits::iterator::Iterator', could not find the information for item 'size_hint'. The model defined in the Lean library seems to be missing the corresponding field."
   ],
-  "log": "[Info ] Imported: /root/vpipe-work/percent-encoding/percent-encoding.llbc\n[Error] Joining region abstractions containing shared loans whose shared value contains borrows is not supported yet\nSource: 'src/lib.rs', lines 185:8-189:5\n[Warn ] Could not translate the body of function 'percent_encoding::{impl core::fmt::Display for percent_encoding::PercentEncode<'_0>}::fmt because of previous error\nName pattern: 'percent_encoding::{core::fmt::Display<percent_encoding::PercentEncode<'0>>}::fmt'\nDefinition span: 'src/lib.rs', lines 184:4-189:5\nSource: 'src/lib.rs', lines 185:8-189:5\nCompiler source: interp/Interp.ml, line 682\n\n[Error] Unimplemented\nSource: 'src/lib.rs', lines 248:4-248:30; this code is generated from a macro invocation at: 'src/lib.rs', lines 246:16-246:21\n[Warn ] Could not translate the body of function 'percent_encoding::{impl core::fmt::Debug for percent_encoding::PercentDecode<'a>}::fmt because of previous error\nName pattern: 'percent_encoding::{core::fmt::Debug<percent_encoding::PercentDecode<'a>>}::fmt'\nDefinition span: 'src/lib.rs', lines 246:16-246:21\nSource: 'src/lib.rs', lines 248:4-248:30; this code is generated from a macro invocation at: 'src/lib.rs', lines 246:16-246:21\nCompiler source: interp/Interp.ml, line 682\n\n[Warn ] When retrieving the builtin information for trait decl 'core::iter::traits::iterator::Iterator', could not find the information for item 'size_hint'. The model defined in the Lean library seems to be missing the corresponding field.\nSource: '/rustc/library/core/src/iter/traits/iterator.rs', lines 42:0-42:24\nCompiler source: extract/Extract.ml, line 2866\n\n[Info ] Generated the partial file (because of 2 errors, including 2 unique errors): /root/vpipe-work/percent-encoding/proj/PercentEncoding/Types.lean\n[Info ] Generated the partial file (because of 2 errors, including 2 unique errors): /root/vpipe-work/percent-encoding/proj/PercentEncoding/FunsExternal_Template.lean\n[Info ] Generated the partial file (because of 2 errors, including 2 unique errors): /root/vpipe-work/percent-encoding/proj/PercentEncoding/Funs.lean\n[Info ] Total execution time: 1.334176 seconds\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+  "log": "[Info ] Imported: /root/vpipe-work/percent-encoding/percent-encoding.llbc\n[Error] Unimplemented\nSource: 'src/lib.rs', lines 283:4-283:30; this code is generated from a macro invocation at: 'src/lib.rs', lines 281:16-281:21\n[Warn ] Could not translate the body of function 'percent_encoding::{impl core::fmt::Debug for percent_encoding::PercentDecode<'a>}::fmt because of previous error\nName pattern: 'percent_encoding::{core::fmt::Debug<percent_encoding::PercentDecode<'a>>}::fmt'\nDefinition span: 'src/lib.rs', lines 281:16-281:21\nSource: 'src/lib.rs', lines 283:4-283:30; this code is generated from a macro invocation at: 'src/lib.rs', lines 281:16-281:21\nCompiler source: interp/Interp.ml, line 682\n\n[Warn ] When retrieving the builtin information for trait decl 'core::iter::traits::iterator::Iterator', could not find the information for item 'size_hint'. The model defined in the Lean library seems to be missing the corresponding field.\nSource: '/rustc/library/core/src/iter/traits/iterator.rs', lines 42:0-42:24\nCompiler source: extract/Extract.ml, line 2866\n\n[Info ] Generated the partial file (because of 1 errors, including 1 unique errors): /root/vpipe-work/percent-encoding/proj/PercentEncoding/TypesExternal_Template.lean\n[Info ] Generated the partial file (because of 1 errors, including 1 unique errors): /root/vpipe-work/percent-encoding/proj/PercentEncoding/Types.lean\n[Info ] Generated the partial file (because of 1 errors, including 1 unique errors): /root/vpipe-work/percent-encoding/proj/PercentEncoding/FunsExternal_Template.lean\n[Info ] Generated the partial file (because of 1 errors, including 1 unique errors): /root/vpipe-work/percent-encoding/proj/PercentEncoding/Funs.lean\n[Info ] Total execution time: 1.215172 seconds\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
  },
  "prove": {
   "ok": true,
-  "seconds": 52,
+  "seconds": 109,
+  "replay": {
+   "ok": true,
+   "tool": "leanchecker",
+   "modules": 5,
+   "seconds": 30,
+   "log": ""
+  },
   "theorems": [
+   {
+    "name": "decode_no_pct",
+    "file": "Proofs/Alloc.lean",
+    "line": 16,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "decode_append_noescape",
+    "file": "Proofs/Alloc.lean",
+    "line": 24,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "decode_shorter",
+    "file": "Proofs/Alloc.lean",
+    "line": 41,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "decode_eq_self_iff",
+    "file": "Proofs/Alloc.lean",
+    "line": 80,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "position_of_percent_loop_spec",
+    "file": "Proofs/Alloc.lean",
+    "line": 93,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "position_of_percent_spec",
+    "file": "Proofs/Alloc.lean",
+    "line": 116,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "vec_extend_decode_spec",
+    "file": "Proofs/Alloc.lean",
+    "line": 141,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "remBytes_iter0",
+    "file": "Proofs/Alloc.lean",
+    "line": 171,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "decode_from_percent_spec",
+    "file": "Proofs/Alloc.lean",
+    "line": 177,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "decode_of_noesc",
+    "file": "Proofs/Alloc.lean",
+    "line": 246,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "bytes_drop",
+    "file": "Proofs/Alloc.lean",
+    "line": 258,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "decode_if_any_spec",
+    "file": "Proofs/Alloc.lean",
+    "line": 262,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "as_slice_bytes",
+    "file": "Proofs/Alloc.lean",
+    "line": 357,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "if_any_spec",
+    "file": "Proofs/Alloc.lean",
+    "line": 365,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "cow_from_decode_spec",
+    "file": "Proofs/Alloc.lean",
+    "line": 380,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "u8_eq_of_val",
+    "file": "Proofs/Alloc.lean",
+    "line": 401,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "stringBytes_ofValid",
+    "file": "Proofs/Alloc.lean",
+    "line": 403,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "stringBytes_append",
+    "file": "Proofs/Alloc.lean",
+    "line": 413,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "cowSliceBytes_eq",
+    "file": "Proofs/Alloc.lean",
+    "line": 426,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "decode_utf8_spec",
+    "file": "Proofs/Alloc.lean",
+    "line": 433,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "decode_utf8_lossy_spec",
+    "file": "Proofs/Alloc.lean",
+    "line": 475,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "utf8Valid_of_ascii",
+    "file": "Proofs/Alloc.lean",
+    "line": 518,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "strBytes_ascii_u8",
+    "file": "Proofs/Alloc.lean",
+    "line": 538,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "push_str_ascii_spec",
+    "file": "Proofs/Alloc.lean",
+    "line": 541,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "string_extend_encode_spec",
+    "file": "Proofs/Alloc.lean",
+    "line": 550,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "toStr_empty_val",
+    "file": "Proofs/Alloc.lean",
+    "line": 582,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "cow_from_encode_spec",
+    "file": "Proofs/Alloc.lean",
+    "line": 586,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "write_chunks_spec",
+    "file": "Proofs/Alloc.lean",
+    "line": 633,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "write_chunks_buffer",
+    "file": "Proofs/Alloc.lean",
+    "line": 689,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "write_chunks_ok",
+    "file": "Proofs/Alloc.lean",
+    "line": 698,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "display_fmt_spec",
+    "file": "Proofs/Alloc.lean",
+    "line": 734,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "asciiSet_debug_call",
+    "file": "Proofs/Alloc.lean",
+    "line": 749,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "asciiSet_debug_ok",
+    "file": "Proofs/Alloc.lean",
+    "line": 754,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "percentEncode_debug_call",
+    "file": "Proofs/Alloc.lean",
+    "line": 758,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "percentEncode_debug_ok",
+    "file": "Proofs/Alloc.lean",
+    "line": 767,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "free_decode_utf8_lossy_spec",
+    "file": "Proofs/Alloc.lean",
+    "line": 774,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "static_assert_spec",
+    "file": "Proofs/Alloc.lean",
+    "line": 813,
+    "axioms": [],
+    "status": "proved"
+   },
    {
     "name": "and_two_pow_ne_zero",
     "file": "Proofs/Code.lean",
@@ -172,114 +434,121 @@
     "status": "proved"
    },
    {
-    "name": "encode_next_spec",
+    "name": "next_chunk_spec",
     "file": "Proofs/Code.lean",
     "line": 171,
     "axioms": [],
     "status": "proved"
    },
    {
+    "name": "encode_next_spec",
+    "file": "Proofs/Code.lean",
+    "line": 208,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
     "name": "encodeCollect_spec",
     "file": "Proofs/Code.lean",
-    "line": 218,
+    "line": 237,
     "axioms": [],
     "status": "proved"
    },
    {
     "name": "iter_clone_spec",
     "file": "Proofs/Code.lean",
-    "line": 231,
+    "line": 250,
     "axioms": [],
     "status": "proved"
    },
    {
     "name": "try_branch_spec",
     "file": "Proofs/Code.lean",
-    "line": 236,
+    "line": 255,
     "axioms": [],
     "status": "proved"
    },
    {
     "name": "from_residual_spec",
     "file": "Proofs/Code.lean",
-    "line": 245,
+    "line": 264,
     "axioms": [],
     "status": "proved"
    },
    {
     "name": "char_from_u8_spec",
     "file": "Proofs/Code.lean",
-    "line": 251,
+    "line": 270,
     "axioms": [],
     "status": "proved"
    },
    {
     "name": "to_digit_16_spec",
     "file": "Proofs/Code.lean",
-    "line": 260,
+    "line": 279,
     "axioms": [],
     "status": "proved"
    },
    {
     "name": "slice_iter_next_spec",
     "file": "Proofs/Code.lean",
-    "line": 271,
+    "line": 290,
     "axioms": [],
     "status": "proved"
    },
    {
     "name": "after_percent_sign_spec",
     "file": "Proofs/Code.lean",
-    "line": 289,
+    "line": 308,
     "axioms": [],
     "status": "proved"
    },
    {
     "name": "remBytes_drop",
     "file": "Proofs/Code.lean",
-    "line": 303,
+    "line": 322,
     "axioms": [],
     "status": "proved"
    },
    {
     "name": "decode_next_spec",
     "file": "Proofs/Code.lean",
-    "line": 310,
+    "line": 329,
     "axioms": [],
     "status": "proved"
    },
    {
     "name": "decodeCollect_spec",
     "file": "Proofs/Code.lean",
-    "line": 369,
+    "line": 388,
     "axioms": [],
     "status": "proved"
    },
    {
     "name": "percent_encode_correct",
     "file": "Proofs/Code.lean",
-    "line": 382,
+    "line": 401,
     "axioms": [],
     "status": "proved"
    },
    {
     "name": "percent_decode_correct",
     "file": "Proofs/Code.lean",
-    "line": 393,
+    "line": 412,
     "axioms": [],
     "status": "proved"
    },
    {
     "name": "percent_encode_output_allowed",
     "file": "Proofs/Code.lean",
-    "line": 404,
+    "line": 423,
     "axioms": [],
     "status": "proved"
    },
    {
     "name": "percent_roundtrip",
     "file": "Proofs/Code.lean",
-    "line": 420,
+    "line": 439,
     "axioms": [],
     "status": "proved"
    },
@@ -336,6 +605,76 @@
     "name": "CONTROLS_no_roundtrip",
     "file": "Proofs/Sets.lean",
     "line": 124,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "inSet_eq_chunk",
+    "file": "Proofs/Sets.lean",
+    "line": 139,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "u32_not_testBit",
+    "file": "Proofs/Sets.lean",
+    "line": 142,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "u32_not_testBit'",
+    "file": "Proofs/Sets.lean",
+    "line": 149,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "mask_getElem!",
+    "file": "Proofs/Sets.lean",
+    "line": 153,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "chunk_cases",
+    "file": "Proofs/Sets.lean",
+    "line": 157,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "remove_spec",
+    "file": "Proofs/Sets.lean",
+    "line": 162,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "union_spec",
+    "file": "Proofs/Sets.lean",
+    "line": 208,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "add_op_spec",
+    "file": "Proofs/Sets.lean",
+    "line": 219,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "complement_spec",
+    "file": "Proofs/Sets.lean",
+    "line": 228,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "not_op_spec",
+    "file": "Proofs/Sets.lean",
+    "line": 240,
     "axioms": [],
     "status": "proved"
    },
@@ -415,22 +754,204 @@
     "line": 90,
     "axioms": [],
     "status": "proved"
+   },
+   {
+    "name": "allM_zip_eq",
+    "file": "Proofs/Traits.lean",
+    "line": 12,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "allM_zip_ne_eq",
+    "file": "Proofs/Traits.lean",
+    "line": 29,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "asciiSet_eq_iff",
+    "file": "Proofs/Traits.lean",
+    "line": 37,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "asciiSet_eq_spec",
+    "file": "Proofs/Traits.lean",
+    "line": 44,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "asciiSet_eq_iff_inSet",
+    "file": "Proofs/Traits.lean",
+    "line": 56,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "slice_u8_eq_spec",
+    "file": "Proofs/Traits.lean",
+    "line": 81,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "percentEncode_eq_spec",
+    "file": "Proofs/Traits.lean",
+    "line": 97,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "asciiSet_assert_fields_are_eq",
+    "file": "Proofs/Traits.lean",
+    "line": 111,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "percentEncode_assert_fields_are_eq",
+    "file": "Proofs/Traits.lean",
+    "line": 113,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "percentEncode_clone_spec",
+    "file": "Proofs/Traits.lean",
+    "line": 119,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "percentDecode_clone_spec",
+    "file": "Proofs/Traits.lean",
+    "line": 123,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "utf8_percent_encode_spec",
+    "file": "Proofs/Traits.lean",
+    "line": 128,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "percent_decode_str_spec",
+    "file": "Proofs/Traits.lean",
+    "line": 133,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "utf8_percent_encode_correct",
+    "file": "Proofs/Traits.lean",
+    "line": 138,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "percent_decode_str_correct",
+    "file": "Proofs/Traits.lean",
+    "line": 144,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "EMPTY_spec",
+    "file": "Proofs/Traits.lean",
+    "line": 151,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "decode_length_bounds",
+    "file": "Proofs/Traits.lean",
+    "line": 160,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "remBytes_length",
+    "file": "Proofs/Traits.lean",
+    "line": 176,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "decode_size_hint_spec",
+    "file": "Proofs/Traits.lean",
+    "line": 185,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "encodeCount_spec",
+    "file": "Proofs/Traits.lean",
+    "line": 219,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "encode_size_hint_val",
+    "file": "Proofs/Traits.lean",
+    "line": 237,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "encode_size_hint_spec",
+    "file": "Proofs/Traits.lean",
+    "line": 254,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "spec_eq_ok",
+    "file": "Proofs/Traits.lean",
+    "line": 271,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "bind_eq_fail_of_spec",
+    "file": "Proofs/Traits.lean",
+    "line": 278,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "add_nonascii_panics",
+    "file": "Proofs/Traits.lean",
+    "line": 285,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "remove_nonascii_panics",
+    "file": "Proofs/Traits.lean",
+    "line": 307,
+    "axioms": [],
+    "status": "proved"
    }
   ],
-  "proved": 49,
-  "total": 49,
-  "generated_sorries": 2,
+  "proved": 123,
+  "total": 123,
+  "generated_sorries": 1,
   "sorries": 0,
   "axiom_thms": 0,
   "unaudited": 0,
   "errors": [],
-  "log": "\u26a0 [1798/1807] Replayed PercentEncoding.Funs\nwarning: PercentEncoding/Funs.lean:597:4: declaration uses `sorry`\nwarning: PercentEncoding/Funs.lean:642:4: declaration uses `sorry`\n\u26a0 [1804/1807] Replayed Proofs.Sets\nwarning: Proofs/Sets.lean:58:14: This simp argument is unused:\n  List.getElem_set\n\nHint: Omit it from the simp argument list.\n  [apply] simp [Ne.symm hq]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nBuild completed successfully (1807 jobs).\n"
+  "log": "\u2714 [1620/1810] Built Mathlib.Algebra.Notation (1.5s)\n\u2714 [1798/1810] Built PercentEncoding.FunsExternal (4.3s)\n\u26a0 [1799/1810] Built PercentEncoding.Funs (7.9s)\nwarning: PercentEncoding/Funs.lean:803:4: declaration uses `sorry`\n\u2714 [1800/1810] Built PercentEncoding (2.7s)\n\u2714 [1802/1810] Built Proofs.Spec (3.2s)\n\u2714 [1803/1810] Built Proofs.SpecLemmas (2.3s)\n\u2714 [1804/1810] Built Proofs.Code (16s)\n\u2714 [1805/1810] Built Proofs (2.0s)\n\u26a0 [1807/1810] Built Proofs.Sets (6.2s)\nwarning: Proofs/Sets.lean:58:14: This simp argument is unused:\n  List.getElem_set\n\nHint: Omit it from the simp argument list.\n  [apply] simp [Ne.symm hq]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Sets.lean:186:47: This simp argument is unused:\n  Bool.and_true\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [hc, decide_true, Bool.true_and]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Sets.lean:201:14: This simp argument is unused:\n  List.getElem_set\n\nHint: Omit it from the simp argument list.\n  [apply] simp [Ne.symm hq]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Sets.lean:216:12: This simp argument is unused:\n  h\n\nHint: Omit it from the simp argument list.\n  [apply] simp [hc, mask_getElem!, Nat.testBit_or, *]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Sets.lean:216:15: This simp argument is unused:\n  hc\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h, mask_getElem!, Nat.testBit_or, *]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Sets.lean:216:19: This simp argument is unused:\n  mask_getElem!\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h, hc, Nat.testBit_or, *]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Sets.lean:237:12: This simp argument is unused:\n  h\n\nHint: Omit it from the simp argument list.\n  [apply] simp [hc, mask_getElem!, u32_not_testBit' _ _ hb, *]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Sets.lean:237:15: This simp argument is unused:\n  hc\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h, mask_getElem!, u32_not_testBit' _ _ hb, *]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Sets.lean:237:19: This simp argument is unused:\n  mask_getElem!\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h, hc, u32_not_testBit' _ _ hb, *]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\n\u26a0 [1808/1810] Built Proofs.Traits (3.8s)\nwarning: Proofs/Traits.lean:22:48: This simp argument is unused:\n  bind_ok\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [List.zip_cons_cons, List.allM]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Traits.lean:16:33: Unused tactic linter: `<;>` should be replaced with `;` or be removed.\n\nNote: This linter can be disabled with `set_option linter.unusedTactic false`\nwarning: Proofs/Traits.lean:16:33: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice\n\nNote: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`\n\u26a0 [1809/1810] Built Proofs.Alloc (5.3s)\nwarning: Proofs/Alloc.lean:339:35: This simp argument is unused:\n  List.length_drop\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [rest1_post] at *\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Alloc.lean:411:8: This simp argument is unused:\n  Usize.ofNatCore_val_eq\n\nHint: Omit it from the simp argument list.\n  [apply] simp [UScalar.ofNatCore_val_eq, Nat.mod_eq_of_lt hb]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Alloc.lean:411:32: This simp argument is unused:\n  UScalar.ofNatCore_val_eq\n\nHint: Omit it from the simp argument list.\n  [apply] simp [Usize.ofNatCore_val_eq, Nat.mod_eq_of_lt hb]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Alloc.lean:450:10: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Alloc.lean:455:10: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Proofs/Alloc.lean:462:10: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Alloc.lean:467:10: `dif_neg` has been deprecated: Use `dite_eq_right` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Proofs/Alloc.lean:492:10: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Alloc.lean:496:10: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Proofs/Alloc.lean:504:10: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Alloc.lean:506:10: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Alloc.lean:513:10: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Proofs/Alloc.lean:531:10: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Alloc.lean:545:6: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Alloc.lean:614:10: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Alloc.lean:739:13: This simp argument is unused:\n  core.fmt.Formatter.Insts.CoreFmtWrite\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [core.fmt.Formatter.Insts.CoreFmtWrite.write_str, core.fmt.Formatter.write_str]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Alloc.lean:785:10: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Alloc.lean:789:10: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Proofs/Alloc.lean:797:10: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Alloc.lean:799:10: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Alloc.lean:806:10: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nBuild completed successfully (1810 jobs).\nwarning: aeneas: repository has local changes:\n  /root/vpipe-work/percent-encoding/proj/.lake/packages/aeneas\nwarning: mathlib: repository has local changes:\n  /root/vpipe-work/percent-encoding/proj/.lake/packages/mathlib\n"
  },
  "functions": {
   "total": 26,
-  "verified": 9,
+  "verified": 21,
   "fixed": 0,
-  "open": 17,
+  "open": 5,
   "complete": false,
   "functions": [
    {
@@ -442,7 +963,8 @@
     "theorems": [
      "contains_spec"
     ],
-    "status": "verified"
+    "status": "verified",
+    "label": "unlabelled"
    },
    {
     "id": "src/ascii_set.rs:AsciiSet::should_percent_encode",
@@ -453,7 +975,8 @@
     "theorems": [
      "should_percent_encode_spec"
     ],
-    "status": "verified"
+    "status": "verified",
+    "label": "unlabelled"
    },
    {
     "id": "src/ascii_set.rs:AsciiSet::add",
@@ -462,9 +985,12 @@
     "name": "add",
     "lean": "ascii_set.AsciiSet.add",
     "theorems": [
-     "add_spec"
+     "add_spec",
+     "add_nonascii_panics"
     ],
-    "status": "verified"
+    "status": "verified",
+    "note": "panics (array index out of bounds) for bytes >= 128; proved, undocumented upstream",
+    "label": "unlabelled"
    },
    {
     "id": "src/ascii_set.rs:AsciiSet::remove",
@@ -472,9 +998,13 @@
     "line": 62,
     "name": "remove",
     "lean": "ascii_set.AsciiSet.remove",
-    "theorems": [],
-    "status": "open",
-    "why": "no theorem about it"
+    "theorems": [
+     "remove_spec",
+     "remove_nonascii_panics"
+    ],
+    "status": "verified",
+    "note": "panics (array index out of bounds) for bytes >= 128; proved, undocumented upstream",
+    "label": "unlabelled"
    },
    {
     "id": "src/ascii_set.rs:AsciiSet::union",
@@ -482,9 +1012,11 @@
     "line": 69,
     "name": "union",
     "lean": "ascii_set.AsciiSet.union",
-    "theorems": [],
-    "status": "open",
-    "why": "no theorem about it"
+    "theorems": [
+     "union_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
    },
    {
     "id": "src/ascii_set.rs:AsciiSet::complement",
@@ -492,9 +1024,11 @@
     "line": 80,
     "name": "complement",
     "lean": "ascii_set.AsciiSet.complement",
-    "theorems": [],
-    "status": "open",
-    "why": "no theorem about it"
+    "theorems": [
+     "complement_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
    },
    {
     "id": "src/ascii_set.rs:ops::Add for AsciiSet::add",
@@ -502,9 +1036,11 @@
     "line": 89,
     "name": "add",
     "lean": "ascii_set.AsciiSet.Insts.CoreOpsArithAddAsciiSetAsciiSet.add",
-    "theorems": [],
-    "status": "open",
-    "why": "no theorem about it"
+    "theorems": [
+     "add_op_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
    },
    {
     "id": "src/ascii_set.rs:ops::Not for AsciiSet::not",
@@ -512,9 +1048,11 @@
     "line": 97,
     "name": "not",
     "lean": "ascii_set.AsciiSet.Insts.CoreOpsBitNotAsciiSet.not",
-    "theorems": [],
-    "status": "open",
-    "why": "no theorem about it"
+    "theorems": [
+     "not_op_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
    },
    {
     "id": "src/ascii_set.rs:_static_assert",
@@ -522,9 +1060,11 @@
     "line": 118,
     "name": "_static_assert",
     "lean": "ascii_set._static_assert",
-    "theorems": [],
-    "status": "open",
-    "why": "no theorem about it"
+    "theorems": [
+     "static_assert_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
    },
    {
     "id": "src/lib.rs:percent_encode_byte",
@@ -533,10 +1073,10 @@
     "name": "percent_encode_byte",
     "lean": "percent_encode_byte",
     "theorems": [
-     "enc_table_slices",
      "percent_encode_byte_spec"
     ],
-    "status": "verified"
+    "status": "verified",
+    "label": "unlabelled"
    },
    {
     "id": "src/lib.rs:percent_encode",
@@ -545,13 +1085,11 @@
     "name": "percent_encode",
     "lean": "percent_encode",
     "theorems": [
-     "should_percent_encode_spec",
-     "enc_table_slices",
-     "percent_encode_byte_spec",
      "percent_encode_correct",
      "percent_encode_output_allowed"
     ],
-    "status": "verified"
+    "status": "verified",
+    "label": "unlabelled"
    },
    {
     "id": "src/lib.rs:utf8_percent_encode",
@@ -559,9 +1097,11 @@
     "line": 136,
     "name": "utf8_percent_encode",
     "lean": "utf8_percent_encode",
-    "theorems": [],
-    "status": "open",
-    "why": "no theorem about it"
+    "theorems": [
+     "utf8_percent_encode_correct"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
    },
    {
     "id": "src/lib.rs:Iterator for PercentEncode::next",
@@ -570,148 +1110,242 @@
     "name": "next",
     "lean": "PercentEncode.Insts.CoreIterTraitsIteratorIteratorSharedAStr.next",
     "theorems": [
-     "encode_next_loop_spec",
-     "encode_next_spec"
+     "encode_next_spec",
+     "next_chunk_spec"
     ],
-    "status": "verified"
+    "status": "open",
+    "why": "proved only on the patched body; the patch is not yet proved equivalent to the original (admission gate 1)",
+    "note": "patched body (next_chunk); equivalence to the original not yet proved",
+    "label": "none"
    },
    {
     "id": "src/lib.rs:Iterator for PercentEncode::size_hint",
     "file": "src/lib.rs",
-    "line": 174,
+    "line": 175,
     "name": "size_hint",
     "lean": "PercentEncode.Insts.CoreIterTraitsIteratorIteratorSharedAStr.size_hint",
-    "theorems": [],
-    "status": "open",
-    "why": "no theorem about it"
+    "theorems": [
+     "encode_size_hint_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
    },
    {
     "id": "src/lib.rs:fmt::Display for PercentEncode::fmt",
     "file": "src/lib.rs",
-    "line": 184,
+    "line": 185,
     "name": "fmt",
     "lean": "PercentEncode.Insts.CoreFmtDisplay.fmt",
-    "theorems": [],
+    "theorems": [
+     "display_fmt_spec",
+     "write_chunks_spec",
+     "write_chunks_buffer"
+    ],
     "status": "open",
-    "why": "no theorem about it"
+    "why": "proved only on the patched body; the patch is not yet proved equivalent to the original (admission gate 1)",
+    "note": "patched body (write_chunks); equivalence to the original not yet proved",
+    "label": "none"
    },
    {
-    "id": "src/lib.rs:From for Cow::from@L194",
+    "id": "src/lib.rs:From for Cow::from@L195",
     "file": "src/lib.rs",
-    "line": 194,
+    "line": 195,
     "name": "from",
-    "lean": null,
-    "theorems": [],
-    "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "lean": "alloc.borrow.CowAStrString.Insts.CoreConvertFromPercentEncode.from",
+    "theorems": [
+     "cow_from_encode_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
    },
    {
     "id": "src/lib.rs:percent_decode_str",
     "file": "src/lib.rs",
-    "line": 216,
+    "line": 217,
     "name": "percent_decode_str",
     "lean": "percent_decode_str",
-    "theorems": [],
-    "status": "open",
-    "why": "no theorem about it"
+    "theorems": [
+     "percent_decode_str_correct"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
    },
    {
     "id": "src/lib.rs:percent_decode",
     "file": "src/lib.rs",
-    "line": 239,
+    "line": 240,
     "name": "percent_decode",
     "lean": "percent_decode",
     "theorems": [
-     "percent_decode_correct",
-     "percent_roundtrip",
-     "roundtrip_NON_ALPHANUMERIC"
+     "percent_decode_correct"
     ],
-    "status": "verified"
+    "status": "verified",
+    "label": "unlabelled"
    },
    {
     "id": "src/lib.rs:after_percent_sign",
     "file": "src/lib.rs",
-    "line": 251,
+    "line": 252,
     "name": "after_percent_sign",
     "lean": "after_percent_sign",
     "theorems": [
      "after_percent_sign_spec"
     ],
-    "status": "verified"
+    "status": "verified",
+    "label": "unlabelled"
    },
    {
     "id": "src/lib.rs:Iterator for PercentDecode::next",
     "file": "src/lib.rs",
-    "line": 262,
+    "line": 263,
     "name": "next",
     "lean": "PercentDecode.Insts.CoreIterTraitsIteratorIteratorU8.next",
     "theorems": [
      "decode_next_spec"
     ],
-    "status": "verified"
+    "status": "open",
+    "why": "proved only on the patched body; the patch is not yet proved equivalent to the original (admission gate 1)",
+    "note": "patched body (closure replaced by match); equivalence to the original not yet proved",
+    "label": "none"
    },
    {
     "id": "src/lib.rs:Iterator for PercentDecode::size_hint",
     "file": "src/lib.rs",
-    "line": 274,
+    "line": 273,
     "name": "size_hint",
     "lean": "PercentDecode.Insts.CoreIterTraitsIteratorIteratorU8.size_hint",
-    "theorems": [],
-    "status": "open",
-    "why": "no theorem about it"
+    "theorems": [
+     "decode_size_hint_spec"
+    ],
+    "status": "verified",
+    "note": "uses the Rust guarantee that a slice is at most isize::MAX bytes",
+    "label": "unlabelled"
    },
    {
-    "id": "src/lib.rs:From for Cow::from@L282",
+    "id": "src/lib.rs:From for Cow::from@L281",
     "file": "src/lib.rs",
-    "line": 282,
+    "line": 281,
     "name": "from",
-    "lean": null,
-    "theorems": [],
-    "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "lean": "alloc.borrow.CowASliceU8VecU8.Insts.CoreConvertFromPercentDecode.from",
+    "theorems": [
+     "cow_from_decode_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
    },
    {
     "id": "src/lib.rs:PercentDecode::if_any",
     "file": "src/lib.rs",
-    "line": 293,
+    "line": 292,
     "name": "if_any",
-    "lean": null,
-    "theorems": [],
+    "lean": "PercentDecode.if_any",
+    "theorems": [
+     "if_any_spec",
+     "decode_if_any_spec"
+    ],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "proved only on the patched body; the patch is not yet proved equivalent to the original (admission gate 1)",
+    "note": "patched body (decode_if_any); equivalence to the original not yet proved",
+    "label": "none"
    },
    {
     "id": "src/lib.rs:PercentDecode::decode_utf8",
     "file": "src/lib.rs",
-    "line": 313,
+    "line": 312,
     "name": "decode_utf8",
-    "lean": null,
-    "theorems": [],
-    "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "lean": "PercentDecode.decode_utf8",
+    "theorems": [
+     "decode_utf8_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
    },
    {
     "id": "src/lib.rs:PercentDecode::decode_utf8_lossy",
     "file": "src/lib.rs",
-    "line": 331,
+    "line": 330,
     "name": "decode_utf8_lossy",
-    "lean": null,
-    "theorems": [],
-    "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "lean": "PercentDecode.decode_utf8_lossy",
+    "theorems": [
+     "decode_utf8_lossy_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
    },
    {
     "id": "src/lib.rs:decode_utf8_lossy",
     "file": "src/lib.rs",
-    "line": 340,
+    "line": 339,
     "name": "decode_utf8_lossy",
-    "lean": null,
-    "theorems": [],
+    "lean": "decode_utf8_lossy",
+    "theorems": [
+     "free_decode_utf8_lossy_spec"
+    ],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "proved only on the patched body; the patch is not yet proved equivalent to the original (admission gate 1)",
+    "note": "patched body (debug_assert!(ptr::eq) removed); equivalence to the original not yet proved",
+    "label": "none"
    }
   ],
   "overrides_not_found": []
  },
- "finished": "2026-10-24T05:56:16Z"
+ "crosscheck": [],
+ "forbidden": [
+  {
+   "file": "PercentEncoding/Funs.lean",
+   "line": 807,
+   "construct": "sorry"
+  }
+ ],
+ "model_crate": false,
+ "finished": "2026-10-24T07:09:42Z",
+ "admission": {
+  "status": "candidate",
+  "label": "unlabelled",
+  "gates": {
+   "real_code": {
+    "pass": false,
+    "detail": "upstream archive SHA-256 not pinned in vpipe.toml (this run: 42645e863db93f5da119118a8337f4e09c545794ad0cfefafca4dc8aac6f3286)"
+   },
+   "every_function": {
+    "pass": false,
+    "detail": "21/26 functions verified or fixed; targets/features covered not declared in [coverage]"
+   },
+   "all_inputs": {
+    "pass": true,
+    "detail": "no bounded-only evidence"
+   },
+   "full_strength": {
+    "pass": false,
+    "detail": "entry strength unlabelled"
+   },
+   "spec_first": {
+    "pass": false,
+    "detail": "need [scope].properties, [scope].written (date) and [scope].reviewed_by"
+   },
+   "not_vacuous": {
+    "pass": false,
+    "detail": "no planted-bug run on this commit (`vpipe mutate`); [scope].test_vectors missing"
+   },
+   "trusted_base": {
+    "pass": false,
+    "detail": "forbidden: 1; axioms not listed in [trust]: []; std models not listed: []"
+   },
+   "cross_check": {
+    "pass": false,
+    "detail": "no [crosscheck] commands"
+   },
+   "reproducible": {
+    "pass": false,
+    "detail": "0 matching clean run(s) on this toolchain; no container digest pinned in toolchain/versions.toml [container]"
+   },
+   "two_reviews": {
+    "pass": false,
+    "detail": "need [review].maintainer and [review].adversarial"
+   }
+  },
+  "passed": 1,
+  "soundness_bugs": [],
+  "admitted": false
+ }
 }

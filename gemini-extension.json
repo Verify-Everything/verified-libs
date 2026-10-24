@@ -1,0 +1,6 @@
+{
+  "name": "verify-everything",
+  "version": "0.1.0",
+  "description": "Skills for formally verifying open-source libraries with Lean/Aeneas, Frama-C and CBMC, and submitting results to Verify-Everything/verified-libs.",
+  "contextFileName": "docs/agent-context.md"
+}

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Fast checks that need no provers: skill frontmatter, manifests parse, scripts parse,
 no build outputs committed. Run in CI and before a PR: python3 scripts/check-repo.py"""
-import re, subprocess, sys, tomllib
+import json, os, re, subprocess, sys, tomllib
 from pathlib import Path
 R = Path(__file__).resolve().parent.parent
 bad = []
@@ -18,6 +18,27 @@ for f in sorted((R / "skills").glob("*/SKILL.md")):
     for link in re.findall(r"\]\(((?:references|templates)/[^)#]*)\)", f.read_text()):
         if not (f.parent / link).exists():
             bad.append(f"{f}: broken link {link}")
+    oy = f.parent / "agents/openai.yaml"  # Codex UI metadata
+    if not oy.exists() or not re.search(r"^interface:\n(\s+\w+: .+\n)*\s+display_name: ", oy.read_text(), re.M):
+        bad.append(f"{oy}: missing, or no interface.display_name")
+# One skills folder, packaged for every agent (docs/installation.md#agents).
+if not (R / ".agents/skills").is_symlink() or os.readlink(R / ".agents/skills") != "../skills":
+    bad.append(".agents/skills must be a symlink to ../skills (Codex and Gemini CLI read it)")
+for f, key in [(".claude-plugin/plugin.json", "name"), (".claude-plugin/marketplace.json", "name"),
+               ("plugin.json", "name"), (".agents/plugins/marketplace.json", "name"),
+               ("gemini-extension.json", "name")]:
+    try:
+        d = json.loads((R / f).read_text())
+        if not d.get(key):
+            bad.append(f"{f}: missing {key}")
+        ctx = d.get("contextFileName")
+        if ctx and not (R / ctx).exists():
+            bad.append(f"{f}: contextFileName {ctx} does not exist")
+    except Exception as e:
+        bad.append(f"{f}: {e}")
+for f in ("CLAUDE.md", "GEMINI.md"):
+    if "AGENTS.md" not in (R / f).read_text():
+        bad.append(f"{f}: must import AGENTS.md")
 for f in sorted((R / "libraries").glob("*/vpipe.toml")) + sorted((R / "libraries").glob("*.toml")):
     try:
         m = tomllib.loads(f.read_text())
@@ -31,7 +52,7 @@ for f in sorted((R / "libraries").glob("*/vpipe.toml")) + sorted((R / "libraries
 for f in list(R.glob("*.sh")) + list(R.glob("scripts/*.sh")) + list(R.glob("skills/*/templates/*.sh")) + list(R.glob("toolchain/*.sh")):
     if subprocess.run(["bash", "-n", str(f)]).returncode:
         bad.append(f"{f}: bash syntax error")
-for f in [R / "bin/vkit.py", R / "bin/vpipe.py", R / "self/gate.py"]:
+for f in [R / "bin/vkit.py", R / "bin/vpipe.py", R / "bin/standards.py", R / "self/gate.py"]:
     if subprocess.run([sys.executable, "-m", "py_compile", str(f)]).returncode:
         bad.append(f"{f}: python syntax error")
 REQUIRED = ["status:", "## Success criteria", "## Code", "## Specification", "## Proof",

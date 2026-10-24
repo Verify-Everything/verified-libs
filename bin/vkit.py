@@ -4,7 +4,7 @@
   vkit doctor [--json]              what is installed, what is missing, which hosts are reachable
   vkit setup [lean|framac|cbmc|mathlib|all] [--yes]
                                     install pinned tools (shows the plan and asks first)
-  vkit skills install [--agent claude|codex|DIR] [--yes] [--dry-run]
+  vkit skills install [--agent claude|codex|gemini|DIR] [--yes] [--dry-run]
   vkit skills list
   vkit update                       git pull this checkout, then refresh installed skills
   vkit <anything else>              passed to the vpipe engine (new, run, run-all, report, selftest, ...)
@@ -23,10 +23,16 @@ PIPE = REPO  # the repo root is the engine root
 SKILLS = REPO / "skills"
 VH = Path(os.environ.get("VPIPE_HOME", Path.home() / ".vpipe"))
 WORK = Path(os.environ.get("VPIPE_WORK", Path.home() / "vpipe-work"))
+# User-level skill folders. Codex and Gemini CLI both read the shared Agent Skills folder
+# ~/.agents/skills (Codex docs: developers.openai.com/codex/skills; Gemini CLI docs/cli/skills.md),
+# so installing for both writes one copy. Inside a clone, .agents/skills -> skills/ serves both too.
+AGENTS_HOME = Path(os.environ.get("GEMINI_CLI_HOME", Path.home()))
 AGENT_SKILL_DIRS = {
     "claude": Path.home() / ".claude/skills",
-    "codex": Path.home() / ".codex/skills",
+    "codex": Path.home() / ".agents/skills",
+    "gemini": AGENTS_HOME / ".agents/skills",
 }
+LEGACY_SKILL_DIRS = [Path(os.environ.get("CODEX_HOME", Path.home() / ".codex")) / "skills"]
 HOSTS = {  # host -> what breaks without it
     "github.com": "Aeneas, Lean, CBMC release downloads and git clones",
     "static.rust-lang.org": "rustup toolchains",
@@ -148,6 +154,8 @@ def doctor(as_json=False):
         "opam": out(["opam", "--version"]),
         "docker": out(["docker", "--version"]),
         "claude": out(["claude", "--version"]),
+        "codex": out(["codex", "--version"]),
+        "gemini": out(["gemini", "--version"]),
     }
     pins = {"aeneas": v["aeneas"]["tag"], "lean": v["lean"]["version"]}
     installed = {}
@@ -158,6 +166,11 @@ def doctor(as_json=False):
     skills = {a: sorted(p.name for p in d.glob("*") if (p / ".vkit-skill").exists()) if d.exists() else []
               for a, d in AGENT_SKILL_DIRS.items()}
     problems = []
+    for d in LEGACY_SKILL_DIRS:
+        old = [p.name for p in d.glob("*") if (p / ".vkit-skill").exists()] if d.exists() else []
+        if old:
+            problems.append(f"old vkit skill copies in {d} ({len(old)}); current Codex reads ~/.agents/skills, "
+                            f"so remove them to avoid duplicates: rm -r {d}/{{{','.join(old)}}}")
     if sysinfo["os"] != "Linux":
         problems.append("Aeneas ships Linux binaries only; on macOS/Windows use the dev container (docs/installation.md).")
     if installed.get("aeneas") and installed["aeneas"] != pins["aeneas"]:
@@ -309,7 +322,8 @@ def install_skills(agents, yes, dry):
     targets = []
     for a in agents:
         d = AGENT_SKILL_DIRS.get(a, Path(a).expanduser())
-        targets.append(d)
+        if d not in targets:  # codex and gemini share ~/.agents/skills
+            targets.append(d)
     plan = []
     for d in targets:
         for n in skill_names():
@@ -343,6 +357,7 @@ def update():
     if (REPO / ".git").exists():
         run(["git", "-C", str(REPO), "pull", "--ff-only"])
     agents = [a for a, d in AGENT_SKILL_DIRS.items() if any((p / ".vkit-skill").exists() for p in d.glob("*"))]
+    agents = list(dict.fromkeys(str(AGENT_SKILL_DIRS[a]) for a in agents))
     return install_skills(agents, True, False) if agents else 0
 
 
@@ -364,7 +379,7 @@ def main():
                                                 choices=["lean", "framac", "cbmc", "mathlib", "all"])
     st.add_argument("--yes", "-y", action="store_true")
     sk = s.add_parser("skills"); sk.add_argument("action", choices=["install", "list"])
-    sk.add_argument("--agent", action="append", help="claude, codex, or a directory (repeatable)")
+    sk.add_argument("--agent", action="append", help="claude, codex, gemini, or a directory (repeatable)")
     sk.add_argument("--yes", "-y", action="store_true"); sk.add_argument("--dry-run", action="store_true")
     s.add_parser("update")
     a = ap.parse_args()

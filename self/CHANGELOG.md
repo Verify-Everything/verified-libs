@@ -54,3 +54,24 @@ Snapshots for rollback are in self/snapshots/.
 - why: crc32fast's functions sit behind different cfgs (x86_64 SIMD, aarch64, portable), so no single Charon run sees them all; toolkit thread saw disk grow per project when no tarball existed.
 - check: two-variant demo (host proves add_sat, riscv fails as expected for a std crate) -> function verified via host; quick gate passes; crc32fast without variants unchanged.
 - incident: a test that copied the shared packages broke lake's build traces, so `lake build` called mathlib's `cache get` against the blocked server and hung for 20 min. Cleared by re-unpacking the tarball. Never copy .lake/packages; move or re-unpack it.
+
+## 2026-10-24T07:20Z v0.2.0 admission standard (approved by Yerin 06:51) in the engine
+- what: bin/standards.py (ten gates, strength labels, forbidden-construct scans, entry status, claim
+  card with the verified-libs front matter) wired into every run; results gain `admission`,
+  `archive_sha256`, `toolchain_digest`, `container_digest`, `clean`, `forbidden`, `crosscheck`,
+  `model_crate`, per-function `label`; Lean builds are replayed with `leanchecker`. New commands:
+  card, mutate (+ --suggest), check-upstream (+ --scaffold), admit, export (--dest), next, take;
+  run --clean and --functions. Layout: candidates/<name>/<version>/ and libs/<name>/<version>/
+  (vpipe.toml, CLAIM.md, proof/, spec/, pipeline/run.sh); libraries/<lib>/ still read. Proving is
+  refused until [scope].properties is written. Zero-byte .olean check before builds.
+  Frama-C: [framac] annotate script, per_function WP runs with per-function options; CBMC
+  harness evidence (label capped at bounded). toolchain/soundness.toml (protected) and
+  [container].digest in versions.toml. selftest checks the standards code.
+- why: Yerin approved the admission standards; toolkit thread asked for leanchecker replay, archive
+  SHA-256, digests, two-run reproducibility and the libs/candidates layout; Neovim thread asked for
+  the annotate hook, per-function WP, CBMC evidence and a work queue; percent-encoding thread hit
+  zero-byte oleans after a full disk.
+- evidence: crc32fast clean run 132/132 in 2.5 min, leanchecker replay passed (14 modules, 61 s),
+  CLAIM.md written, entry status candidate with 1/10 gates (correct: nothing pinned or reviewed
+  yet). Planted bug `^`->`&` in fold_16 was caught. Fixture tests: annotate hook (dishonest
+  annotation rejected), per-function WP 17/17, CBMC pass/fail/no-unwinding cases, take/next.

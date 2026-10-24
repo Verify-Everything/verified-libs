@@ -9,7 +9,10 @@ HERE=$(cd "$(dirname "$0")/.." && pwd)
 SRC=${1:-/mnt/project-files/pipeline}
 NOTES=${2:-/mnt/project-files/verification-notes}
 [ -f "$SRC/bin/vpipe.py" ] || { echo "no vpipe at $SRC" >&2; exit 1; }
-ENGINE=(VERSION bootstrap.sh bin/vpipe bin/vpipe.py toolchain templates checklists self selftest libraries results)
+ENGINE=(VERSION bootstrap.sh bin/vpipe bin/vpipe.py bin/standards.py toolchain templates checklists self selftest libraries candidates results)
+# Toolkit-owned files inside engine folders survive the copy.
+KEEP=(templates/CLAIM.md)
+keep=$(mktemp -d); for k in "${KEEP[@]}"; do [ -e "$HERE/$k" ] && mkdir -p "$keep/$(dirname "$k")" && cp "$HERE/$k" "$keep/$k"; done
 for p in "${ENGINE[@]}"; do
   [ -e "$SRC/$p" ] || continue
   rm -rf "${HERE:?}/$p"; mkdir -p "$(dirname "$HERE/$p")"
@@ -17,6 +20,7 @@ for p in "${ENGINE[@]}"; do
       --exclude 'self/snapshots/*' --exclude 'self/.*.lock' --exclude '*.tar.zst' --exclude '*.tar.gz' "$p" ) \
     | ( cd "$HERE" && tar xf - )
 done
+( cd "$keep" && tar cf - . ) | ( cd "$HERE" && tar xf - ); rm -rf "${keep:?}"
 # Engine README becomes docs/engine.md; the repo README is the toolkit's.
 cp "$SRC/README.md" "$HERE/docs/engine.md"
 # Lessons: the engine reads notes/ in the repo when the workshop folder is absent.

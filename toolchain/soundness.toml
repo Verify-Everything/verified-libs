@@ -1,0 +1,9 @@
+# Known soundness bugs in tools the pipeline uses. An entry whose run used an affected version is
+# marked broken until it is re-checked on a fixed version (admission standard, lifecycle).
+# Protected from the self-update loop.
+#
+# [[bug]]
+# tool = "lean"              # key in installed.json: lean, aeneas, charon_rust, frama-c
+# versions = ["4.35.0"]
+# note = "kernel accepted ... (link)"
+# fixed_in = "4.35.1"

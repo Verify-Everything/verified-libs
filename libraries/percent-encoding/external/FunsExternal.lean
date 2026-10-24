@@ -68,18 +68,24 @@ def Slice.Insts.CoreFmtDebug.fmt
     Name pattern: [core::intrinsics::transmute]
     Visibility: public -/
 @[rust_fun "core::intrinsics::transmute"]
-axiom core.intrinsics.transmute
-  {Src : Type _} (Dst : Type _) : Src → Result Dst
+def core.intrinsics.transmute
+  {Src : Type _} (Dst : Type _) : Src → Result Dst :=
+  -- Never called: `_static_assert` only names `transmute` so the compiler checks
+  -- array sizes. Modelled as failure, so no proof can rely on a call.
+  fun _ => fail .undef
 
 /-- [core::iter::traits::iterator::Iterator::size_hint]:
     Source: '/rustc/library/core/src/iter/traits/iterator.rs', lines 189:4-189:49
     Name pattern: [core::iter::traits::iterator::Iterator::size_hint]
     Visibility: public -/
 @[trait_default, rust_fun "core::iter::traits::iterator::Iterator::size_hint"]
-axiom core.iter.traits.iterator.Iterator.size_hint.default
+def core.iter.traits.iterator.Iterator.size_hint.default
   {Self : Type _} {Clause0_Item : Type _} (IteratorInst :
   core.iter.traits.iterator.Iterator Self Clause0_Item) :
-  Self → Result (Std.Usize × (Option Std.Usize))
+  Self → Result (Std.Usize × (Option Std.Usize)) :=
+  -- Never called: both iterators in this crate override `size_hint`.
+  -- Modelled as failure, so no proof can rely on a call.
+  fun _ => fail .undef
 
 /-- [core::mem::size_of]:
     Source: '/rustc/library/core/src/mem/mod.rs', lines 375:0-375:34
@@ -208,10 +214,65 @@ def stringOfValid (l : List Std.U8) (h : Utf8Valid l) : String := String.fromUTF
 def stringBytes (s : String) : List Std.U8 :=
   s.toByteArray.data.toList.map (fun b => Std.U8.ofNatCore b.toNat (by have := b.toNat_lt; scalar_tac))
 
-/-- What `String::from_utf8_lossy` returns for invalid input: std replaces
-    each maximal invalid subsequence by U+FFFD. Left uninterpreted: the crate
-    only passes bytes to std, so the theorems hold for any such function. -/
-opaque stdUtf8Lossy : List Std.U8 → String
+/-- One step of Rust's `Utf8Chunks` (used by `String::from_utf8_lossy`): the
+    lead byte decides how many continuation bytes follow and the allowed range
+    of the first one (Unicode Table 3-7, well-formed UTF-8). -/
+def utf8Lead (b0 : Nat) : Nat × Nat × Nat :=
+  if 0xC2 ≤ b0 ∧ b0 ≤ 0xDF then (1, 0x80, 0xBF)
+  else if b0 = 0xE0 then (2, 0xA0, 0xBF)
+  else if (0xE1 ≤ b0 ∧ b0 ≤ 0xEC) ∨ b0 = 0xEE ∨ b0 = 0xEF then (2, 0x80, 0xBF)
+  else if b0 = 0xED then (2, 0x80, 0x9F)
+  else if b0 = 0xF0 then (3, 0x90, 0xBF)
+  else if 0xF1 ≤ b0 ∧ b0 ≤ 0xF3 then (3, 0x80, 0xBF)
+  else if b0 = 0xF4 then (3, 0x80, 0x8F)
+  else (0, 0, 0)
+
+def isCont (b : Nat) : Bool := 0x80 ≤ b && b ≤ 0xBF
+
+/-- Lossy UTF-8 decoding with U+FFFD for each maximal invalid subpart (the
+    "substitution of maximal subparts" practice, which Rust follows). `fuel`
+    is the input length; every step consumes at least one byte. -/
+def utf8LossyGo : Nat → List Nat → String → String
+  | 0, _, acc => acc
+  | _, [], acc => acc
+  | fuel + 1, b0 :: rest, acc =>
+    if b0 < 0x80 then utf8LossyGo fuel rest (acc.push (Char.ofNat b0)) else
+    match utf8Lead b0, rest with
+    | (1, lo, hi), b1 :: r1 =>
+      if lo ≤ b1 ∧ b1 ≤ hi then
+        utf8LossyGo fuel r1 (acc.push (Char.ofNat ((b0 % 0x20) * 0x40 + b1 % 0x40)))
+      else utf8LossyGo fuel rest (acc.push '\uFFFD')
+    | (2, lo, hi), b1 :: r1 =>
+      if lo ≤ b1 ∧ b1 ≤ hi then
+        match r1 with
+        | b2 :: r2 =>
+          if isCont b2 then
+            utf8LossyGo fuel r2
+              (acc.push (Char.ofNat ((b0 % 0x10) * 0x1000 + (b1 % 0x40) * 0x40 + b2 % 0x40)))
+          else utf8LossyGo fuel r1 (acc.push '\uFFFD')
+        | [] => acc.push '\uFFFD'
+      else utf8LossyGo fuel rest (acc.push '\uFFFD')
+    | (3, lo, hi), b1 :: r1 =>
+      if lo ≤ b1 ∧ b1 ≤ hi then
+        match r1 with
+        | b2 :: r2 =>
+          if isCont b2 then
+            match r2 with
+            | b3 :: r3 =>
+              if isCont b3 then
+                utf8LossyGo fuel r3 (acc.push (Char.ofNat ((b0 % 0x08) * 0x40000 +
+                  (b1 % 0x40) * 0x1000 + (b2 % 0x40) * 0x40 + b3 % 0x40)))
+              else utf8LossyGo fuel r2 (acc.push '\uFFFD')
+            | [] => acc.push '\uFFFD'
+          else utf8LossyGo fuel r1 (acc.push '\uFFFD')
+        | [] => acc.push '\uFFFD'
+      else utf8LossyGo fuel rest (acc.push '\uFFFD')
+    | _, _ => utf8LossyGo fuel rest (acc.push '\uFFFD')
+
+/-- What `String::from_utf8_lossy` returns for invalid input: each maximal
+    invalid subpart becomes U+FFFD. Differential-tested against Rust std
+    (tests/models). -/
+def stdUtf8Lossy (l : List Std.U8) : String := utf8LossyGo l.length (l.map (·.val)) ""
 
 /-- [core::fmt::{impl core::fmt::Write for core::fmt::Formatter<'_>}::write_str]:
     Name pattern: [core::fmt::{core::fmt::Write<core::fmt::Formatter<'0>>}::write_str]

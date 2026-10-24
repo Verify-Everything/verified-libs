@@ -2,9 +2,9 @@
 target/
 __pycache__/
 *.part
-pipeline/cache/*
-!pipeline/cache/.keep
-pipeline/self/snapshots/*
-!pipeline/self/snapshots/.keep
-pipeline/self/.*.lock
+cache/*
+!cache/.keep
+self/snapshots/*
+!self/snapshots/.keep
+self/.*.lock
 *.tar.zst

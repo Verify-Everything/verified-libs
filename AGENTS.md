@@ -11,7 +11,9 @@ The repo root is the engine root.
 - `results/<lib>/latest.json` run outputs; `results/SUMMARY.md`.
 - `notes/general.md` lessons from every library (read first). `toolchain/versions.toml` pins.
 - `self/gate.py` + `selftest/` protected acceptance gate; `templates/`, `checklists/` engine data.
-- `skills/` agent skills (also the Claude Code plugin). Start with `skills/verify-library/SKILL.md`.
+- `skills/` agent skills, shared by Claude Code, Codex and Gemini CLI (`.agents/skills` links here;
+  `.claude-plugin/`, `plugin.json` + `.agents/plugins/`, `gemini-extension.json` package them).
+  Start with `skills/verify-library/SKILL.md`. `CLAUDE.md` and `GEMINI.md` only import this file.
 - `docs/` human docs. `install.sh` installer.
 
 ## Finish line

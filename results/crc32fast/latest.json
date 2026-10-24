@@ -1,16 +1,22 @@
 {
  "library": "crc32fast",
+ "entry": "crc32fast",
  "commit": "d2363eab95ebc85fcf726d1c8fa845148e474591",
  "version": "1.5.3",
  "tool": "lean-aeneas",
- "started": "2026-10-24T06:48:01Z",
- "pipeline_version": "0.1.5",
+ "started": "2026-10-24T07:05:05Z",
+ "pipeline_version": "0.1.6",
  "toolchain": {
   "aeneas": "nightly-2026.10.23-fdebf20",
   "charon_rust": "nightly-2026-09-17",
   "lean": "4.35.0",
   "aeneas_dir": "/root/.vpipe/aeneas-nightly-2026.10.23-fdebf20"
  },
+ "clean": true,
+ "toolchain_digest": "sha256:388575708c786f2ce7f6abfed8f16c48c0b7e574e227f5b6605bb1805086f620",
+ "container_digest": null,
+ "ci_run": null,
+ "archive_sha256": "5f9d28e38dcb613309c036523202e50241cdea899e8af524de6397dad594bf61",
  "source": {
   "patches": [],
   "tests": []
@@ -32,11 +38,18 @@
    "When retrieving the builtin information for trait decl 'core::iter::range::Step', could not find the information for item 'forward_overflowing'. The model defined in the Lean library seems to be missing the corresponding field.",
    "When retrieving the builtin information for trait decl 'core::iter::range::Step', could not find the information for item 'backward_overflowing'. The model defined in the Lean library seems to be missing the corresponding field."
   ],
-  "log": "[Info ] Imported: /root/vpipe-work/crc32fast/crc32fast.llbc\n[Warn ] When retrieving the builtin information for trait decl 'core::iter::range::Step', could not find the information for item 'forward_overflowing'. The model defined in the Lean library seems to be missing the corresponding field.\nSource: '/rustc/library/core/src/iter/range.rs', lines 35:0-35:64\nCompiler source: extract/Extract.ml, line 2866\n\n[Warn ] When retrieving the builtin information for trait decl 'core::iter::range::Step', could not find the information for item 'backward_overflowing'. The model defined in the Lean library seems to be missing the corresponding field.\nSource: '/rustc/library/core/src/iter/range.rs', lines 35:0-35:64\nCompiler source: extract/Extract.ml, line 2866\n\n[Info ] Creating missing directory: /root/vpipe-work/crc32fast/proj/Crc32fast/Extracted\n[Info ] Generated: /root/vpipe-work/crc32fast/proj/Crc32fast/Extracted/TypesExternal_Template.lean\n[Info ] Generated: /root/vpipe-work/crc32fast/proj/Crc32fast/Extracted/Types.lean\n[Info ] Generated: /root/vpipe-work/crc32fast/proj/Crc32fast/Extracted/FunsExternal_Template.lean\n[Info ] Generated: /root/vpipe-work/crc32fast/proj/Crc32fast/Extracted/Funs.lean\n[Info ] Total execution time: 1.942390 seconds\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+  "log": "[Info ] Imported: /root/vpipe-work/crc32fast/crc32fast.llbc\n[Warn ] When retrieving the builtin information for trait decl 'core::iter::range::Step', could not find the information for item 'forward_overflowing'. The model defined in the Lean library seems to be missing the corresponding field.\nSource: '/rustc/library/core/src/iter/range.rs', lines 35:0-35:64\nCompiler source: extract/Extract.ml, line 2866\n\n[Warn ] When retrieving the builtin information for trait decl 'core::iter::range::Step', could not find the information for item 'backward_overflowing'. The model defined in the Lean library seems to be missing the corresponding field.\nSource: '/rustc/library/core/src/iter/range.rs', lines 35:0-35:64\nCompiler source: extract/Extract.ml, line 2866\n\n[Info ] Creating missing directory: /root/vpipe-work/crc32fast/proj/Crc32fast/Extracted\n[Info ] Generated: /root/vpipe-work/crc32fast/proj/Crc32fast/Extracted/TypesExternal_Template.lean\n[Info ] Generated: /root/vpipe-work/crc32fast/proj/Crc32fast/Extracted/Types.lean\n[Info ] Generated: /root/vpipe-work/crc32fast/proj/Crc32fast/Extracted/FunsExternal_Template.lean\n[Info ] Generated: /root/vpipe-work/crc32fast/proj/Crc32fast/Extracted/Funs.lean\n[Info ] Total execution time: 2.026871 seconds\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
  },
  "prove": {
   "ok": true,
-  "seconds": 25,
+  "seconds": 140,
+  "replay": {
+   "ok": true,
+   "tool": "leanchecker",
+   "modules": 14,
+   "seconds": 61,
+   "log": ""
+  },
   "theorems": [
    {
     "name": "fromLE4",
@@ -970,7 +983,7 @@
   "axiom_thms": 0,
   "unaudited": 0,
   "errors": [],
-  "log": "\u26a0 [1807/1810] Replayed Crc32fast.Baseline\nwarning: Crc32fast/Baseline.lean:61:6: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Baseline.lean:222:6: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Baseline.lean:240:6: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Baseline.lean:238:43: This simp argument is unused:\n  core.slice.index.SliceIndexRangeFromUsizeSlice\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [core.slice.index.Slice.index, core.slice.index.SliceIndexRangeFromUsizeSlice.index]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Crc32fast/Baseline.lean:242:45: Variable name `h` is not explicitly referenced.\n\nHint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:\n  [apply] _h\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`\nwarning: Crc32fast/Baseline.lean:247:20: This simp argument is unused:\n  Slice.length\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [bytes]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Crc32fast/Baseline.lean:307:6: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Baseline.lean:322:6: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Baseline.lean:331:6: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Crc32fast/Baseline.lean:361:6: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Baseline.lean:369:6: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\n\u26a0 [1808/1810] Replayed Crc32fast.Hasher\nwarning: Crc32fast/Hasher.lean:21:4: This simp argument is unused:\n  Hasher.new_with_initial_len.closure.Insts.CoreOpsFunctionFnOnceTupleHasher\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [Hasher.new_with_initial_len, Hasher.internal_new_specialized, specialized.State.new,\n    core.option.Option.Insts.CoreOpsTry_traitTry.branch,\n    core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual, core.option.Option.unwrap_or_else,\n    Hasher.new_with_initial_len.closure.Insts.CoreOpsFunctionFnOnceTupleHasher.call_once, Hasher.internal_new_baseline,\n    bind_ok, bind_tc_ok]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Crc32fast/Hasher.lean:23:43: This simp argument is unused:\n  bind_tc_ok\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [Hasher.new_with_initial_len, Hasher.internal_new_specialized, specialized.State.new,\n    core.option.Option.Insts.CoreOpsTry_traitTry.branch,\n    core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual, core.option.Option.unwrap_or_else,\n    Hasher.new_with_initial_len.closure.Insts.CoreOpsFunctionFnOnceTupleHasher,\n    Hasher.new_with_initial_len.closure.Insts.CoreOpsFunctionFnOnceTupleHasher.call_once, Hasher.internal_new_baseline,\n    bind_ok]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Crc32fast/Hasher.lean:37:6: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Hasher.lean:67:37: This simp argument is unused:\n  UScalar.max\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [Usize.max, U64.max]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\n\u26a0 [1809/1810] Replayed Crc32fast.Combine\nwarning: Crc32fast/Combine.lean:26:6: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Combine.lean:43:6: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Combine.lean:74:6: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Combine.lean:85:52: This simp argument is unused:\n  IScalar.toNat\n\nHint: Omit it from the simp argument list.\n  [apply] simp [hd]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Crc32fast/Combine.lean:200:6: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Combine.lean:230:27: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Combine.lean:230:39: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Combine.lean:239:28: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Crc32fast/Combine.lean:239:46: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Crc32fast/Combine.lean:284:6: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Crc32fast/Combine.lean:295:6: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Crc32fast/Combine.lean:307:8: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Combine.lean:307:19: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Combine.lean:310:8: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Crc32fast/Combine.lean:310:19: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Crc32fast/Combine.lean:350:8: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Combine.lean:354:8: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nBuild completed successfully (1810 jobs).\n"
+  "log": "\u2714 [1371/1555] Built Crc32fast.Spec (760ms)\n\u2714 [1551/1788] Built Crc32fast.Bits (768ms)\n\u2714 [1798/1810] Built Crc32fast.External.TypesExternal (3.9s)\n\u2714 [1799/1810] Built Crc32fast.Extracted.TypesExternal (4.1s)\n\u2714 [1800/1810] Built Crc32fast.SpecLemmas (4.9s)\n\u2714 [1801/1810] Built Crc32fast.Extracted.Types (1.0s)\n\u2714 [1802/1810] Built Crc32fast.Extracted.FunsExternal (2.5s)\n\u2714 [1803/1810] Built Crc32fast.External.FunsExternal (2.9s)\n\u2714 [1804/1810] Built Crc32fast.CombineSpec (23s)\n\u2714 [1805/1810] Built Crc32fast.Extracted.Funs (22s)\n\u2714 [1806/1810] Built Crc32fast.Table (11s)\n\u26a0 [1807/1810] Built Crc32fast.Baseline (5.4s)\nwarning: Crc32fast/Baseline.lean:61:6: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Baseline.lean:222:6: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Baseline.lean:240:6: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Baseline.lean:238:43: This simp argument is unused:\n  core.slice.index.SliceIndexRangeFromUsizeSlice\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [core.slice.index.Slice.index, core.slice.index.SliceIndexRangeFromUsizeSlice.index]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Crc32fast/Baseline.lean:242:45: Variable name `h` is not explicitly referenced.\n\nHint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:\n  [apply] _h\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`\nwarning: Crc32fast/Baseline.lean:247:20: This simp argument is unused:\n  Slice.length\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [bytes]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Crc32fast/Baseline.lean:307:6: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Baseline.lean:322:6: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Baseline.lean:331:6: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Crc32fast/Baseline.lean:361:6: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Baseline.lean:369:6: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\n\u26a0 [1808/1810] Built Crc32fast.Hasher (2.3s)\nwarning: Crc32fast/Hasher.lean:21:4: This simp argument is unused:\n  Hasher.new_with_initial_len.closure.Insts.CoreOpsFunctionFnOnceTupleHasher\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [Hasher.new_with_initial_len, Hasher.internal_new_specialized, specialized.State.new,\n    core.option.Option.Insts.CoreOpsTry_traitTry.branch,\n    core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual, core.option.Option.unwrap_or_else,\n    Hasher.new_with_initial_len.closure.Insts.CoreOpsFunctionFnOnceTupleHasher.call_once, Hasher.internal_new_baseline,\n    bind_ok, bind_tc_ok]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Crc32fast/Hasher.lean:23:43: This simp argument is unused:\n  bind_tc_ok\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [Hasher.new_with_initial_len, Hasher.internal_new_specialized, specialized.State.new,\n    core.option.Option.Insts.CoreOpsTry_traitTry.branch,\n    core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual, core.option.Option.unwrap_or_else,\n    Hasher.new_with_initial_len.closure.Insts.CoreOpsFunctionFnOnceTupleHasher,\n    Hasher.new_with_initial_len.closure.Insts.CoreOpsFunctionFnOnceTupleHasher.call_once, Hasher.internal_new_baseline,\n    bind_ok]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Crc32fast/Hasher.lean:37:6: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Hasher.lean:67:37: This simp argument is unused:\n  UScalar.max\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [Usize.max, U64.max]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\n\u26a0 [1809/1810] Built Crc32fast.Combine (3.5s)\nwarning: Crc32fast/Combine.lean:26:6: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Combine.lean:43:6: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Combine.lean:74:6: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Combine.lean:85:52: This simp argument is unused:\n  IScalar.toNat\n\nHint: Omit it from the simp argument list.\n  [apply] simp [hd]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Crc32fast/Combine.lean:200:6: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Combine.lean:230:27: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Combine.lean:230:39: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Combine.lean:239:28: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Crc32fast/Combine.lean:239:46: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Crc32fast/Combine.lean:284:6: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Crc32fast/Combine.lean:295:6: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Crc32fast/Combine.lean:307:8: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Combine.lean:307:19: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Combine.lean:310:8: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Crc32fast/Combine.lean:310:19: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Crc32fast/Combine.lean:350:8: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Crc32fast/Combine.lean:354:8: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nBuild completed successfully (1810 jobs).\n"
  },
  "functions": {
   "total": 43,
@@ -988,7 +1001,8 @@
     "theorems": [
      "fold_16_eq"
     ],
-    "status": "verified"
+    "status": "verified",
+    "label": "unlabelled"
    },
    {
     "id": "src/baseline.rs:update_fast_16",
@@ -1013,7 +1027,8 @@
      "tail_eq",
      "update_fast_16_eq"
     ],
-    "status": "verified"
+    "status": "verified",
+    "label": "unlabelled"
    },
    {
     "id": "src/baseline.rs:update_slow",
@@ -1028,7 +1043,8 @@
      "update_slow_loop_eq",
      "update_slow_eq"
     ],
-    "status": "verified"
+    "status": "verified",
+    "label": "unlabelled"
    },
    {
     "id": "src/combine.rs:multiply",
@@ -1043,7 +1059,8 @@
      "multiply_loop_eq",
      "multiply_eq"
     ],
-    "status": "verified"
+    "status": "verified",
+    "label": "unlabelled"
    },
    {
     "id": "src/combine.rs:combine",
@@ -1058,7 +1075,8 @@
      "combine_loop_eq",
      "combine_eq"
     ],
-    "status": "verified"
+    "status": "verified",
+    "label": "unlabelled"
    },
    {
     "id": "src/combine.rs:golden",
@@ -1068,7 +1086,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/lib.rs:hash",
@@ -1082,7 +1101,8 @@
      "hash_eq",
      "update_update_eq_hash"
     ],
-    "status": "verified"
+    "status": "verified",
+    "label": "unlabelled"
    },
    {
     "id": "src/lib.rs:Hasher::new",
@@ -1096,7 +1116,8 @@
      "new_eq",
      "update_update_eq_hash"
     ],
-    "status": "verified"
+    "status": "verified",
+    "label": "unlabelled"
    },
    {
     "id": "src/lib.rs:Hasher::new_with_initial",
@@ -1107,7 +1128,8 @@
     "theorems": [
      "new_with_initial_len_eq"
     ],
-    "status": "verified"
+    "status": "verified",
+    "label": "unlabelled"
    },
    {
     "id": "src/lib.rs:Hasher::new_with_initial_len",
@@ -1118,7 +1140,8 @@
     "theorems": [
      "new_with_initial_len_eq"
     ],
-    "status": "verified"
+    "status": "verified",
+    "label": "unlabelled"
    },
    {
     "id": "src/lib.rs:Hasher::internal_new_baseline",
@@ -1128,7 +1151,8 @@
     "lean": "Hasher.internal_new_baseline",
     "theorems": [],
     "status": "open",
-    "why": "no theorem about it"
+    "why": "no theorem about it",
+    "label": "none"
    },
    {
     "id": "src/lib.rs:Hasher::internal_new_specialized",
@@ -1138,7 +1162,8 @@
     "lean": "Hasher.internal_new_specialized",
     "theorems": [],
     "status": "open",
-    "why": "no theorem about it"
+    "why": "no theorem about it",
+    "label": "none"
    },
    {
     "id": "src/lib.rs:Hasher::update",
@@ -1148,7 +1173,8 @@
     "lean": "Hasher.update",
     "theorems": [],
     "status": "open",
-    "why": "no theorem about it"
+    "why": "no theorem about it",
+    "label": "none"
    },
    {
     "id": "src/lib.rs:Hasher::total_len",
@@ -1158,7 +1184,8 @@
     "lean": "Hasher.total_len",
     "theorems": [],
     "status": "open",
-    "why": "no theorem about it"
+    "why": "no theorem about it",
+    "label": "none"
    },
    {
     "id": "src/lib.rs:Hasher::finalize",
@@ -1168,7 +1195,8 @@
     "lean": "Hasher.finalize",
     "theorems": [],
     "status": "open",
-    "why": "no theorem about it"
+    "why": "no theorem about it",
+    "label": "none"
    },
    {
     "id": "src/lib.rs:Hasher::reset",
@@ -1178,7 +1206,8 @@
     "lean": "Hasher.reset",
     "theorems": [],
     "status": "open",
-    "why": "no theorem about it"
+    "why": "no theorem about it",
+    "label": "none"
    },
    {
     "id": "src/lib.rs:Hasher::combine",
@@ -1188,7 +1217,8 @@
     "lean": "Hasher.combine",
     "theorems": [],
     "status": "open",
-    "why": "no theorem about it"
+    "why": "no theorem about it",
+    "label": "none"
    },
    {
     "id": "src/lib.rs:fmt::Debug for Hasher::fmt",
@@ -1198,7 +1228,8 @@
     "lean": "Hasher.Insts.CoreFmtDebug.fmt",
     "theorems": [],
     "status": "open",
-    "why": "no theorem about it"
+    "why": "no theorem about it",
+    "label": "none"
    },
    {
     "id": "src/lib.rs:Default for Hasher::default",
@@ -1208,7 +1239,8 @@
     "lean": "Hasher.Insts.CoreDefaultDefault.default",
     "theorems": [],
     "status": "open",
-    "why": "no theorem about it"
+    "why": "no theorem about it",
+    "label": "none"
    },
    {
     "id": "src/lib.rs:hash::Hasher for Hasher::write",
@@ -1218,7 +1250,8 @@
     "lean": "Hasher.Insts.CoreHashHasher.write",
     "theorems": [],
     "status": "open",
-    "why": "no theorem about it"
+    "why": "no theorem about it",
+    "label": "none"
    },
    {
     "id": "src/lib.rs:hash::Hasher for Hasher::finish",
@@ -1228,7 +1261,8 @@
     "lean": "Hasher.Insts.CoreHashHasher.finish",
     "theorems": [],
     "status": "open",
-    "why": "no theorem about it"
+    "why": "no theorem about it",
+    "label": "none"
    },
    {
     "id": "src/specialized/aarch64.rs:State::new@L8",
@@ -1238,7 +1272,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/specialized/aarch64.rs:State::new@L19",
@@ -1248,7 +1283,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/specialized/aarch64.rs:State::update",
@@ -1258,7 +1294,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/specialized/aarch64.rs:calculate",
@@ -1268,7 +1305,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/specialized/aarch64.rs:crc_quads",
@@ -1278,7 +1316,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/specialized/aarch64.rs:crc_bytes",
@@ -1288,7 +1327,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/specialized/mod.rs:State::new",
@@ -1298,7 +1338,8 @@
     "lean": "specialized.State.new",
     "theorems": [],
     "status": "open",
-    "why": "no theorem about it"
+    "why": "no theorem about it",
+    "label": "none"
    },
    {
     "id": "src/specialized/mod.rs:State::update",
@@ -1308,7 +1349,8 @@
     "lean": "specialized.State.update",
     "theorems": [],
     "status": "open",
-    "why": "no theorem about it"
+    "why": "no theorem about it",
+    "label": "none"
    },
    {
     "id": "src/specialized/pclmulqdq.rs:State::detect@L42",
@@ -1318,7 +1360,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/specialized/pclmulqdq.rs:State::detect@L65",
@@ -1328,7 +1371,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/specialized/pclmulqdq.rs:State::new",
@@ -1338,7 +1382,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/specialized/pclmulqdq.rs:State::update",
@@ -1348,7 +1393,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/specialized/pclmulqdq.rs:calculate",
@@ -1358,7 +1404,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/specialized/pclmulqdq.rs:calculate_avx2",
@@ -1368,7 +1415,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/specialized/pclmulqdq.rs:calculate_avx512",
@@ -1378,7 +1426,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/specialized/pclmulqdq.rs:reduce_128_to_crc",
@@ -1388,7 +1437,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/specialized/pclmulqdq.rs:reduce128",
@@ -1398,7 +1448,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/specialized/pclmulqdq.rs:reduce256",
@@ -1408,7 +1459,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/specialized/pclmulqdq.rs:reduce512",
@@ -1418,7 +1470,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/specialized/pclmulqdq.rs:get",
@@ -1428,7 +1481,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/specialized/pclmulqdq.rs:get256",
@@ -1438,7 +1492,8 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    },
    {
     "id": "src/specialized/pclmulqdq.rs:get512",
@@ -1448,10 +1503,129 @@
     "lean": null,
     "theorems": [],
     "status": "open",
-    "why": "not extracted (unsupported by Aeneas or excluded by cfg)"
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
    }
   ],
   "overrides_not_found": []
  },
- "finished": "2026-10-24T06:48:48Z"
+ "crosscheck": [],
+ "forbidden": [
+  {
+   "file": "Crc32fast/External/FunsExternal.lean",
+   "line": 30,
+   "construct": "axiom"
+  },
+  {
+   "file": "Crc32fast/External/FunsExternal.lean",
+   "line": 37,
+   "construct": "axiom"
+  },
+  {
+   "file": "Crc32fast/External/TypesExternal.lean",
+   "line": 26,
+   "construct": "axiom"
+  },
+  {
+   "file": "Crc32fast/Extracted/FunsExternal.lean",
+   "line": 30,
+   "construct": "axiom"
+  },
+  {
+   "file": "Crc32fast/Extracted/FunsExternal.lean",
+   "line": 37,
+   "construct": "axiom"
+  },
+  {
+   "file": "Crc32fast/Extracted/TypesExternal.lean",
+   "line": 26,
+   "construct": "axiom"
+  },
+  {
+   "file": "standalone/extract/templates/FunsExternal_Template.lean",
+   "line": 30,
+   "construct": "axiom"
+  },
+  {
+   "file": "standalone/extract/templates/FunsExternal_Template.lean",
+   "line": 41,
+   "construct": "axiom"
+  },
+  {
+   "file": "standalone/extract/templates/FunsExternal_Template.lean",
+   "line": 51,
+   "construct": "axiom"
+  },
+  {
+   "file": "standalone/extract/templates/FunsExternal_Template.lean",
+   "line": 58,
+   "construct": "axiom"
+  },
+  {
+   "file": "standalone/extract/templates/FunsExternal_Template.lean",
+   "line": 69,
+   "construct": "axiom"
+  },
+  {
+   "file": "standalone/extract/templates/FunsExternal_Template.lean",
+   "line": 79,
+   "construct": "axiom"
+  },
+  {
+   "file": "standalone/extract/templates/TypesExternal_Template.lean",
+   "line": 27,
+   "construct": "axiom"
+  }
+ ],
+ "model_crate": false,
+ "finished": "2026-10-24T07:07:32Z",
+ "admission": {
+  "status": "candidate",
+  "label": "unlabelled",
+  "gates": {
+   "real_code": {
+    "pass": false,
+    "detail": "upstream archive SHA-256 not pinned in vpipe.toml (this run: 5f9d28e38dcb613309c036523202e50241cdea899e8af524de6397dad594bf61)"
+   },
+   "every_function": {
+    "pass": false,
+    "detail": "9/43 functions verified or fixed; targets/features covered not declared in [coverage]"
+   },
+   "all_inputs": {
+    "pass": true,
+    "detail": "no bounded-only evidence"
+   },
+   "full_strength": {
+    "pass": false,
+    "detail": "entry strength unlabelled"
+   },
+   "spec_first": {
+    "pass": false,
+    "detail": "need [scope].properties, [scope].written (date) and [scope].reviewed_by"
+   },
+   "not_vacuous": {
+    "pass": false,
+    "detail": "no planted-bug run on this commit (`vpipe mutate`); [scope].test_vectors missing"
+   },
+   "trusted_base": {
+    "pass": false,
+    "detail": "forbidden: 13; axioms not listed in [trust]: []; std models not listed: ['core.fmt.Formatter.debug_struct', 'core.fmt.builders.DebugStruct', 'core.fmt.builders.DebugStruct.finish']"
+   },
+   "cross_check": {
+    "pass": false,
+    "detail": "no [crosscheck] commands"
+   },
+   "reproducible": {
+    "pass": false,
+    "detail": "1 matching clean run(s) on this toolchain; no container digest pinned in toolchain/versions.toml [container]"
+   },
+   "two_reviews": {
+    "pass": false,
+    "detail": "need [review].maintainer and [review].adversarial"
+   }
+  },
+  "passed": 1,
+  "soundness_bugs": [],
+  "admitted": false
+ }
 }

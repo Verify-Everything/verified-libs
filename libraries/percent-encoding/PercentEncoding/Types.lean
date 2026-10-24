@@ -2,6 +2,7 @@
 -- [percent_encoding]: type definitions
 module
 public import Aeneas
+public import PercentEncoding.TypesExternal
 @[expose] public section
 open Aeneas Aeneas.Std Result ControlFlow Error
 set_option linter.dupNamespace false
@@ -20,6 +21,23 @@ set_option maxRecDepth 16384
 
 namespace percent_encoding
 
+/-- Trait declaration: [core::borrow::Borrow]
+    Source: '/rustc/library/core/src/borrow.rs', lines 158:0-158:40
+    Name pattern: [core::borrow::Borrow]
+    Visibility: public -/
+@[rust_trait "core::borrow::Borrow"]
+structure core.borrow.Borrow (Self : Type _) (Borrowed : Type _) where
+  borrow : Self → Result Borrowed
+
+/-- Trait declaration: [core::fmt::Write]
+    Source: '/rustc/library/core/src/fmt/mod.rs', lines 123:0-123:15
+    Name pattern: [core::fmt::Write]
+    Visibility: public -/
+@[rust_trait "core::fmt::Write"]
+structure core.fmt.Write (Self : Type _) where
+  write_str : Self → Str → Result ((core.result.Result Unit core.fmt.Error)
+    × Self)
+
 /-- Trait declaration: [core::ops::arith::Add]
     Source: '/rustc/library/core/src/ops/arith.rs', lines 76:0-76:31
     Name pattern: [core::ops::arith::Add]
@@ -37,6 +55,25 @@ structure core.ops.arith.Add (Self : Type _) (Rhs : Type _) (Self_Output :
 structure core.ops.bit.Not (Self : Type _) (Self_Output : Type _) where
   not : Self → Result Self_Output
 
+/-- Trait declaration: [alloc::borrow::ToOwned]
+    Source: '/rustc/library/alloc/src/borrow.rs', lines 27:0-27:17
+    Name pattern: [alloc::borrow::ToOwned]
+    Visibility: public -/
+@[rust_trait "alloc::borrow::ToOwned"
+  (parentClauses := ["coreborrowBorrowInst"])]
+structure alloc.borrow.ToOwned (Self : Type _) (Self_Owned : Type _) where
+  coreborrowBorrowInst : core.borrow.Borrow Self_Owned Self
+  to_owned : Self → Result Self_Owned
+
+/-- [alloc::borrow::Cow]
+    Source: '/rustc/library/alloc/src/borrow.rs', lines 169:0-169:32
+    Name pattern: [alloc::borrow::Cow]
+    Visibility: public -/
+@[discriminant isize, rust_type "alloc::borrow::Cow"]
+inductive alloc.borrow.Cow (B : Type _) (Clause0_Owned : Type _) where
+| Borrowed : B → alloc.borrow.Cow B Clause0_Owned
+| Owned : Clause0_Owned → alloc.borrow.Cow B Clause0_Owned
+
 /-- [percent_encoding::ascii_set::AsciiSet]
     Source: 'src/ascii_set.rs', lines 28:0-30:1
     Visibility: public -/
@@ -51,7 +88,7 @@ structure PercentEncode where
   ascii_set : ascii_set.AsciiSet
 
 /-- [percent_encoding::PercentDecode]
-    Source: 'src/lib.rs', lines 247:0-249:1
+    Source: 'src/lib.rs', lines 282:0-284:1
     Visibility: public -/
 structure PercentDecode where
   bytes : core.slice.iter.Iter Std.U8

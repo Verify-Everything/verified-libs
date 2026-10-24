@@ -13,10 +13,30 @@ curl -fsSL https://raw.githubusercontent.com/Verify-Everything/verified-libs/mai
 or from a checkout: `bash install.sh`. The installer:
 1. clones the repo to `~/verified-libs` (or uses the checkout it runs from; `--dir` to change),
 2. writes `~/.vpipe/bin/vkit` and `~/.vpipe/bin/vpipe` and adds `~/.vpipe/bin` to PATH,
-3. copies the skills to `~/.claude/skills/` and/or `~/.codex/skills/` (`--agents`),
-   backing up any folder of the same name that vkit didn't install,
+3. copies the skills for the agents you pick (`--agents claude,codex,gemini`): Claude Code
+   reads `~/.claude/skills/`; Codex and Gemini CLI both read `~/.agents/skills/`, so they share
+   one copy. Any folder of the same name that vkit didn't install is backed up first,
 4. optionally runs `vkit setup` for the tools you pick (`--tools`).
 It prints the plan and asks first. `--dry-run` shows the plan only; `--yes` skips the questions.
+
+## Agents
+The skills follow the open Agent Skills format (a folder with `SKILL.md`), so one copy works in
+Claude Code, Codex and Gemini CLI. Pick whichever way of installing suits you:
+
+| Agent | Inside a clone of this repo | User-wide | As a package |
+|---|---|---|---|
+| Claude Code | reads `CLAUDE.md` (which imports `AGENTS.md`) | `vkit skills install --agent claude` | `/plugin marketplace add Verify-Everything/verified-libs` then `/plugin install verify-everything@verify-everything` |
+| Codex | reads `AGENTS.md` and `.agents/skills/` | `vkit skills install --agent codex` | `codex plugin marketplace add Verify-Everything/verified-libs` then `codex plugin add verify-everything@verify-everything` |
+| Gemini CLI | reads `GEMINI.md` (which imports `AGENTS.md`) and `.agents/skills/` once you trust the folder | `vkit skills install --agent gemini` | `gemini extensions install https://github.com/Verify-Everything/verified-libs` |
+
+Tested on 2026-10-24 with Codex CLI 0.164.0 and Gemini CLI 0.65.0 in a clean home: each route
+showed all eight skills (`codex debug prompt-input`, `gemini skills list`). Use one route per
+agent, or the agent lists each skill twice. Codex shows the names and prompts from each skill's
+`agents/openai.yaml`; other agents ignore that file. `vkit doctor` warns about old copies in
+`~/.codex/skills/` from earlier vkit versions.
+
+`vkit run <lib> --agent` and `vpipe improve` run a headless Claude Code session today
+(`claude -p`); choosing Codex or Gemini for those runs is planned in the engine.
 
 ## Tools one at a time
 | Command | Installs | Where |

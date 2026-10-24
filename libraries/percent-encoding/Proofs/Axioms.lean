@@ -58,3 +58,5 @@ open percent_encoding.Proofs percent_encoding.Spec
 #print axioms write_chunks_spec
 #print axioms write_chunks_buffer
 #print axioms display_fmt_spec
+#print axioms free_decode_utf8_lossy_spec
+#print axioms static_assert_spec

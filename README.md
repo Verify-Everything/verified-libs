@@ -59,7 +59,7 @@ candidates/<library>/<version>/  same shape, below the bar (created as entries m
 libraries/<lib>/                 vpipe engine working area: manifests and proofs in progress
 templates/CLAIM.md               start here
 bin/ toolchain/ self/ selftest/  the vpipe engine (re-checks everything, improves itself)
-skills/                          agent skills (also a Claude Code plugin)
+skills/                          agent skills (Claude Code plugin, Codex plugin, Gemini extension)
 docs/                            installation, adding a library, trust model, engine
 ```
 
@@ -73,14 +73,22 @@ git clone https://github.com/<you>/verified-libs && cd verified-libs && bash ins
 ```
 The installer shows its plan and asks before changing anything. It installs the `vkit` and
 `vpipe` commands into `~/.vpipe/bin`, copies the agent skills into your agent's skills folder,
-and (if you choose) installs the pinned provers. Flags: `--agents claude,codex|none`,
+and (if you choose) installs the pinned provers. Flags: `--agents claude,codex,gemini|none`,
 `--tools lean,framac,cbmc|all|none`, `--yes`, `--dry-run`.
 
-Claude Code users can install the skills as a plugin instead:
-```
+The skills work in **Claude Code, Codex and Gemini CLI**. Inside a clone they load on their own
+(`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.agents/skills/`). To install them as a package instead:
+```bash
+# Claude Code
 /plugin marketplace add Verify-Everything/verified-libs
 /plugin install verify-everything@verify-everything
+# Codex
+codex plugin marketplace add Verify-Everything/verified-libs
+codex plugin add verify-everything@verify-everything
+# Gemini CLI
+gemini extensions install https://github.com/Verify-Everything/verified-libs
 ```
+Details: [docs/installation.md#agents](docs/installation.md#agents).
 
 Linux (x86_64, aarch64) runs everything natively. On macOS or Windows, open the repo in the
 [dev container](.devcontainer/) (VS Code, Codespaces, or `devcontainer up`).
@@ -101,7 +109,7 @@ Or by hand:
 vkit new <lib> --lang rust --upstream <git url> --commit <sha> --version <tag>
 vkit run <lib> --extract-only    # what Aeneas can translate; decides the scope
 vkit run <lib>                   # build proofs, audit axioms, write results
-vkit run <lib> --agent           # let a headless Claude session write specs and proofs
+vkit run <lib> --agent           # let a headless Claude Code session write specs and proofs
 ```
 
 ## How it works

@@ -1,0 +1,5 @@
+# Codex UI metadata (developers.openai.com/codex/skills#optional-metadata). Other agents ignore it.
+interface:
+  display_name: "Submit verification results"
+  short_description: "Open a PR with honest, reproducible claims"
+  default_prompt: "Use $submit-verification-results to package this library's proofs as a pull request."

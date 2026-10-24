@@ -7,11 +7,13 @@ Axioms = std functions modelled by an unproven axiom; Skipped = items Aeneas cou
 
 Functions = functions in the pinned source that are verified or have a verified fix, out of all of them. A library is complete only when this is N/N.
 
-| Library | Tool | Version | Proved | Sorries | Extra-axiom thms | Axioms | Skipped | Functions | Status | Run |
-|---|---|---|---|---|---|---|---|---|---|---|
-| crc32fast | lean-aeneas | 1.5.3 | 132/132 | 0 | 0 | 3 | 0 | 9/43 | open: 34 functions | 2026-10-24T06:48:48Z |
-| percent-encoding | lean-aeneas | 2.3.2 | 49/49 | 0 | 0 | 4 | 2 | 9/26 | open: 17 functions | 2026-10-24T05:56:16Z |
-| semver | lean-aeneas | 1.0.28 | 145/145 | 0 | 0 | 0 | 0 | 4/92 | open: 88 functions | 2026-10-24T06:02:56Z |
+Strength = weakest per-function label (full-correctness > safety-contracts > no-ub > bounded > tested; unlabelled = functions.toml gives no label). Entry = status under the admission standard and gates passed; only libs/ entries can be verified, see each CLAIM.md.
+
+| Library | Tool | Version | Proved | Sorries | Extra-axiom thms | Axioms | Skipped | Functions | Progress | Strength | Entry | Run |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| crc32fast | lean-aeneas | 1.5.3 | 132/132 | 0 | 0 | 3 | 0 | 9/43 | open: 34 functions | unlabelled | candidate (1/10) | 2026-10-24T07:07:32Z |
+| percent-encoding | lean-aeneas | 2.3.2 | 123/123 | 0 | 0 | 0 | 1 | 21/26 | open: 5 functions | unlabelled | candidate (1/10) | 2026-10-24T07:09:42Z |
+| semver | lean-aeneas | 1.0.28 | 145/145 | 0 | 0 | 0 | 0 | 4/92 | open: 88 functions | - | - (0/10) | 2026-10-24T06:02:56Z |
 
 ## crc32fast: open functions (34 of 43)
 
@@ -52,27 +54,15 @@ Functions = functions in the pinned source that are verified or have a verified 
 | `src/specialized/pclmulqdq.rs:get256` | not extracted (unsupported by Aeneas or excluded by cfg) |
 | `src/specialized/pclmulqdq.rs:get512` | not extracted (unsupported by Aeneas or excluded by cfg) |
 
-## percent-encoding: open functions (17 of 26)
+## percent-encoding: open functions (5 of 26)
 
 | Function | Why open |
 |---|---|
-| `src/ascii_set.rs:AsciiSet::remove` | no theorem about it |
-| `src/ascii_set.rs:AsciiSet::union` | no theorem about it |
-| `src/ascii_set.rs:AsciiSet::complement` | no theorem about it |
-| `src/ascii_set.rs:ops::Add for AsciiSet::add` | no theorem about it |
-| `src/ascii_set.rs:ops::Not for AsciiSet::not` | no theorem about it |
-| `src/ascii_set.rs:_static_assert` | no theorem about it |
-| `src/lib.rs:utf8_percent_encode` | no theorem about it |
-| `src/lib.rs:Iterator for PercentEncode::size_hint` | no theorem about it |
-| `src/lib.rs:fmt::Display for PercentEncode::fmt` | no theorem about it |
-| `src/lib.rs:From for Cow::from@L194` | not extracted (unsupported by Aeneas or excluded by cfg) |
-| `src/lib.rs:percent_decode_str` | no theorem about it |
-| `src/lib.rs:Iterator for PercentDecode::size_hint` | no theorem about it |
-| `src/lib.rs:From for Cow::from@L282` | not extracted (unsupported by Aeneas or excluded by cfg) |
-| `src/lib.rs:PercentDecode::if_any` | not extracted (unsupported by Aeneas or excluded by cfg) |
-| `src/lib.rs:PercentDecode::decode_utf8` | not extracted (unsupported by Aeneas or excluded by cfg) |
-| `src/lib.rs:PercentDecode::decode_utf8_lossy` | not extracted (unsupported by Aeneas or excluded by cfg) |
-| `src/lib.rs:decode_utf8_lossy` | not extracted (unsupported by Aeneas or excluded by cfg) |
+| `src/lib.rs:Iterator for PercentEncode::next` | proved only on the patched body; the patch is not yet proved equivalent to the original (admission gate 1) |
+| `src/lib.rs:fmt::Display for PercentEncode::fmt` | proved only on the patched body; the patch is not yet proved equivalent to the original (admission gate 1) |
+| `src/lib.rs:Iterator for PercentDecode::next` | proved only on the patched body; the patch is not yet proved equivalent to the original (admission gate 1) |
+| `src/lib.rs:PercentDecode::if_any` | proved only on the patched body; the patch is not yet proved equivalent to the original (admission gate 1) |
+| `src/lib.rs:decode_utf8_lossy` | proved only on the patched body; the patch is not yet proved equivalent to the original (admission gate 1) |
 
 ## semver: open functions (88 of 92)
 

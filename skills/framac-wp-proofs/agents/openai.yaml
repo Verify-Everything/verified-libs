@@ -1,0 +1,5 @@
+# Codex UI metadata (developers.openai.com/codex/skills#optional-metadata). Other agents ignore it.
+interface:
+  display_name: "Frama-C WP proofs"
+  short_description: "Prove C code with ACSL and Frama-C WP"
+  default_prompt: "Use $framac-wp-proofs to write ACSL contracts and discharge the WP goals for this C file."

@@ -25,7 +25,7 @@ Read it: https://claude.ai/artifact/1tqQsrMgXckaNZQJVXPWvp . What changes for He
 - Label each function: full-correctness / safety-contracts / no-ub / bounded / tested. Record in functions.toml.
 - Bugs: report fixes as "proved fix" only when the fix is proved on the real (patched) code.
 
-## Rule for third-party dependencies (all Helix threads; interim until Yerin decides, card posted 2026-10-24)
+## Rule for third-party dependencies (all Helix threads; Yerin decided 2026-10-24: the used parts of ropey, smartstring, smallvec get verified as separate entries)
 ropey, smartstring, smallvec, unicode-segmentation, unicode-width, regex, tree-house/tree-sitter, log, etc. are NOT std.
 - Model each one you reach as a small Lean definition (or a parameter with a stated spec), never as a bare `axiom` with no spec.
 - List every one in your STATUS.md and in helix.md under "Open external assumptions": crate + version, the functions used,
@@ -50,6 +50,19 @@ ropey, smartstring, smallvec, unicode-segmentation, unicode-width, regex, tree-h
    in the tracker until then.
 5. Differential tests stay: they are gate 8 (cross-check of the translation) and catch spec mistakes early.
 6. Lean: list-level spec + proof that the extracted real code meets it (no panic + functional result), `#print axioms` clean.
+
+## Real-code extraction tricks (from the transaction.rs and parsers threads, 2026-10-24)
+- Don't mark core/alloc/std opaque (crashes Aeneas on builtin types).
+- `--exclude 'core::str::pattern'` (Aeneas crashes on the Pattern GAT). str::find/contains/split then show up as
+  `sorry /- Could not find: trait_impl_id -/`: replace them by script with a hand-defined Pattern stand-in, and list it as a translation patch.
+- Some setups need the copy's rust-toolchain.toml removed; transaction.rs worked with helix-verify/model/rust-toolchain.toml copied in.
+- Aeneas `Str` = `Slice U8` with no UTF-8 invariant, so specs need a UTF-8 precondition.
+- Aeneas's `Iterator` structure only has next/step_by/enumerate/take. Generated instances also set size_hint/count/map/...:
+  helix-verify/real/tools/postprocess.py drops the unused fields. Real code that calls `Inst.size_hint` (from_changes, delete)
+  needs a `size_hint` field: we vendor Aeneas with one field added (default `(0, None)`, as in Rust). List it as a library patch.
+- A local variable named like a module (`selection`) shadows `selection.Selection.iter`: fully qualify (`helix_core.selection...`) in postprocess.
+- Known blockers: fn-pointer fields ("Arrow types"), early return inside a loop or closure, str::strip_suffix, Box AsRef,
+  closures taking `&mut` pairs (Selection::normalize), SmallVec. These need another tool or an Aeneas fix.
 
 ## Lean lessons (Aeneas fdebf20 / Lean 4.35)
 - `lake env lean F.lean` does not rebuild deps: `lake build <Module>` after re-extraction or edits.

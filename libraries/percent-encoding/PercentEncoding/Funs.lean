@@ -25,6 +25,15 @@ noncomputable section
 
 namespace percent_encoding
 
+/-- Trait implementation: [core::fmt::{impl core::fmt::Write for core::fmt::Formatter<'_0>}]
+    Source: '/rustc/library/core/src/fmt/mod.rs', lines 2839:0-2839:28
+    Name pattern: [core::fmt::Write<core::fmt::Formatter<'0>>] -/
+@[reducible, rust_trait_impl "core::fmt::Write<core::fmt::Formatter<'0>>"]
+def core.fmt.Formatter.Insts.CoreFmtWrite : core.fmt.Write core.fmt.Formatter
+  := {
+  write_str := core.fmt.Formatter.Insts.CoreFmtWrite.write_str
+}
+
 /-- Trait implementation: [core::fmt::{impl core::fmt::Debug for [T]}]
     Source: '/rustc/library/core/src/fmt/mod.rs', lines 3126:0-3126:28
     Name pattern: [core::fmt::Debug<[@T]>] -/
@@ -52,6 +61,67 @@ def Slice.Insts.CoreCmpPartialEqSlice {T : Type _} {U : Type _}
 def core.slice.iter.Iter.Insts.CoreFmtDebug {T : Type _} (fmtDebugInst :
   core.fmt.Debug T) : core.fmt.Debug (core.slice.iter.Iter T) := {
   fmt := core.slice.iter.Iter.Insts.CoreFmtDebug.fmt fmtDebugInst
+}
+
+/-- Trait implementation: [alloc::slice::{impl core::borrow::Borrow<[T]> for alloc::vec::Vec<T>}]
+    Source: '/rustc/library/alloc/src/slice.rs', lines 806:0-806:47
+    Name pattern: [core::borrow::Borrow<alloc::vec::Vec<@T>, [@T]>] -/
+@[reducible, rust_trait_impl "core::borrow::Borrow<alloc::vec::Vec<@T>, [@T]>"]
+def alloc.vec.Vec.Insts.CoreBorrowBorrowSlice (T : Type _) (A : Type _) :
+  core.borrow.Borrow (alloc.vec.Vec T) (Slice T) := {
+  borrow := alloc.vec.Vec.Insts.CoreBorrowBorrowSlice.borrow A
+}
+
+/-- Trait implementation: [alloc::slice::{impl alloc::borrow::ToOwned<alloc::vec::Vec<T>> for [T]}]
+    Source: '/rustc/library/alloc/src/slice.rs', lines 853:0-853:30
+    Name pattern: [alloc::borrow::ToOwned<[@T], alloc::vec::Vec<@T>>] -/
+@[reducible, rust_trait_impl
+  "alloc::borrow::ToOwned<[@T], alloc::vec::Vec<@T>>"]
+def Slice.Insts.AllocBorrowToOwnedVec {T : Type _} (corecloneCloneInst :
+  core.clone.Clone T) : alloc.borrow.ToOwned (Slice T) (alloc.vec.Vec T) := {
+  coreborrowBorrowInst := alloc.vec.Vec.Insts.CoreBorrowBorrowSlice T
+    alloc.alloc.Global
+  to_owned := Slice.Insts.AllocBorrowToOwnedVec.to_owned corecloneCloneInst
+}
+
+/-- Trait implementation: [alloc::str::{impl core::borrow::Borrow<str> for alloc::string::String}]
+    Source: '/rustc/library/alloc/src/str.rs', lines 231:0-231:27
+    Name pattern: [core::borrow::Borrow<alloc::string::String, str>] -/
+@[reducible, rust_trait_impl
+  "core::borrow::Borrow<alloc::string::String, str>"]
+def alloc.string.String.Insts.CoreBorrowBorrowStr : core.borrow.Borrow String
+  Str := {
+  borrow := alloc.string.String.Insts.CoreBorrowBorrowStr.borrow
+}
+
+/-- Trait implementation: [alloc::str::{impl alloc::borrow::ToOwned<alloc::string::String> for str}]
+    Source: '/rustc/library/alloc/src/str.rs', lines 248:0-248:20
+    Name pattern: [alloc::borrow::ToOwned<str, alloc::string::String>] -/
+@[reducible, rust_trait_impl
+  "alloc::borrow::ToOwned<str, alloc::string::String>"]
+def Str.Insts.AllocBorrowToOwnedString : alloc.borrow.ToOwned Str String := {
+  coreborrowBorrowInst := alloc.string.String.Insts.CoreBorrowBorrowStr
+  to_owned := Str.Insts.AllocBorrowToOwnedString.to_owned
+}
+
+/-- Trait implementation: [alloc::string::{impl core::convert::From<&'a str> for alloc::borrow::Cow<'a, str, alloc::string::String>}]
+    Source: '/rustc/library/alloc/src/string.rs', lines 3279:0-3279:39
+    Name pattern: [core::convert::From<alloc::borrow::Cow<'a, str, alloc::string::String>, &'a str>] -/
+@[reducible, rust_trait_impl
+  "core::convert::From<alloc::borrow::Cow<'a, str, alloc::string::String>, &'a str>"]
+def alloc.borrow.CowAStrString.Insts.CoreConvertFromSharedAStr :
+  core.convert.From (alloc.borrow.Cow Str String) Str := {
+  «from» := alloc.borrow.CowAStrString.Insts.CoreConvertFromSharedAStr.from
+}
+
+/-- Trait implementation: [alloc::string::{impl core::convert::From<alloc::string::String> for alloc::borrow::Cow<'a, str, alloc::string::String>}]
+    Source: '/rustc/library/alloc/src/string.rs', lines 3300:0-3300:38
+    Name pattern: [core::convert::From<alloc::borrow::Cow<'a, str, alloc::string::String>, alloc::string::String>] -/
+@[reducible, rust_trait_impl
+  "core::convert::From<alloc::borrow::Cow<'a, str, alloc::string::String>, alloc::string::String>"]
+def alloc.borrow.CowAStrString.Insts.CoreConvertFromString : core.convert.From
+  (alloc.borrow.Cow Str String) String := {
+  «from» := alloc.borrow.CowAStrString.Insts.CoreConvertFromString.from
 }
 
 /-- [percent_encoding::ascii_set::{impl core::fmt::Debug for percent_encoding::ascii_set::AsciiSet}::fmt]:
@@ -513,8 +583,59 @@ def PercentEncode.Insts.CoreCmpEq : core.cmp.Eq PercentEncode := {
   assert_fields_are_eq := PercentEncode.Insts.CoreCmpEq.assert_fields_are_eq
 }
 
+/-- [percent_encoding::next_chunk]: loop body 0:
+    Source: 'src/lib.rs', lines 1:0-162:13 -/
+@[rust_loop_body]
+def next_chunk_loop.body
+  (set : ascii_set.AsciiSet) (remaining : Slice Std.U8) (i : Std.Usize) :
+  Result (ControlFlow Std.Usize Std.Usize)
+  := do
+  let i1 := Slice.len remaining
+  if i < i1
+  then
+    let i2 ← Slice.index_usize remaining i
+    let b ← ascii_set.AsciiSet.should_percent_encode set i2
+    if b
+    then ok (done i)
+    else let i3 ← i + 1#usize
+         ok (cont i3)
+  else ok (done i)
+
+/-- [percent_encoding::next_chunk]: loop 0:
+    Source: 'src/lib.rs', lines 1:0-162:13 -/
+@[rust_loop]
+def next_chunk_loop
+  (set : ascii_set.AsciiSet) (remaining : Slice Std.U8) (i : Std.Usize) :
+  Result Std.Usize
+  := do
+  loop
+    (fun i1 => next_chunk_loop.body set remaining i1)
+    i
+
+/-- [percent_encoding::next_chunk]:
+    Source: 'src/lib.rs', lines 149:0-171:1 -/
+def next_chunk
+  (bytes : Slice Std.U8) (set : ascii_set.AsciiSet) :
+  Result (Option (Str × (Slice Std.U8)))
+  := do
+  let o ← core.slice.Slice.split_first bytes
+  match o with
+  | none => ok none
+  | some p =>
+    let (first_byte, remaining) := p
+    let b ← ascii_set.AsciiSet.should_percent_encode set first_byte
+    if b
+    then let s ← percent_encode_byte first_byte
+         ok (some (s, remaining))
+    else
+      let i ← next_chunk_loop set remaining 0#usize
+      let i1 ← 1#usize + i
+      let (unchanged_slice, remaining1) ← core.slice.Slice.split_at bytes i1
+      let s ← core.str.converts.from_utf8_unchecked unchanged_slice
+      ok (some (s, remaining1))
+
 /-- [percent_encoding::{impl core::iter::traits::iterator::Iterator<&'a str> for percent_encoding::PercentEncode<'a>}::size_hint]:
-    Source: 'src/lib.rs', lines 174:4-180:5
+    Source: 'src/lib.rs', lines 189:4-195:5
     Visibility: public -/
 def PercentEncode.Insts.CoreIterTraitsIteratorIteratorSharedAStr.size_hint
   (self : PercentEncode) : Result (Std.Usize × (Option Std.Usize)) := do
@@ -524,105 +645,145 @@ def PercentEncode.Insts.CoreIterTraitsIteratorIteratorSharedAStr.size_hint
   else let i := Slice.len self.bytes
        ok (1#usize, some i)
 
-/-- [percent_encoding::{impl core::iter::traits::iterator::Iterator<&'a str> for percent_encoding::PercentEncode<'a>}::next]: loop body 0:
-    Source: 'src/lib.rs', lines 1:0-164:17
-    Visibility: public -/
-@[rust_loop_body]
-def PercentEncode.Insts.CoreIterTraitsIteratorIteratorSharedAStr.next_loop.body
-  («as» : ascii_set.AsciiSet) (remaining : Slice Std.U8) (i : Std.Usize) :
-  Result (ControlFlow Std.Usize Std.Usize)
-  := do
-  let i1 := Slice.len remaining
-  if i < i1
-  then
-    let i2 ← Slice.index_usize remaining i
-    let b ← ascii_set.AsciiSet.should_percent_encode «as» i2
-    if b
-    then ok (done i)
-    else let i3 ← i + 1#usize
-         ok (cont i3)
-  else ok (done i)
-
-/-- [percent_encoding::{impl core::iter::traits::iterator::Iterator<&'a str> for percent_encoding::PercentEncode<'a>}::next]: loop 0:
-    Source: 'src/lib.rs', lines 1:0-164:17
-    Visibility: public -/
-@[rust_loop]
-def PercentEncode.Insts.CoreIterTraitsIteratorIteratorSharedAStr.next_loop
-  («as» : ascii_set.AsciiSet) (remaining : Slice Std.U8) (i : Std.Usize) :
-  Result Std.Usize
-  := do
-  loop
-    (fun i1 =>
-      PercentEncode.Insts.CoreIterTraitsIteratorIteratorSharedAStr.next_loop.body
-      «as» remaining i1)
-    i
-
 /-- [percent_encoding::{impl core::iter::traits::iterator::Iterator<&'a str> for percent_encoding::PercentEncode<'a>}::next]:
-    Source: 'src/lib.rs', lines 150:4-172:5
+    Source: 'src/lib.rs', lines 176:4-187:5
     Visibility: public -/
 def PercentEncode.Insts.CoreIterTraitsIteratorIteratorSharedAStr.next
   (self : PercentEncode) : Result ((Option Str) × PercentEncode) := do
-  let o ← core.slice.Slice.split_first self.bytes
+  let o ← next_chunk self.bytes self.ascii_set
   match o with
   | none => ok (none, self)
   | some p =>
-    let (first_byte, remaining) := p
-    let b ←
-      ascii_set.AsciiSet.should_percent_encode self.ascii_set first_byte
-    if b
-    then
-      let s ← percent_encode_byte first_byte
-      ok (some s, { self with bytes := remaining })
-    else
-      let i ←
-        PercentEncode.Insts.CoreIterTraitsIteratorIteratorSharedAStr.next_loop
-          self.ascii_set remaining 0#usize
-      let i1 ← 1#usize + i
-      let (unchanged_slice, remaining1) ←
-        core.slice.Slice.split_at self.bytes i1
-      let s ← core.str.converts.from_utf8_unchecked unchanged_slice
-      ok (some s, { self with bytes := remaining1 })
+    let (chunk, remaining) := p
+    ok (some chunk, { self with bytes := remaining })
 
 /-- Trait implementation: [percent_encoding::{impl core::iter::traits::iterator::Iterator<&'a str> for percent_encoding::PercentEncode<'a>}]
-    Source: 'src/lib.rs', lines 147:0-181:1 -/
+    Source: 'src/lib.rs', lines 173:0-196:1 -/
 @[reducible]
 def PercentEncode.Insts.CoreIterTraitsIteratorIteratorSharedAStr :
   core.iter.traits.iterator.Iterator PercentEncode Str := {
   next := PercentEncode.Insts.CoreIterTraitsIteratorIteratorSharedAStr.next
 }
 
+/-- [percent_encoding::write_chunks]: loop body 0:
+    Source: 'src/lib.rs', lines 212:4-223:5 -/
+@[rust_loop_body]
+def write_chunks_loop.body
+  {W : Type _} (corefmtWriteInst : core.fmt.Write W) (set : ascii_set.AsciiSet)
+  (sink : W) (rest : Slice Std.U8)
+  (result : core.result.Result Unit core.fmt.Error) (done1 : Bool) :
+  Result (ControlFlow (W × (Slice Std.U8) × (core.result.Result Unit
+    core.fmt.Error) × Bool) ((core.result.Result Unit core.fmt.Error) × W))
+  := do
+  if done1
+  then ok (done (result, sink))
+  else
+    let o ← next_chunk rest set
+    match o with
+    | none => ok (cont (sink, rest, result, true))
+    | some p =>
+      let (chunk, remaining) := p
+      let (r, sink1) ← corefmtWriteInst.write_str sink chunk
+      match r with
+      | core.result.Result.Ok _ => ok (cont (sink1, remaining, result, done1))
+      | core.result.Result.Err _ => ok (cont (sink1, remaining, r, true))
+
+/-- [percent_encoding::write_chunks]: loop 0:
+    Source: 'src/lib.rs', lines 212:4-223:5 -/
+@[rust_loop]
+def write_chunks_loop
+  {W : Type _} (corefmtWriteInst : core.fmt.Write W) (set : ascii_set.AsciiSet)
+  (sink : W) (rest : Slice Std.U8)
+  (result : core.result.Result Unit core.fmt.Error) (done1 : Bool) :
+  Result ((core.result.Result Unit core.fmt.Error) × W)
+  := do
+  loop
+    (fun (sink1, rest1, result1, done2) => write_chunks_loop.body
+      corefmtWriteInst set sink1 rest1 result1 done2)
+    (sink, rest, result, done1)
+
+/-- [percent_encoding::write_chunks]:
+    Source: 'src/lib.rs', lines 208:0-225:1 -/
+@[reducible]
+def write_chunks
+  {W : Type _} (corefmtWriteInst : core.fmt.Write W) (bytes : Slice Std.U8)
+  (set : ascii_set.AsciiSet) (sink : W) :
+  Result ((core.result.Result Unit core.fmt.Error) × W)
+  := do
+  write_chunks_loop corefmtWriteInst set sink bytes (core.result.Result.Ok ())
+    false
+
 /-- [percent_encoding::{impl core::fmt::Display for percent_encoding::PercentEncode<'_0>}::fmt]:
-    Source: 'src/lib.rs', lines 184:4-189:5
+    Source: 'src/lib.rs', lines 199:4-204:5
     Visibility: public -/
 def PercentEncode.Insts.CoreFmtDisplay.fmt
   (self : PercentEncode) (formatter : core.fmt.Formatter) :
   Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
   := do
-  sorry
+  write_chunks core.fmt.Formatter.Insts.CoreFmtWrite self.bytes self.ascii_set
+    formatter
 
 /-- Trait implementation: [percent_encoding::{impl core::fmt::Display for percent_encoding::PercentEncode<'_0>}]
-    Source: 'src/lib.rs', lines 183:0-190:1 -/
+    Source: 'src/lib.rs', lines 198:0-205:1 -/
 @[reducible]
 def PercentEncode.Insts.CoreFmtDisplay : core.fmt.Display PercentEncode := {
   fmt := PercentEncode.Insts.CoreFmtDisplay.fmt
 }
 
+/-- [percent_encoding::{impl core::convert::From<percent_encoding::PercentEncode<'a>> for alloc::borrow::Cow<'a, str, alloc::string::String>}::from]:
+    Source: 'src/lib.rs', lines 229:4-242:5
+    Visibility: public -/
+def alloc.borrow.CowAStrString.Insts.CoreConvertFromPercentEncode.from
+  (iter : PercentEncode) : Result (alloc.borrow.Cow Str String) := do
+  let (o, iter1) ←
+    PercentEncode.Insts.CoreIterTraitsIteratorIteratorSharedAStr.next iter
+  match o with
+  | none =>
+    core.convert.IntoFrom.into
+      alloc.borrow.CowAStrString.Insts.CoreConvertFromSharedAStr (toStr "")
+  | some first =>
+    let (o1, iter2) ←
+      PercentEncode.Insts.CoreIterTraitsIteratorIteratorSharedAStr.next iter1
+    match o1 with
+    | none =>
+      core.convert.IntoFrom.into
+        alloc.borrow.CowAStrString.Insts.CoreConvertFromSharedAStr first
+    | some second =>
+      let string ← Str.Insts.AllocBorrowToOwnedString.to_owned first
+      let string1 ← alloc.string.String.push_str string second
+      let string2 ←
+        alloc.string.String.Insts.CoreIterTraitsCollectExtendSharedAStr.extend
+          (core.iter.traits.collect.IntoIterator.Blanket
+          PercentEncode.Insts.CoreIterTraitsIteratorIteratorSharedAStr) string1
+          iter2
+      core.convert.IntoFrom.into
+        alloc.borrow.CowAStrString.Insts.CoreConvertFromString string2
+
+/-- Trait implementation: [percent_encoding::{impl core::convert::From<percent_encoding::PercentEncode<'a>> for alloc::borrow::Cow<'a, str, alloc::string::String>}]
+    Source: 'src/lib.rs', lines 228:0-243:1 -/
+@[reducible]
+def alloc.borrow.CowAStrString.Insts.CoreConvertFromPercentEncode :
+  core.convert.From (alloc.borrow.Cow Str String) PercentEncode := {
+  «from» :=
+    alloc.borrow.CowAStrString.Insts.CoreConvertFromPercentEncode.from
+}
+
 /-- [percent_encoding::percent_decode]:
-    Source: 'src/lib.rs', lines 239:0-243:1
+    Source: 'src/lib.rs', lines 274:0-278:1
     Visibility: public -/
 def percent_decode (input : Slice Std.U8) : Result PercentDecode := do
   let i ← core.slice.Slice.iter input
   ok { bytes := i }
 
 /-- [percent_encoding::percent_decode_str]:
-    Source: 'src/lib.rs', lines 216:0-218:1
+    Source: 'src/lib.rs', lines 251:0-253:1
     Visibility: public -/
 def percent_decode_str (input : Str) : Result PercentDecode := do
   let s ← core.str.Str.as_bytes input
   percent_decode s
 
 /-- [percent_encoding::{impl core::clone::Clone for percent_encoding::PercentDecode<'a>}::clone]:
-    Source: 'src/lib.rs', lines 246:9-246:14
+    Source: 'src/lib.rs', lines 281:9-281:14
     Visibility: public -/
 def PercentDecode.Insts.CoreCloneClone.clone
   (self : PercentDecode) : Result PercentDecode := do
@@ -630,14 +791,14 @@ def PercentDecode.Insts.CoreCloneClone.clone
   ok { bytes := i }
 
 /-- Trait implementation: [percent_encoding::{impl core::clone::Clone for percent_encoding::PercentDecode<'a>}]
-    Source: 'src/lib.rs', lines 246:9-246:14 -/
+    Source: 'src/lib.rs', lines 281:9-281:14 -/
 @[reducible]
 def PercentDecode.Insts.CoreCloneClone : core.clone.Clone PercentDecode := {
   clone := PercentDecode.Insts.CoreCloneClone.clone
 }
 
 /-- [percent_encoding::{impl core::fmt::Debug for percent_encoding::PercentDecode<'a>}::fmt]:
-    Source: 'src/lib.rs', lines 246:16-246:21
+    Source: 'src/lib.rs', lines 281:16-281:21
     Visibility: public -/
 def PercentDecode.Insts.CoreFmtDebug.fmt
   (self : PercentDecode) (f : core.fmt.Formatter) :
@@ -646,14 +807,14 @@ def PercentDecode.Insts.CoreFmtDebug.fmt
   sorry
 
 /-- Trait implementation: [percent_encoding::{impl core::fmt::Debug for percent_encoding::PercentDecode<'a>}]
-    Source: 'src/lib.rs', lines 246:16-246:21 -/
+    Source: 'src/lib.rs', lines 281:16-281:21 -/
 @[reducible]
 def PercentDecode.Insts.CoreFmtDebug : core.fmt.Debug PercentDecode := {
   fmt := PercentDecode.Insts.CoreFmtDebug.fmt
 }
 
 /-- [percent_encoding::after_percent_sign]:
-    Source: 'src/lib.rs', lines 251:0-257:1 -/
+    Source: 'src/lib.rs', lines 286:0-292:1 -/
 def after_percent_sign
   (iter : core.slice.iter.Iter Std.U8) :
   Result ((Option Std.U8) × (core.slice.iter.Iter Std.U8))
@@ -705,7 +866,7 @@ def after_percent_sign
     ok (o1, iter)
 
 /-- [percent_encoding::{impl core::iter::traits::iterator::Iterator<u8> for percent_encoding::PercentDecode<'_0>}::size_hint]:
-    Source: 'src/lib.rs', lines 274:4-277:5
+    Source: 'src/lib.rs', lines 309:4-312:5
     Visibility: public -/
 def PercentDecode.Insts.CoreIterTraitsIteratorIteratorU8.size_hint
   (self : PercentDecode) : Result (Std.Usize × (Option Std.Usize)) := do
@@ -717,7 +878,7 @@ def PercentDecode.Insts.CoreIterTraitsIteratorIteratorU8.size_hint
   ok (i1, some bytes)
 
 /-- [percent_encoding::{impl core::iter::traits::iterator::Iterator<u8> for percent_encoding::PercentDecode<'_0>}::next]:
-    Source: 'src/lib.rs', lines 262:4-272:5
+    Source: 'src/lib.rs', lines 297:4-307:5
     Visibility: public -/
 def PercentDecode.Insts.CoreIterTraitsIteratorIteratorU8.next
   (self : PercentDecode) : Result ((Option Std.U8) × PercentDecode) := do
@@ -733,11 +894,221 @@ def PercentDecode.Insts.CoreIterTraitsIteratorIteratorU8.next
     else ok (o, { bytes := i })
 
 /-- Trait implementation: [percent_encoding::{impl core::iter::traits::iterator::Iterator<u8> for percent_encoding::PercentDecode<'_0>}]
-    Source: 'src/lib.rs', lines 259:0-278:1 -/
+    Source: 'src/lib.rs', lines 294:0-313:1 -/
 @[reducible]
 def PercentDecode.Insts.CoreIterTraitsIteratorIteratorU8 :
   core.iter.traits.iterator.Iterator PercentDecode Std.U8 := {
   next := PercentDecode.Insts.CoreIterTraitsIteratorIteratorU8.next
 }
+
+/-- [percent_encoding::position_of_percent]: loop body 0:
+    Source: 'src/lib.rs', lines 1:0-416:5 -/
+@[rust_loop_body]
+def position_of_percent_loop.body
+  (bytes : Slice Std.U8) (i : Std.Usize) :
+  Result (ControlFlow Std.Usize Std.Usize)
+  := do
+  let i1 := Slice.len bytes
+  if i < i1
+  then
+    let i2 ← Slice.index_usize bytes i
+    if i2 != 37#u8
+    then let i3 ← i + 1#usize
+         ok (cont i3)
+    else ok (done i)
+  else ok (done i)
+
+/-- [percent_encoding::position_of_percent]: loop 0:
+    Source: 'src/lib.rs', lines 1:0-416:5 -/
+@[rust_loop]
+def position_of_percent_loop
+  (bytes : Slice Std.U8) (i : Std.Usize) : Result Std.Usize := do
+  loop
+    (fun i1 => position_of_percent_loop.body bytes i1)
+    i
+
+/-- [percent_encoding::position_of_percent]:
+    Source: 'src/lib.rs', lines 412:0-422:1 -/
+def position_of_percent
+  (bytes : Slice Std.U8) : Result (Option Std.Usize) := do
+  let i ← position_of_percent_loop bytes 0#usize
+  let i1 := Slice.len bytes
+  if i < i1
+  then ok (some i)
+  else ok none
+
+/-- [percent_encoding::decode_from_percent]:
+    Source: 'src/lib.rs', lines 396:0-408:1 -/
+def decode_from_percent
+  (initial_bytes : Slice Std.U8) (after : Slice Std.U8) :
+  Result (Option (alloc.vec.Vec Std.U8))
+  := do
+  let bytes_iter ← core.slice.Slice.iter after
+  let (o, bytes_iter1) ← after_percent_sign bytes_iter
+  match o with
+  | none => ok none
+  | some decoded_byte =>
+    let i := Slice.len initial_bytes
+    let i1 ←
+      core.slice.iter.Iter.Insts.CoreIterTraitsExact_sizeExactSizeIteratorSharedT.len
+        bytes_iter1
+    let i2 ← i - i1
+    let unchanged_bytes_len ← i2 - 3#usize
+    let s ←
+      core.slice.index.Slice.index
+        (core.slice.index.SliceIndexRangeToUsizeSlice Std.U8) initial_bytes
+        { «end» := unchanged_bytes_len }
+    let decoded ←
+      Slice.Insts.AllocBorrowToOwnedVec.to_owned core.clone.CloneU8 s
+    let decoded1 ← alloc.vec.Vec.push decoded decoded_byte
+    let decoded2 ←
+      alloc.vec.Vec.Insts.CoreIterTraitsCollectExtend.extend alloc.alloc.Global
+        (core.iter.traits.collect.IntoIterator.Blanket
+        PercentDecode.Insts.CoreIterTraitsIteratorIteratorU8) decoded1
+        { bytes := bytes_iter1 }
+    ok (some decoded2)
+
+/-- [percent_encoding::decode_if_any]: loop body 0:
+    Source: 'src/lib.rs', lines 373:4-388:5 -/
+@[rust_loop_body]
+def decode_if_any_loop.body
+  (initial_bytes : Slice Std.U8) (rest : Slice Std.U8)
+  (result : Option (alloc.vec.Vec Std.U8)) (done1 : Bool) :
+  Result (ControlFlow ((Slice Std.U8) × (Option (alloc.vec.Vec Std.U8)) ×
+    Bool) (Option (alloc.vec.Vec Std.U8)))
+  := do
+  if done1
+  then ok (done result)
+  else
+    let o ← position_of_percent rest
+    match o with
+    | none => ok (cont (rest, result, true))
+    | some i =>
+      let i1 ← i + 1#usize
+      let s ←
+        core.slice.index.Slice.index
+          (core.slice.index.SliceIndexRangeFromUsizeSlice Std.U8) rest
+          { start := i1 }
+      let o1 ← decode_from_percent initial_bytes s
+      match o1 with
+      | none =>
+        let rest1 ←
+          core.slice.index.Slice.index
+            (core.slice.index.SliceIndexRangeFromUsizeSlice Std.U8) rest
+            { start := i1 }
+        ok (cont (rest1, result, done1))
+      | some _ => ok (cont (rest, o1, true))
+
+/-- [percent_encoding::decode_if_any]: loop 0:
+    Source: 'src/lib.rs', lines 373:4-388:5 -/
+@[rust_loop]
+def decode_if_any_loop
+  (initial_bytes : Slice Std.U8) (rest : Slice Std.U8)
+  (result : Option (alloc.vec.Vec Std.U8)) (done1 : Bool) :
+  Result (Option (alloc.vec.Vec Std.U8))
+  := do
+  loop
+    (fun (rest1, result1, done2) => decode_if_any_loop.body initial_bytes rest1
+      result1 done2)
+    (rest, result, done1)
+
+/-- [percent_encoding::decode_if_any]:
+    Source: 'src/lib.rs', lines 369:0-390:1 -/
+@[reducible]
+def decode_if_any
+  (initial_bytes : Slice Std.U8) : Result (Option (alloc.vec.Vec Std.U8)) := do
+  decode_if_any_loop initial_bytes initial_bytes none false
+
+/-- [percent_encoding::{percent_encoding::PercentDecode<'a>}::if_any]:
+    Source: 'src/lib.rs', lines 328:4-332:5 -/
+def PercentDecode.if_any
+  (self : PercentDecode) : Result (Option (alloc.vec.Vec Std.U8)) := do
+  let s ← core.slice.iter.Iter.as_slice self.bytes
+  decode_if_any s
+
+/-- [percent_encoding::{impl core::convert::From<percent_encoding::PercentDecode<'a>> for alloc::borrow::Cow<'a, [u8], alloc::vec::Vec<u8>>}::from]:
+    Source: 'src/lib.rs', lines 317:4-322:5
+    Visibility: public -/
+def alloc.borrow.CowASliceU8VecU8.Insts.CoreConvertFromPercentDecode.from
+  (iter : PercentDecode) :
+  Result (alloc.borrow.Cow (Slice Std.U8) (alloc.vec.Vec Std.U8))
+  := do
+  let o ← PercentDecode.if_any iter
+  match o with
+  | none =>
+    let s ← core.slice.iter.Iter.as_slice iter.bytes
+    ok (alloc.borrow.Cow.Borrowed s)
+  | some vec => ok (alloc.borrow.Cow.Owned vec)
+
+/-- Trait implementation: [percent_encoding::{impl core::convert::From<percent_encoding::PercentDecode<'a>> for alloc::borrow::Cow<'a, [u8], alloc::vec::Vec<u8>>}]
+    Source: 'src/lib.rs', lines 316:0-323:1 -/
+@[reducible]
+def alloc.borrow.CowASliceU8VecU8.Insts.CoreConvertFromPercentDecode :
+  core.convert.From (alloc.borrow.Cow (Slice Std.U8) (alloc.vec.Vec Std.U8))
+  PercentDecode := {
+  «from» :=
+    alloc.borrow.CowASliceU8VecU8.Insts.CoreConvertFromPercentDecode.from
+}
+
+/-- [percent_encoding::{percent_encoding::PercentDecode<'a>}::decode_utf8]:
+    Source: 'src/lib.rs', lines 341:4-352:5
+    Visibility: public -/
+def PercentDecode.decode_utf8
+  (self : PercentDecode) :
+  Result (core.result.Result (alloc.borrow.Cow Str String)
+    core.str.error.Utf8Error)
+  := do
+  let c ←
+    core.convert.IntoFrom.into
+      alloc.borrow.CowASliceU8VecU8.Insts.CoreConvertFromPercentDecode self
+  match c with
+  | alloc.borrow.Cow.Borrowed bytes =>
+    let r ← core.str.converts.from_utf8 bytes
+    match r with
+    | core.result.Result.Ok s =>
+      let c1 ←
+        core.convert.IntoFrom.into
+          alloc.borrow.CowAStrString.Insts.CoreConvertFromSharedAStr s
+      ok (core.result.Result.Ok c1)
+    | core.result.Result.Err e => ok (core.result.Result.Err e)
+  | alloc.borrow.Cow.Owned bytes =>
+    let r ← alloc.string.String.from_utf8 bytes
+    match r with
+    | core.result.Result.Ok s =>
+      let c1 ←
+        core.convert.IntoFrom.into
+          alloc.borrow.CowAStrString.Insts.CoreConvertFromString s
+      ok (core.result.Result.Ok c1)
+    | core.result.Result.Err e =>
+      let ue ← alloc.string.FromUtf8Error.utf8_error e
+      ok (core.result.Result.Err ue)
+
+/-- [percent_encoding::decode_utf8_lossy]:
+    Source: 'src/lib.rs', lines 428:0-456:1 -/
+def decode_utf8_lossy
+  (input : alloc.borrow.Cow (Slice Std.U8) (alloc.vec.Vec Std.U8)) :
+  Result (alloc.borrow.Cow Str String)
+  := do
+  match input with
+  | alloc.borrow.Cow.Borrowed bytes =>
+    alloc.string.String.from_utf8_lossy bytes
+  | alloc.borrow.Cow.Owned bytes =>
+    let s := alloc.vec.Vec.deref bytes
+    let c ← alloc.string.String.from_utf8_lossy s
+    match c with
+    | alloc.borrow.Cow.Borrowed _ =>
+      let s1 ← alloc.string.String.from_utf8_unchecked bytes
+      ok (alloc.borrow.Cow.Owned s1)
+    | alloc.borrow.Cow.Owned _ => ok c
+
+/-- [percent_encoding::{percent_encoding::PercentDecode<'a>}::decode_utf8_lossy]:
+    Source: 'src/lib.rs', lines 359:4-361:5
+    Visibility: public -/
+def PercentDecode.decode_utf8_lossy
+  (self : PercentDecode) : Result (alloc.borrow.Cow Str String) := do
+  let c ←
+    core.convert.IntoFrom.into
+      alloc.borrow.CowASliceU8VecU8.Insts.CoreConvertFromPercentDecode self
+  percent_encoding.decode_utf8_lossy c
 
 end percent_encoding

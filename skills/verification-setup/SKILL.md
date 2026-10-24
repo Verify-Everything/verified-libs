@@ -17,6 +17,12 @@ hosts and problems. Fix only what the current task needs: a C task doesn't need 
 Each prints a plan and asks. Pass `--yes` only when the user approved installs.
 macOS/Windows: Aeneas ships Linux binaries only; use the dev container (`.devcontainer/`).
 
+## Agent skills
+`vkit skills install --agent claude|codex|gemini` (Claude Code: `~/.claude/skills`; Codex and
+Gemini CLI share `~/.agents/skills`). `vkit doctor` lists installed copies per agent. If an agent
+lists a skill twice, it found more than one copy (user folder, repo `.agents/skills`, plugin or
+extension): keep one. See `docs/installation.md#agents`.
+
 ## Pins
 All versions live in `toolchain/versions.toml`. They must agree: Lean = the Aeneas
 release's `backends/lean/lean-toolchain`; Rust nightly = its `rust-toolchain`. Don't bump one

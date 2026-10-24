@@ -25,6 +25,11 @@ cache_dirs = ["/mnt/project-files/verification-notes/cache", "cache"]   # relati
 
 [framac]
 # From nixpkgs (opam.ocaml.org is blocked). alt-ergo is unfree in nixpkgs, so provers are z3 + cvc5.
-nix_packages = ["frama-c", "why3", "z3", "cvc5"]
+nix_packages = ["frama-c", "why3", "z3", "cvc5", "cbmc"]   # cbmc: bounded evidence (label "bounded", candidates only)
 provers = ["z3", "cvc5"]
 wp_timeout = 20
+
+[container]
+# Admission gate 9: CI re-checks every entry from clean inside a container pinned by digest.
+# Set digest to the image's sha256 once the toolkit publishes one; CI exports VPIPE_CONTAINER_DIGEST.
+digest = ""

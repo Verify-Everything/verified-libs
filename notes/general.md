@@ -180,3 +180,12 @@ Result: full functional correctness of encoder + decoder + round trip, standard 
 - Lean packages: symlink a new project's `.lake/packages` to `~/lakepkgs/.lake/packages` instead of re-downloading. zstd is at `~/.vpipe/bin/zstd` after bootstrap.
 - To check name clashes between proof files written by parallel workers, write one file that imports every module and `#print axioms` each theorem; it also gives the axiom audit in one run.
 - `let*` on a pair result destructures it: `let* ⟨ a, b, post ⟩ ← f_spec`. For flattened loop invariants use `refine ⟨by scalar_tac, ?_, by scalar_tac⟩`. Postconditions Aeneas simplifies to `True` need `trivial`, not `rfl`.
+
+## 2026-10-24 semver: running Aeneas on real upstream code
+- `charon --preset=aeneas` on a crate using `str` patterns crashes Aeneas ("Unimplemented ... str/pattern.rs").
+  `--exclude 'core::str::pattern'` gets past it; the str methods then land as axioms in FunsExternal.
+- Unsafe raw-pointer code (ptr::read/write, alloc, NonNull) also lands as axioms. Those axioms have no
+  meaning in Aeneas's pure model, so unsafe parts need a second tool and a linked spec.
+- "Returns inside of nested loops are not supported yet" drops the whole function body (semver display::pad).
+- Under the admission standards, a model crate is only a candidate. Run this upstream test FIRST on a new
+  library, before writing a model, to see how much of the real code Aeneas can read.

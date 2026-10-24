@@ -39,7 +39,7 @@ wp_timeout = 20
 # Admission gate 9: CI re-checks every entry from clean inside a container pinned by digest.
 # Set digest to the image's sha256 once the toolkit publishes one; CI exports VPIPE_CONTAINER_DIGEST.
 image = "ghcr.io/verify-everything/verified-libs-toolchain"
-digest = ""                  # "sha256:<64 hex>", exactly as CI exports VPIPE_CONTAINER_DIGEST
+digest = "sha256:f065d68e1d07c9d6f67976e71accdd0f1069d267fdd3401a4a7d99f75a6d4291"               # "sha256:<64 hex>", exactly as CI exports VPIPE_CONTAINER_DIGEST
 
 [aeneas_patched]
 # Optional patched Charon + Aeneas (owner: "Extend Aeneas for real library code" thread). A library

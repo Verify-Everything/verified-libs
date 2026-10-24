@@ -5,10 +5,10 @@ source: https://github.com/servo/rust-url.git
 commit: 00a6ce58d02f4e0d43c5ca0702c0bedb8b1ebf3a
 archive_sha256: 42645e863db93f5da119118a8337f4e09c545794ad0cfefafca4dc8aac6f3286
 tool: Lean 4 + Aeneas
-tool_version: aeneas nightly-2026.10.23-fdebf20, charon_rust nightly-2026-09-17, lean 4.35.0; sha256:388575708c786f2ce7f6abfed8f16c48c0b7e574e227f5b6605bb1805086f620
-strength: tested
+tool_version: aeneas nightly-2026.10.23-fdebf20, charon_rust nightly-2026-09-17, lean 4.35.0; sha256:e70fa595928911df6c112e8841481da9137b4febfbb51887cd0eba6938a1a858
+strength: tested  # lowest label; real value: unlabelled (functions without a label in functions.toml, or open)
 status: candidate
-functions: 0/26
+functions: 21/33
 ---
 
 # percent-encoding 2.3.2: CLAIM
@@ -17,10 +17,10 @@ functions: 0/26
 
 Status: candidate
 Entry strength: unlabelled
-Functions: 0/26 at full-correctness (21 verified or fixed)
+Functions: 21/33 at full-correctness (27 verified or fixed)
 
 ## Success criteria (written before proof work)
-- Written: NOT RECORDED. Reviewed by: NOBODY YET
+- Written: 2026-10-24 (Proofs/Spec.lean, written before the proofs in the percent-encoding thread). Reviewed by: 
 - Every function in the pinned source (all features, all supported targets, trait impls) reaches full-correctness for all inputs.
 - Library-specific properties:
   - percent_encode / PercentEncode::next match the spec: allowed bytes pass through, others become %XX; chunks are ASCII
@@ -34,27 +34,27 @@ Functions: 0/26 at full-correctness (21 verified or fixed)
 ## Code
 - Upstream: https://github.com/servo/rust-url.git @ 00a6ce58d02f4e0d43c5ca0702c0bedb8b1ebf3a, archive SHA-256 42645e863db93f5da119118a8337f4e09c545794ad0cfefafca4dc8aac6f3286
 - Fork (if any): none
-- Features and targets covered: NOT DECLARED
+- Features and targets covered: default features (std, alloc), no_std without alloc (subset of the same functions), all targets (no arch code; usize width abstract)
 - Upstream releases: not checked yet (`vpipe check-upstream`)
 
 ## Specification
-- Plain words: NOT WRITTEN
-- Formal spec files: not listed
-- Matches standard / test vectors: NONE
+- Plain words: percent_encode/utf8_percent_encode escape exactly the bytes in the set (plus all non-ASCII) as %XX and pass the rest through; percent_decode/percent_decode_str decode every %XX with two hex digits and keep everything else; the Cow, if_any, decode_utf8 and decode_utf8_lossy wrappers return those bytes, borrowing exactly when nothing changed; AsciiSet operations are set operations on 0..=127.
+- Formal spec files: Proofs/Spec.lean
+- Matches standard / test vectors: WHATWG URL Standard, percent-encoding (https://url.spec.whatwg.org/#percent-encoded-bytes): percent-encode a byte, percent-decode; upstream unit tests pass on the patched crate
 
 ## Proof
-- Tool(s) and versions: lean-aeneas; aeneas nightly-2026.10.23-fdebf20, charon_rust nightly-2026-09-17, lean 4.35.0; toolchain digest sha256:388575708c786f2ce7f6abfed8f16c48c0b7e574e227f5b6605bb1805086f620; container digest NOT IN A PINNED CONTAINER
+- Tool(s) and versions: lean-aeneas; aeneas nightly-2026.10.23-fdebf20, charon_rust nightly-2026-09-17, lean 4.35.0; toolchain digest sha256:e70fa595928911df6c112e8841481da9137b4febfbb51887cd0eba6938a1a858; container digest NOT IN A PINNED CONTAINER
 - Kernel replay (leanchecker): passed
 - Theorems / goals: 123/123 proved, 0 sorries, 0 with extra axioms
 - Per-function results: below, and functions.toml for declared labels and evidence
-- Planted-bug check: no planted-bug run on this commit (`vpipe mutate`); [scope].test_vectors missing
-- Differential cross-check of the translation: no [crosscheck] commands
+- Planted-bug check: no planted-bug run on this commit (`vpipe mutate`)
+- Differential cross-check of the translation: 2 differential cross-check command(s)
 
 ## Trusted base
 - Axioms reported by the checker: Classical.choice, Quot.sound, propext
 - Std or library models: none listed
-- Tool assumptions: translator (Aeneas/Charon) faithful; Lean kernel sound
-- Unsafe / FFI boundaries: not listed
+- Tool assumptions: Charon and Aeneas translate the (patched) Rust faithfully; cross-checked by tests/CrossCheck.lean against the compiled upstream crate
+- Unsafe / FFI boundaries: two str::from_utf8_unchecked calls and one String::from_utf8_unchecked: their models fail on invalid UTF-8, so the proofs show each call gets valid UTF-8
 - Patches applied: rust/aeneas-friendly.patch
 - Forbidden constructs found: 1
 
@@ -64,6 +64,7 @@ Functions: 0/26 at full-correctness (21 verified or fixed)
 - `src/lib.rs:Iterator for PercentDecode::next`: proved only on the patched body; the patch is not yet proved equivalent to the original (admission gate 1)
 - `src/lib.rs:PercentDecode::if_any`: proved only on the patched body; the patch is not yet proved equivalent to the original (admission gate 1)
 - `src/lib.rs:decode_utf8_lossy`: proved only on the patched body; the patch is not yet proved equivalent to the original (admission gate 1)
+- `src/lib.rs:From for Cow::from@L317`: not extracted (unsupported by Aeneas or excluded by cfg)
 
 ## How to re-check
 
@@ -78,14 +79,14 @@ Functions: 0/26 at full-correctness (21 verified or fixed)
 
 | Gate | Pass | Detail |
 |---|---|---|
-| real code | NO | upstream archive SHA-256 not pinned in vpipe.toml (this run: 42645e863db93f5da119118a8337f4e09c545794ad0cfefafca4dc8aac6f3286) |
-| every function | NO | 21/26 functions verified or fixed; targets/features covered not declared in [coverage] |
+| real code | NO | tool-only patches without a proved equivalence: ['rust/aeneas-friendly.patch'] |
+| every function | NO | 27/33 functions verified or fixed |
 | all inputs | yes | no bounded-only evidence |
 | full strength | NO | entry strength unlabelled |
 | spec first | NO | need [scope].properties, [scope].written (date) and [scope].reviewed_by |
-| not vacuous | NO | no planted-bug run on this commit (`vpipe mutate`); [scope].test_vectors missing |
+| not vacuous | NO | no planted-bug run on this commit (`vpipe mutate`) |
 | trusted base | NO | forbidden: 1; axioms not listed in [trust]: []; std models not listed: [] |
-| cross check | NO | no [crosscheck] commands |
+| cross check | NO | 2 differential cross-check command(s) |
 | reproducible | NO | 0 matching clean run(s) on this toolchain; no container digest pinned in toolchain/versions.toml [container] |
 | two reviews | NO | need [review].maintainer and [review].adversarial |
 
@@ -93,37 +94,44 @@ Functions: 0/26 at full-correctness (21 verified or fixed)
 
 | Function | Status | Label | Evidence |
 |---|---|---|---|
-| `src/ascii_set.rs:AsciiSet::contains` | verified | unlabelled | contains_spec |
-| `src/ascii_set.rs:AsciiSet::should_percent_encode` | verified | unlabelled | should_percent_encode_spec |
-| `src/ascii_set.rs:AsciiSet::add` | verified | unlabelled | add_spec, add_nonascii_panics |
-| `src/ascii_set.rs:AsciiSet::remove` | verified | unlabelled | remove_spec, remove_nonascii_panics |
-| `src/ascii_set.rs:AsciiSet::union` | verified | unlabelled | union_spec |
-| `src/ascii_set.rs:AsciiSet::complement` | verified | unlabelled | complement_spec |
-| `src/ascii_set.rs:ops::Add for AsciiSet::add` | verified | unlabelled | add_op_spec |
-| `src/ascii_set.rs:ops::Not for AsciiSet::not` | verified | unlabelled | not_op_spec |
-| `src/ascii_set.rs:_static_assert` | verified | unlabelled | static_assert_spec |
-| `src/lib.rs:percent_encode_byte` | verified | unlabelled | percent_encode_byte_spec |
-| `src/lib.rs:percent_encode` | verified | unlabelled | percent_encode_correct, percent_encode_output_allowed |
-| `src/lib.rs:utf8_percent_encode` | verified | unlabelled | utf8_percent_encode_correct |
+| `src/ascii_set.rs:AsciiSet::contains` | verified | full-correctness | contains_spec |
+| `src/ascii_set.rs:AsciiSet::should_percent_encode` | verified | full-correctness | should_percent_encode_spec |
+| `src/ascii_set.rs:AsciiSet::add` | verified | full-correctness | add_spec, add_nonascii_panics |
+| `src/ascii_set.rs:AsciiSet::remove` | verified | full-correctness | remove_spec, remove_nonascii_panics |
+| `src/ascii_set.rs:AsciiSet::union` | verified | full-correctness | union_spec |
+| `src/ascii_set.rs:AsciiSet::complement` | verified | full-correctness | complement_spec |
+| `src/ascii_set.rs:ops::Add for AsciiSet::add` | verified | full-correctness | add_op_spec |
+| `src/ascii_set.rs:ops::Not for AsciiSet::not` | verified | full-correctness | not_op_spec |
+| `src/ascii_set.rs:_static_assert` | verified | full-correctness | static_assert_spec |
+| `src/lib.rs:percent_encode_byte` | verified | full-correctness | percent_encode_byte_spec |
+| `src/lib.rs:percent_encode` | verified | full-correctness | percent_encode_correct, percent_encode_output_allowed |
+| `src/lib.rs:utf8_percent_encode` | verified | full-correctness | utf8_percent_encode_correct |
 | `src/lib.rs:Iterator for PercentEncode::next` | open | none | encode_next_spec, next_chunk_spec |
-| `src/lib.rs:Iterator for PercentEncode::size_hint` | verified | unlabelled | encode_size_hint_spec |
+| `src/lib.rs:Iterator for PercentEncode::size_hint` | verified | full-correctness | encode_size_hint_spec |
 | `src/lib.rs:fmt::Display for PercentEncode::fmt` | open | none | display_fmt_spec, write_chunks_spec, write_chunks_buffer |
-| `src/lib.rs:From for Cow::from@L195` | verified | unlabelled | cow_from_encode_spec |
-| `src/lib.rs:percent_decode_str` | verified | unlabelled | percent_decode_str_correct |
-| `src/lib.rs:percent_decode` | verified | unlabelled | percent_decode_correct |
-| `src/lib.rs:after_percent_sign` | verified | unlabelled | after_percent_sign_spec |
+| `src/lib.rs:From for Cow::from@L195` | verified | full-correctness | cow_from_encode_spec |
+| `src/lib.rs:percent_decode_str` | verified | full-correctness | percent_decode_str_correct |
+| `src/lib.rs:percent_decode` | verified | full-correctness | percent_decode_correct |
+| `src/lib.rs:after_percent_sign` | verified | full-correctness | after_percent_sign_spec |
 | `src/lib.rs:Iterator for PercentDecode::next` | open | none | decode_next_spec |
-| `src/lib.rs:Iterator for PercentDecode::size_hint` | verified | unlabelled | decode_size_hint_spec |
-| `src/lib.rs:From for Cow::from@L281` | verified | unlabelled | cow_from_decode_spec |
+| `src/lib.rs:Iterator for PercentDecode::size_hint` | verified | full-correctness | decode_size_hint_spec |
+| `src/lib.rs:From for Cow::from@L281` | verified | full-correctness | cow_from_decode_spec |
 | `src/lib.rs:PercentDecode::if_any` | open | none | if_any_spec, decode_if_any_spec |
-| `src/lib.rs:PercentDecode::decode_utf8` | verified | unlabelled | decode_utf8_spec |
-| `src/lib.rs:PercentDecode::decode_utf8_lossy` | verified | unlabelled | decode_utf8_lossy_spec |
+| `src/lib.rs:PercentDecode::decode_utf8` | verified | full-correctness | decode_utf8_spec |
+| `src/lib.rs:PercentDecode::decode_utf8_lossy` | verified | full-correctness | decode_utf8_lossy_spec |
 | `src/lib.rs:decode_utf8_lossy` | open | none | free_decode_utf8_lossy_spec |
+| `src/lib.rs:next_chunk` | verified | unlabelled | encode_next_loop_spec, next_chunk_spec |
+| `src/lib.rs:write_chunks` | verified | unlabelled | write_chunks_spec, write_chunks_buffer, write_chunks_ok |
+| `src/lib.rs:From for Cow::from@L229` | verified | unlabelled | cow_from_encode_spec |
+| `src/lib.rs:From for Cow::from@L317` | open | none |  |
+| `src/lib.rs:decode_if_any` | verified | unlabelled | decode_if_any_spec |
+| `src/lib.rs:decode_from_percent` | verified | unlabelled | decode_from_percent_spec |
+| `src/lib.rs:position_of_percent` | verified | unlabelled | position_of_percent_loop_spec, position_of_percent_spec |
 
 ## Credits
 - not recorded
 
 ## Review
-- Maintainer sign-off: NOT YET
-- Adversarial review: NOT YET
+- Maintainer sign-off: 
+- Adversarial review: 
 - Last clean CI re-check: no clean run yet

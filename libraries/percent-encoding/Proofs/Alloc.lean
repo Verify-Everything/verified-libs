@@ -514,25 +514,6 @@ theorem decode_utf8_lossy_spec (d : PercentDecode) :
       apply (WP.spec_ok _).2
       exact ⟨fun h => absurd h hv, fun _ => by rw [hdv]⟩
 
-/-- ASCII bytes are valid UTF-8 (each is the encoding of one `char`). -/
-theorem utf8Valid_of_ascii (l : List Std.U8) (h : ∀ b ∈ l, b.val < 128) : Utf8Valid l := by
-  refine ⟨l.map (fun b => Char.ofNat b.val), ?_⟩
-  apply ByteArray.ext
-  rw [← Array.toList_inj]
-  simp only [u8sToBA, List.utf8Encode, List.toList_data_toByteArray, List.toList_toArray]
-  induction l with
-  | nil => simp
-  | cons b l ih =>
-    have hb := h b List.mem_cons_self
-    simp only [List.map_cons, List.flatMap_cons]
-    rw [← ih (fun x hx => h x (List.mem_cons_of_mem _ hx))]
-    have hc : (Char.ofNat b.val).val.toNat = b.val := by
-      simp only [Char.ofNat, Char.ofNatAux]
-      rw [dif_pos (Or.inl (by omega))]
-      simp
-    simp only [String.utf8EncodeChar, hc]
-    simp [show b.val ≤ 127 by omega]
-
 /-! ### `Cow<str>` from the encoder -/
 
 theorem strBytes_ascii_u8 (c : Str) (h : ∀ x ∈ strBytes c, x < 128) : ∀ b ∈ c.val, b.val < 128 :=

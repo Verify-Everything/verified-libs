@@ -1,0 +1,11 @@
+[package]
+name = "crcdiff"
+version = "0.1.0"
+edition = "2021"
+[dependencies]
+crc32fast = { path = "SRC", default-features = false }
+[features]
+std = ["crc32fast/std"]
+[profile.release]
+debug-assertions = true
+overflow-checks = true

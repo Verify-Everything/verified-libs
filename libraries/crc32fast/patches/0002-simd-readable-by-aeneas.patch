@@ -1,0 +1,164 @@
+From b4227bf6d653b9eae205b57808dca62d871a10e0 Mon Sep 17 00:00:00 2001
+From: crc32fast verification <noreply@anthropic.com>
+Date: Sat, 24 Oct 2026 07:13:41 +0000
+Subject: [PATCH 2/2] Make the SIMD kernels readable by Aeneas (no behaviour
+ change)
+
+- x86: unaligned loads moved into load128/load256/load512 helpers.
+- aarch64: align_to moved into split_quads; the chunks_exact/zip loops
+  written as index loops; `for chunk in &mut iter` as `while let`.
+
+Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01JGxgidugpFJPeiTe1bJ4g2
+---
+ src/specialized/aarch64.rs   | 43 +++++++++++++++++++++---------------
+ src/specialized/pclmulqdq.rs | 33 +++++++++++++++++++++++----
+ 2 files changed, 54 insertions(+), 22 deletions(-)
+
+diff --git a/src/specialized/aarch64.rs b/src/specialized/aarch64.rs
+index cf0ed4f..ef1d914 100644
+--- a/src/specialized/aarch64.rs
++++ b/src/specialized/aarch64.rs
+@@ -40,7 +40,7 @@ const MIN_TRIPLE_QUADS: usize = 192;
+ // target_feature is necessary to allow rustc to inline the crc32* wrappers
+ #[target_feature(enable = "crc")]
+ pub unsafe fn calculate(crc: u32, data: &[u8]) -> u32 {
+-    let (pre_quad, quads, post_quad) = data.align_to::<u64>();
++    let (pre_quad, quads, post_quad) = split_quads(data);
+ 
+     // Running (finalized) CRC.
+     let mut r = crc;
+@@ -66,25 +66,24 @@ pub unsafe fn calculate(crc: u32, data: &[u8]) -> u32 {
+         let mut c2 = !0u32;
+ 
+         // Unroll each stream by 4 while keeping the three chains independent.
+-        let mut chunks_a = a.chunks_exact(4);
+-        let mut chunks_b = b.chunks_exact(4);
+-        let mut chunks_c = c.chunks_exact(4);
+-        for ((qa, qb), qc) in (&mut chunks_a).zip(&mut chunks_b).zip(&mut chunks_c) {
++        // Verification patch: the `chunks_exact(4)` + `zip` loops written with an index (Aeneas
++        // cannot translate `for` over `&mut` iterators). `a`, `b`, `c` all have length `n3`, so
++        // this makes the same `__crc32d` calls in the same order: full chunks of 4, then the
++        // `n3 % 4` remainder words.
++        let mut i = 0;
++        while i + 4 <= n3 {
+             for k in 0..4 {
+-                c0 = arch::__crc32d(c0, qa[k]);
+-                c1 = arch::__crc32d(c1, qb[k]);
+-                c2 = arch::__crc32d(c2, qc[k]);
++                c0 = arch::__crc32d(c0, a[i + k]);
++                c1 = arch::__crc32d(c1, b[i + k]);
++                c2 = arch::__crc32d(c2, c[i + k]);
+             }
++            i += 4;
+         }
+-        for ((&qa, &qb), &qc) in chunks_a
+-            .remainder()
+-            .iter()
+-            .zip(chunks_b.remainder())
+-            .zip(chunks_c.remainder())
+-        {
+-            c0 = arch::__crc32d(c0, qa);
+-            c1 = arch::__crc32d(c1, qb);
+-            c2 = arch::__crc32d(c2, qc);
++        while i < n3 {
++            c0 = arch::__crc32d(c0, a[i]);
++            c1 = arch::__crc32d(c1, b[i]);
++            c2 = arch::__crc32d(c2, c[i]);
++            i += 1;
+         }
+ 
+         r = crate::combine::combine(!c0, !c1, block_len);
+@@ -100,13 +99,21 @@ pub unsafe fn calculate(crc: u32, data: &[u8]) -> u32 {
+     crc_bytes(r, post_quad)
+ }
+ 
++// Verification patch: `align_to` in its own function, so the proofs model it in one place.
++#[inline]
++fn split_quads(data: &[u8]) -> (&[u8], &[u64], &[u8]) {
++    // SAFETY: every bit pattern is a valid `u64`.
++    unsafe { data.align_to::<u64>() }
++}
++
+ #[target_feature(enable = "crc")]
+ unsafe fn crc_quads(crc: u32, quads: &[u64]) -> u32 {
+     let mut c = !crc;
+ 
+     // unrolling increases performance by a lot
+     let mut quad_iter = quads.chunks_exact(8);
+-    for chunk in &mut quad_iter {
++    // Verification patch: `for chunk in &mut quad_iter` written as the `while let` it stands for.
++    while let Some(chunk) = quad_iter.next() {
+         c = arch::__crc32d(c, chunk[0]);
+         c = arch::__crc32d(c, chunk[1]);
+         c = arch::__crc32d(c, chunk[2]);
+diff --git a/src/specialized/pclmulqdq.rs b/src/specialized/pclmulqdq.rs
+index 17938de..332dfce 100644
+--- a/src/specialized/pclmulqdq.rs
++++ b/src/specialized/pclmulqdq.rs
+@@ -339,7 +339,7 @@ unsafe fn reduce_128_to_crc(mut x: arch::__m128i, mut data: &[u8]) -> u32 {
+ 
+         let mut part = [0u8; 16];
+         part[..n].copy_from_slice(data);
+-        let part = arch::_mm_loadu_si128(part.as_ptr() as *const arch::__m128i);
++        let part = load128(&part);
+         x = arch::_mm_xor_si128(x, arch::_mm_shuffle_epi8(part, shl));
+ 
+         x = reduce128(overflow, x, k3k4);
+@@ -427,9 +427,34 @@ unsafe fn reduce512(a: arch::__m512i, b: arch::__m512i, keys: arch::__m512i) ->
+     arch::_mm512_xor_si512(arch::_mm512_xor_si512(b, t1), t2)
+ }
+ 
++// Verification patch: the unaligned loads are moved into three small helpers so the rest of the
++// file has no raw-pointer casts. Each helper reads the first 16/32/64 bytes of `a`.
++#[inline]
++unsafe fn load128(a: &[u8]) -> arch::__m128i {
++    debug_assert!(a.len() >= 16);
++    arch::_mm_loadu_si128(a.as_ptr() as *const arch::__m128i)
++}
++
++#[cfg(stable_vpclmulqdq)]
++#[target_feature(enable = "avx")]
++#[inline]
++unsafe fn load256(a: &[u8]) -> arch::__m256i {
++    debug_assert!(a.len() >= 32);
++    arch::_mm256_loadu_si256(a.as_ptr() as *const arch::__m256i)
++}
++
++#[cfg(stable_vpclmulqdq)]
++#[allow(clippy::incompatible_msrv)]
++#[target_feature(enable = "avx512f")]
++#[inline]
++unsafe fn load512(a: &[u8]) -> arch::__m512i {
++    debug_assert!(a.len() >= 64);
++    arch::_mm512_loadu_si512(a.as_ptr() as *const _)
++}
++
+ unsafe fn get(a: &mut &[u8]) -> arch::__m128i {
+     debug_assert!(a.len() >= 16);
+-    let r = arch::_mm_loadu_si128(a.as_ptr() as *const arch::__m128i);
++    let r = load128(a);
+     *a = &a[16..];
+     r
+ }
+@@ -439,7 +464,7 @@ unsafe fn get(a: &mut &[u8]) -> arch::__m128i {
+ #[inline]
+ unsafe fn get256(a: &mut &[u8]) -> arch::__m256i {
+     debug_assert!(a.len() >= 32);
+-    let r = arch::_mm256_loadu_si256(a.as_ptr() as *const arch::__m256i);
++    let r = load256(a);
+     *a = &a[32..];
+     r
+ }
+@@ -450,7 +475,7 @@ unsafe fn get256(a: &mut &[u8]) -> arch::__m256i {
+ #[inline]
+ unsafe fn get512(a: &mut &[u8]) -> arch::__m512i {
+     debug_assert!(a.len() >= 64);
+-    let r = arch::_mm512_loadu_si512(a.as_ptr() as *const _);
++    let r = load512(a);
+     *a = &a[64..];
+     r
+ }
+-- 
+2.43.0
+

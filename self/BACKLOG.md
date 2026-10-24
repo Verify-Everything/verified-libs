@@ -25,3 +25,5 @@ CHANGELOG entry. Humans and threads may add items. Newest evidence wins.
 - [x] Cargo.lock pinning, External template diffing, bv_decide guidance (from crc32fast adoption, v0.1.2).
 - [x] Patch files, [test] commands (upstream + differential tests), postprocess hooks, strict externals (percent-encoding adoption, v0.1.3).
 - [x] Frama-C -wp-literals default, WP session cache, annotation-only honesty check (v0.1.4).
+
+- Codex/Gemini agent runs (v0.2.2): command lines accepted by codex-cli 0.164.0 and gemini 0.65.0, but no end-to-end run yet (no API keys in any container so far). Risk: `gemini --sandbox` may mount only the cwd, so --include-directories paths outside it (WORK/<lib>, NOTES) may be missing inside the sandbox. Check on the first real run; if so, pass those paths through gemini's sandbox mount setting (check its docs for the exact form) instead of guessing.

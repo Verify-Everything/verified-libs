@@ -34,6 +34,10 @@ COPY --chown=vpipe . /home/vpipe/src
 RUN --mount=type=secret,id=ca,required=false,uid=1001 with-ca bash -c '\
     cd ~/src && bash install.sh --yes --agents none --tools lean,framac,cbmc --no-path \
  && { python3 bin/vkit.py doctor --json > ~/toolchain.json || true; } \
- && python3 self/gate.py --full && cd ~ && rm -rf ~/src ~/vpipe-work ~/.cargo/registry ~/.vpipe/bin/vkit ~/.vpipe/bin/vpipe ~/.cache' \
+ && python3 self/gate.py --full \
+ && cd ~ && rm -rf ~/src ~/vpipe-work ~/.cargo/registry ~/.vpipe/bin/vkit ~/.vpipe/bin/vpipe ~/.cache \
+      ~/.rustup/toolchains/*/share/doc \
+ && for d in ~/.vpipe/aeneas-*; do [ "$d" -ef ~/.vpipe/aeneas ] || rm -rf "$d"; done \
+ && nix store gc' \
  && git config --global --add safe.directory '*'
 WORKDIR /work

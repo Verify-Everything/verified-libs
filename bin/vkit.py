@@ -291,7 +291,7 @@ def setup_cbmc(yes):
     if which("cbmc"):
         log("cbmc already installed:", out(["cbmc", "--version"]))
         return 0
-    ver = "6.4.1"
+    ver = "6.11.0"  # = CBMC in the pinned nixpkgs ([framac].nixpkgs), so every route gives one version
     if platform.system() == "Darwin" and which("brew"):
         cmd = "brew install cbmc"
     elif platform.system() == "Linux" and which("dpkg") and platform.machine() == "x86_64":
@@ -301,7 +301,9 @@ def setup_cbmc(yes):
         cmd = (f"cd /tmp && curl -fsSLO https://github.com/diffblue/cbmc/releases/download/cbmc-{ver}/{deb} && "
                f"{sudo}apt-get update -qq && {sudo}apt-get install -y ./{deb}")
     elif which("nix"):
-        cmd = f"nix profile install nixpkgs#cbmc"
+        pkgs = versions().get("framac", {}).get("nixpkgs", "nixpkgs")
+        cmd = (f"mkdir -p {VH}/nix {VH}/bin && ln -sf \"$(nix --extra-experimental-features 'nix-command flakes' "
+               f"build --out-link {VH}/nix/cbmc --print-out-paths '{pkgs}#cbmc' | head -1)/bin/cbmc\" {VH}/bin/cbmc")
     else:
         sys.exit("No supported route to CBMC here; see https://github.com/diffblue/cbmc/releases")
     if not confirm([f"run: {cmd}"], yes):

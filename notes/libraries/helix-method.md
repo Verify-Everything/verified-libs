@@ -65,6 +65,11 @@ toml/serde, globset, etc. are NOT std. The same decision applies to each: it bec
 - Known blockers: fn-pointer fields ("Arrow types"), early return inside a loop or closure, str::strip_suffix, Box AsRef,
   closures taking `&mut` pairs (Selection::normalize), SmallVec. These need another tool or an Aeneas fix.
 
+- Char matches and non-ASCII char literals: helix-verify/real-common/tools/lower_char_switch.py and nonascii_chars.py
+  (LLBC passes; need `charon --no-dedup-serialized-ast`; pipeline in helix-verify/text/real/EXTRACT.md). chars.rs proved this way.
+- Display/Debug: Aeneas's Formatter::write_str is a no-op, so output can't be proved until the vendored Aeneas has a
+  recording Formatter (byte list, write_str appends). Tracked in the Start verifying Helix thread.
+
 ## Lean lessons (Aeneas fdebf20 / Lean 4.35)
 - `lake env lean F.lean` does not rebuild deps: `lake build <Module>` after re-extraction or edits.
 - Use `step*?` to get an explicit `let* ⟨ x, x_post, … ⟩ ← spec` script; step*-generated names are inaccessible.

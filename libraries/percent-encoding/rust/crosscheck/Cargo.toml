@@ -1,0 +1,12 @@
+[package]
+name = "crosscheck"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+# The pinned, unpatched upstream crate (vpipe rewrites this path to its checkout).
+percent-encoding = { path = "../../../rust-url/percent_encoding" }
+
+[profile.release]
+debug = false

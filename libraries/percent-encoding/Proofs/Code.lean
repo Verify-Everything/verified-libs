@@ -68,10 +68,31 @@ theorem should_percent_encode_spec (s : ascii_set.AsciiSet) (b : Std.U8) :
   step*
   all_goals simp_all [shouldEncode, inSet]
 
+/-- ASCII bytes are valid UTF-8 (each is the encoding of one `char`). -/
+theorem utf8Valid_of_ascii (l : List Std.U8) (h : ∀ b ∈ l, b.val < 128) : Utf8Valid l := by
+  refine ⟨l.map (fun b => Char.ofNat b.val), ?_⟩
+  apply ByteArray.ext
+  rw [← Array.toList_inj]
+  simp only [u8sToBA, List.utf8Encode, List.toList_data_toByteArray, List.toList_toArray]
+  induction l with
+  | nil => simp
+  | cons b l ih =>
+    have hb := h b List.mem_cons_self
+    simp only [List.map_cons, List.flatMap_cons]
+    rw [← ih (fun x hx => h x (List.mem_cons_of_mem _ hx))]
+    have hc : (Char.ofNat b.val).val.toNat = b.val := by
+      simp only [Char.ofNat, Char.ofNatAux]
+      rw [dif_pos (Or.inl (by omega))]
+      simp
+    simp only [String.utf8EncodeChar, hc]
+    simp [show b.val ≤ 127 by omega]
+
+/-- `str::from_utf8_unchecked` on ASCII bytes: no undefined behaviour, same bytes. -/
 @[step]
-theorem from_utf8_unchecked_spec (s : Slice Std.U8) :
+theorem from_utf8_unchecked_spec (s : Slice Std.U8) (h : ∀ b ∈ s.val, b.val < 128) :
     core.str.converts.from_utf8_unchecked s ⦃ r => (show Slice Std.U8 from r) = s ⦄ := by
   unfold core.str.converts.from_utf8_unchecked
+  rw [if_pos (utf8Valid_of_ascii _ h)]
   exact (WP.spec_ok _).2 rfl
 
 set_option maxRecDepth 100000 in
@@ -82,19 +103,34 @@ theorem enc_table_slices : ∀ n < 256,
   unfold percent_encode_byte.ENC_TABLE
   decide +kernel
 
+theorem encByte_ascii (b : Nat) (hb : b < 256) : ∀ c ∈ encByte b, c < 128 := by
+  have h1 : b / 16 < 16 := by omega
+  have h2 : b % 16 < 16 := by omega
+  intro c hc
+  simp only [encByte, List.mem_cons, List.not_mem_nil, or_false] at hc
+  rcases hc with rfl | rfl | rfl
+  · decide
+  · exact hexDigit_lt _ h1
+  · exact hexDigit_lt _ h2
+
 @[step]
 theorem percent_encode_byte_spec (b : Std.U8) :
     percent_encode_byte b ⦃ r => strBytes r = encByte b.val ⦄ := by
   unfold percent_encode_byte
   have hb := b.hBounds
   simp only [lift]
-  step*
   have hb' : b.val < 256 := by simpa [UScalarTy.numBits] using hb
-  have hi : index.val = b.val * 3 := by
-    rw [index_post, core.convert.num.FromUsizeU8.from_val_eq]
   have := enc_table_slices b.val hb'
-  simp only [strBytes, bytes, r_post, s_post, i1_post, hi] at *
-  exact this
+  step*
+  · have hi : index.val = b.val * 3 := by
+      rw [index_post, core.convert.num.FromUsizeU8.from_val_eq]
+    intro x hx
+    simp only [s_post, i1_post, hi] at hx
+    exact encByte_ascii _ hb' _ (this ▸ List.mem_map_of_mem hx)
+  · have hi : index.val = b.val * 3 := by
+      rw [index_post, core.convert.num.FromUsizeU8.from_val_eq]
+    simp only [strBytes, bytes, r_post, s_post, i1_post, hi] at *
+    exact this
 
 @[step]
 theorem split_first_spec (s : Slice Std.U8) :
@@ -138,16 +174,6 @@ theorem lt128_of_not_should (s : ascii_set.AsciiSet) (c : Nat)
   simp only [shouldEncode, Bool.or_eq_false_iff, Bool.not_eq_false', decide_eq_true_eq] at h
   exact h.1
 
-theorem encByte_ascii (b : Nat) (hb : b < 256) : ∀ c ∈ encByte b, c < 128 := by
-  have h1 : b / 16 < 16 := by omega
-  have h2 : b % 16 < 16 := by omega
-  intro c hc
-  simp only [encByte, List.mem_cons, List.not_mem_nil, or_false] at hc
-  rcases hc with rfl | rfl | rfl
-  · decide
-  · exact hexDigit_lt _ h1
-  · exact hexDigit_lt _ h2
-
 theorem take_not_should (s : ascii_set.AsciiSet) (first : Std.U8) (rem : List Std.U8) (i : Nat)
     (hfirst : shouldEncode s first.val = false)
     (hrem : ∀ k < i, shouldEncode s (rem[k]!).val = false) :
@@ -188,6 +214,11 @@ theorem next_chunk_spec (bs : Slice Std.U8) (set : ascii_set.AsciiSet) :
     · simp [Slice.length, o_post]
     · rw [hb, s_post]; simp_all [encode]
     · rw [s_post]; exact encByte_ascii _ hfirst
+  · have hnot := take_not_should set first rem.val i.val (by simp_all) i_post1
+    intro c hc
+    have hc' : c.val ∈ ((first :: rem.val).take (1 + i.val)).map (·.val) := by
+      rw [unchanged_slice_post2, i1_post, o_post] at hc; exact List.mem_map_of_mem hc
+    exact lt128_of_not_should _ _ (hnot _ hc')
   · have hlen : bs.length = rem.length + 1 := by simp [Slice.length, o_post]
     have hnot := take_not_should set first rem.val i.val (by simp_all) i_post1
     have hchunk : strBytes s = (bs.val.take i1.val).map (·.val) := by

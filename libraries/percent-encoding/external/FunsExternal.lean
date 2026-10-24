@@ -91,12 +91,10 @@ def core.iter.traits.iterator.Iterator.size_hint.default
     Source: '/rustc/library/core/src/mem/mod.rs', lines 375:0-375:34
     Name pattern: [core::mem::size_of]
     Visibility: public
-    Model: only the sizes used by this crate (x86_64 target). -/
+    Model: `size_of::<u32>()` = 4, the only call in this crate. scripts/postprocess.py
+    fails the run if the extracted code calls it at any other type. -/
 @[rust_fun "core::mem::size_of"]
-noncomputable def core.mem.size_of (T : Type) : Result Std.Usize :=
-  open Classical in
-  if T = Std.U32 then ok 4#usize
-  else fail .panic
+def core.mem.size_of (T : Type) : Result Std.Usize := ok 4#usize
 
 /-- [core::num::{u8}::is_ascii]:
     Source: '/rustc/library/core/src/num/mod.rs', lines 632:4-632:40
@@ -175,16 +173,6 @@ def core.slice.Slice.split_first
   | x :: _ => ok (some (x, Slice.from (s.val.drop 1)
       (by have := s.property; simp; omega)))
 
-/-- [core::str::converts::from_utf8_unchecked]:
-    Source: '/rustc/library/core/src/str/converts.rs', lines 178:0-178:57
-    Name pattern: [core::str::converts::from_utf8_unchecked]
-    Visibility: public -/
-@[rust_fun "core::str::converts::from_utf8_unchecked"]
-def core.str.converts.from_utf8_unchecked (s : Slice Std.U8) : Result Str :=
-  -- `Str` is `Slice U8` in Aeneas. The UTF-8 precondition is not modelled here;
-  -- we prove separately that every emitted chunk is ASCII.
-  ok s
-
 /-- [core::str::{str}::as_bytes]:
     Source: '/rustc/library/core/src/str/mod.rs', lines 514:4-514:41
     Name pattern: [core::str::{str}::as_bytes]
@@ -213,6 +201,16 @@ def stringOfValid (l : List Std.U8) (h : Utf8Valid l) : String := String.fromUTF
 /-- The UTF-8 bytes of a string. -/
 def stringBytes (s : String) : List Std.U8 :=
   s.toByteArray.data.toList.map (fun b => Std.U8.ofNatCore b.toNat (by have := b.toNat_lt; scalar_tac))
+
+/-- [core::str::converts::from_utf8_unchecked]:
+    Source: '/rustc/library/core/src/str/converts.rs', lines 178:0-178:57
+    Name pattern: [core::str::converts::from_utf8_unchecked]
+    Visibility: public -/
+@[rust_fun "core::str::converts::from_utf8_unchecked"]
+def core.str.converts.from_utf8_unchecked (s : Slice Std.U8) : Result Str :=
+  -- `Str` is `Slice U8` in Aeneas. Undefined behaviour on invalid UTF-8, so every
+  -- proof through a call must show the bytes are valid.
+  if Utf8Valid s.val then ok s else fail .undef
 
 /-- One step of Rust's `Utf8Chunks` (used by `String::from_utf8_lossy`): the
     lead byte decides how many continuation bytes follow and the allowed range

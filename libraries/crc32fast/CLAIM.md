@@ -5,10 +5,10 @@ source: https://github.com/srijs/rust-crc32fast
 commit: d2363eab95ebc85fcf726d1c8fa845148e474591
 archive_sha256: 5f9d28e38dcb613309c036523202e50241cdea899e8af524de6397dad594bf61
 tool: Lean 4 + Aeneas
-tool_version: aeneas nightly-2026.10.23-fdebf20, charon_rust nightly-2026-09-17, lean 4.35.0; sha256:388575708c786f2ce7f6abfed8f16c48c0b7e574e227f5b6605bb1805086f620
+tool_version: aeneas nightly-2026.10.23-fdebf20, charon_rust nightly-2026-09-17, lean 4.35.0; sha256:e70fa595928911df6c112e8841481da9137b4febfbb51887cd0eba6938a1a858
 strength: tested  # lowest label; real value: unlabelled (functions without a label in functions.toml, or open)
 status: candidate
-functions: 0/43
+functions: 30/46
 ---
 
 # crc32fast 1.5.3: CLAIM
@@ -17,78 +17,62 @@ functions: 0/43
 
 Status: candidate
 Entry strength: unlabelled
-Functions: 0/43 at full-correctness (9 verified or fixed)
+Functions: 30/46 at full-correctness (30 verified or fixed)
 
 ## Success criteria (written before proof work)
 - Written: NOT RECORDED. Reviewed by: NOBODY YET
 - Every function in the pinned source (all features, all supported targets, trait impls) reaches full-correctness for all inputs.
 - Library-specific properties:
-  - update_slow, update_fast_16 and hash equal the bit-at-a-time reference CRC-32
-  - Hasher::update then finalize equals hash of the concatenated input (incremental = single pass)
+  - update_slow, update_fast_16, every SIMD kernel (SSE, AVX2, AVX-512, aarch64 CRC32) and hash equal the bit-at-a-time reference CRC-32, for inputs of any length
+  - Hasher::update then finalize equals hash of the concatenated input (incremental = single pass), with any kernel State::new picks
   - combine and Hasher::combine equal the CRC of the concatenation
+  - No function panics or fails on any input; the u64 byte count wraps modulo 2^64 (verified fix 0001)
+  - Debug writes exactly `crc32fast::Hasher`; Clone, Default, Hash::write/finish behave as documented
 
 ## Code
 - Upstream: https://github.com/srijs/rust-crc32fast @ d2363eab95ebc85fcf726d1c8fa845148e474591, archive SHA-256 5f9d28e38dcb613309c036523202e50241cdea899e8af524de6397dad594bf61
 - Fork (if any): none
-- Features and targets covered: NOT DECLARED
+- Features and targets covered: riscv64gc-unknown-none-elf, no_std (portable code: every target without a SIMD kernel), x86_64-unknown-linux-gnu, no_std (compile-time detection) and std (runtime detection, any CPU answer), aarch64-unknown-linux-gnu, no_std and std (runtime crc detection, any CPU answer), x86_64 kernels: SSE4.1+PCLMULQDQ, AVX2+VPCLMULQDQ, AVX-512+VPCLMULQDQ (the nightly feature only switches the AVX-512 path on; its code is proved); variants: riscv64-portable, x86_64, x86_64-std, aarch64, aarch64-std
 - Upstream releases checked 2026-10-24T07:08:07Z: pinned version is the latest
 
 ## Specification
-- Plain words: NOT WRITTEN
-- Formal spec files: not listed
-- Matches standard / test vectors: NONE
+- Plain words: crc32fast computes the standard CRC-32 (ISO-HDLC, reflected polynomial 0xEDB88320, init and final XOR 0xFFFFFFFF). Every public function returns the CRC the bit-at-a-time reference gives, for any input and on every target and kernel; incremental updates and combine equal a single pass; nothing panics.
+- Formal spec files: common/Crc32fast/Spec.lean
+- Matches standard / test vectors: CRC-32/ISO-HDLC check value crc32("123456789") = 0xCBF43926 (Greg Cook's CRC catalogue), proved in Spec.lean, crc32fast's own vectors: crc32("") = 0, crc32("hello world") = 0x0d4a1185, proved in Spec.lean
 
 ## Proof
-- Tool(s) and versions: lean-aeneas; aeneas nightly-2026.10.23-fdebf20, charon_rust nightly-2026-09-17, lean 4.35.0; toolchain digest sha256:388575708c786f2ce7f6abfed8f16c48c0b7e574e227f5b6605bb1805086f620; container digest NOT IN A PINNED CONTAINER
-- Kernel replay (leanchecker): passed
-- Theorems / goals: 132/132 proved, 0 sorries, 0 with extra axioms
+- Tool(s) and versions: lean-aeneas; aeneas nightly-2026.10.23-fdebf20, charon_rust nightly-2026-09-17, lean 4.35.0; toolchain digest sha256:e70fa595928911df6c112e8841481da9137b4febfbb51887cd0eba6938a1a858; container digest NOT IN A PINNED CONTAINER
+- Kernel replay (leanchecker): not run
+- Theorems / goals: 723/1151 proved, 0 sorries, 0 with extra axioms
 - Per-function results: below, and functions.toml for declared labels and evidence
-- Planted-bug check: no planted-bug run on this commit (`vpipe mutate`); [scope].test_vectors missing
+- Planted-bug check: no planted-bug run on this commit (`vpipe mutate`)
 - Differential cross-check of the translation: no [crosscheck] commands
 
 ## Trusted base
 - Axioms reported by the checker: Classical.choice, Quot.sound, propext
-- Std or library models: none listed (unlisted models assumed by the extraction: 3)
+- Std or library models: core.fmt.Formatter.sink, core.fmt.Formatter.isPretty, core.fmt.Formatter.debug_struct, core.fmt.builders.DebugStruct.finish, core.num.U32.wrapping_neg, core.option.Option.unwrap_or_else, core.option.Option.Insts.CoreCloneClone.clone, core.option.Option.Insts.CoreOpsTry_traitTry.branch, core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual, core.iter.traits.iterator.Iterator.fold.default, core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.fold, x86 SSE2/SSSE3/SSE4.1/PCLMULQDQ/AVX/AVX2/AVX-512/VPCLMULQDQ intrinsics (24, in variants/x86_64*/Crc32fast/External), crc32fast.specialized.pclmulqdq.load128, crc32fast.specialized.pclmulqdq.load256, crc32fast.specialized.pclmulqdq.load512, x86.cpuHas, a64.cpuHasCrc, core.core_arch.aarch64.neon.generated.__crc32d, core.core_arch.arm_shared.neon.generated.__crc32b, crc32fast.specialized.aarch64.split_quads, a64.splitPre, a64.splitMid
 - Tool assumptions: translator (Aeneas/Charon) faithful; Lean kernel sound
 - Unsafe / FFI boundaries: not listed
-- Patches applied: none
-- Forbidden constructs found: 13
+- Patches applied: patches/0001-hasher-wrapping-add.patch, patches/0002-simd-readable-by-aeneas.patch
+- Forbidden constructs found: 32
 
 ## Not covered
-- `src/combine.rs:golden`: not extracted (unsupported by Aeneas or excluded by cfg)
-- `src/lib.rs:Hasher::internal_new_baseline`: no theorem about it
-- `src/lib.rs:Hasher::internal_new_specialized`: no theorem about it
-- `src/lib.rs:Hasher::update`: no theorem about it
-- `src/lib.rs:Hasher::total_len`: no theorem about it
-- `src/lib.rs:Hasher::finalize`: no theorem about it
-- `src/lib.rs:Hasher::reset`: no theorem about it
-- `src/lib.rs:Hasher::combine`: no theorem about it
-- `src/lib.rs:fmt::Debug for Hasher::fmt`: no theorem about it
-- `src/lib.rs:Default for Hasher::default`: no theorem about it
-- `src/lib.rs:hash::Hasher for Hasher::write`: no theorem about it
-- `src/lib.rs:hash::Hasher for Hasher::finish`: no theorem about it
-- `src/specialized/aarch64.rs:State::new@L8`: not extracted (unsupported by Aeneas or excluded by cfg)
-- `src/specialized/aarch64.rs:State::new@L19`: not extracted (unsupported by Aeneas or excluded by cfg)
-- `src/specialized/aarch64.rs:State::update`: not extracted (unsupported by Aeneas or excluded by cfg)
-- `src/specialized/aarch64.rs:calculate`: not extracted (unsupported by Aeneas or excluded by cfg)
-- `src/specialized/aarch64.rs:crc_quads`: not extracted (unsupported by Aeneas or excluded by cfg)
-- `src/specialized/aarch64.rs:crc_bytes`: not extracted (unsupported by Aeneas or excluded by cfg)
-- `src/specialized/mod.rs:State::new`: no theorem about it
-- `src/specialized/mod.rs:State::update`: no theorem about it
-- `src/specialized/pclmulqdq.rs:State::detect@L42`: not extracted (unsupported by Aeneas or excluded by cfg)
-- `src/specialized/pclmulqdq.rs:State::detect@L65`: not extracted (unsupported by Aeneas or excluded by cfg)
-- `src/specialized/pclmulqdq.rs:State::new`: not extracted (unsupported by Aeneas or excluded by cfg)
-- `src/specialized/pclmulqdq.rs:State::update`: not extracted (unsupported by Aeneas or excluded by cfg)
-- `src/specialized/pclmulqdq.rs:calculate`: not extracted (unsupported by Aeneas or excluded by cfg)
-- `src/specialized/pclmulqdq.rs:calculate_avx2`: not extracted (unsupported by Aeneas or excluded by cfg)
-- `src/specialized/pclmulqdq.rs:calculate_avx512`: not extracted (unsupported by Aeneas or excluded by cfg)
-- `src/specialized/pclmulqdq.rs:reduce_128_to_crc`: not extracted (unsupported by Aeneas or excluded by cfg)
-- `src/specialized/pclmulqdq.rs:reduce128`: not extracted (unsupported by Aeneas or excluded by cfg)
-- `src/specialized/pclmulqdq.rs:reduce256`: not extracted (unsupported by Aeneas or excluded by cfg)
-- `src/specialized/pclmulqdq.rs:reduce512`: not extracted (unsupported by Aeneas or excluded by cfg)
-- `src/specialized/pclmulqdq.rs:get`: not extracted (unsupported by Aeneas or excluded by cfg)
-- `src/specialized/pclmulqdq.rs:get256`: not extracted (unsupported by Aeneas or excluded by cfg)
-- `src/specialized/pclmulqdq.rs:get512`: not extracted (unsupported by Aeneas or excluded by cfg)
+- `src/lib.rs:Hasher::update`: no theorem about it; x86_64: no theorem about it; x86_64-std: no theorem about it; aarch64: no theorem about it; aarch64-std: no theorem about it
+- `src/lib.rs:Hasher::total_len`: no theorem about it; x86_64: no theorem about it; x86_64-std: no theorem about it; aarch64: no theorem about it; aarch64-std: no theorem about it
+- `src/lib.rs:Hasher::finalize`: no theorem about it; x86_64: no theorem about it; x86_64-std: no theorem about it; aarch64: no theorem about it; aarch64-std: no theorem about it
+- `src/lib.rs:Hasher::reset`: no theorem about it; x86_64: no theorem about it; x86_64-std: no theorem about it; aarch64: no theorem about it; aarch64-std: no theorem about it
+- `src/lib.rs:Hasher::combine`: no theorem about it; x86_64: no theorem about it; x86_64-std: no theorem about it; aarch64: no theorem about it; aarch64-std: no theorem about it
+- `src/specialized/aarch64.rs:State::new@L8`: not extracted (unsupported by Aeneas or excluded by cfg); x86_64: not extracted (unsupported by Aeneas or excluded by cfg); x86_64-std: not extracted (unsupported by Aeneas or excluded by cfg); aarch64: theorems not proved: ['state_new_eq']; aarch64-std: not extracted (unsupported by Aeneas or excluded by cfg)
+- `src/specialized/aarch64.rs:State::new@L19`: not extracted (unsupported by Aeneas or excluded by cfg); x86_64: not extracted (unsupported by Aeneas or excluded by cfg); x86_64-std: not extracted (unsupported by Aeneas or excluded by cfg); aarch64: not extracted (unsupported by Aeneas or excluded by cfg); aarch64-std: theorems not proved: ['state_new_eq']
+- `src/specialized/aarch64.rs:State::update`: not extracted (unsupported by Aeneas or excluded by cfg); x86_64: not extracted (unsupported by Aeneas or excluded by cfg); x86_64-std: not extracted (unsupported by Aeneas or excluded by cfg); aarch64: no theorem about it; aarch64-std: no theorem about it
+- `src/specialized/aarch64.rs:crc_quads`: not extracted (unsupported by Aeneas or excluded by cfg); x86_64: not extracted (unsupported by Aeneas or excluded by cfg); x86_64-std: not extracted (unsupported by Aeneas or excluded by cfg); aarch64: theorems not proved: ['call_q', 'crc_quads_eq', 'fold_quads', 'quads_body_none', 'quads_body_some', 'quads_loop_eq', 'quads_unfold']; aarch64-std: theorems not proved: ['call_q', 'crc_quads_eq', 'fold_quads', 'quads_body_none', 'quads_body_some', 'quads_loop_eq', 'quads_unfold']
+- `src/specialized/aarch64.rs:split_quads`: not extracted (unsupported by Aeneas or excluded by cfg); x86_64: not extracted (unsupported by Aeneas or excluded by cfg); x86_64-std: not extracted (unsupported by Aeneas or excluded by cfg); aarch64: not extracted (unsupported by Aeneas or excluded by cfg); aarch64-std: not extracted (unsupported by Aeneas or excluded by cfg)
+- `src/specialized/aarch64.rs:crc_bytes`: not extracted (unsupported by Aeneas or excluded by cfg); x86_64: not extracted (unsupported by Aeneas or excluded by cfg); x86_64-std: not extracted (unsupported by Aeneas or excluded by cfg); aarch64: theorems not proved: ['call_q', 'fold_quads']; aarch64-std: theorems not proved: ['call_q', 'fold_quads']
+- `src/specialized/mod.rs:State::update`: no theorem about it; x86_64: not extracted (unsupported by Aeneas or excluded by cfg); x86_64-std: not extracted (unsupported by Aeneas or excluded by cfg); aarch64: not extracted (unsupported by Aeneas or excluded by cfg); aarch64-std: not extracted (unsupported by Aeneas or excluded by cfg)
+- `src/specialized/pclmulqdq.rs:State::update`: not extracted (unsupported by Aeneas or excluded by cfg); x86_64: no theorem about it; x86_64-std: no theorem about it; aarch64: not extracted (unsupported by Aeneas or excluded by cfg); aarch64-std: not extracted (unsupported by Aeneas or excluded by cfg)
+- `src/specialized/pclmulqdq.rs:load128`: not extracted (unsupported by Aeneas or excluded by cfg); x86_64: not extracted (unsupported by Aeneas or excluded by cfg); x86_64-std: not extracted (unsupported by Aeneas or excluded by cfg); aarch64: not extracted (unsupported by Aeneas or excluded by cfg); aarch64-std: not extracted (unsupported by Aeneas or excluded by cfg)
+- `src/specialized/pclmulqdq.rs:load256`: not extracted (unsupported by Aeneas or excluded by cfg); x86_64: not extracted (unsupported by Aeneas or excluded by cfg); x86_64-std: not extracted (unsupported by Aeneas or excluded by cfg); aarch64: not extracted (unsupported by Aeneas or excluded by cfg); aarch64-std: not extracted (unsupported by Aeneas or excluded by cfg)
+- `src/specialized/pclmulqdq.rs:load512`: not extracted (unsupported by Aeneas or excluded by cfg); x86_64: not extracted (unsupported by Aeneas or excluded by cfg); x86_64-std: not extracted (unsupported by Aeneas or excluded by cfg); aarch64: not extracted (unsupported by Aeneas or excluded by cfg); aarch64-std: not extracted (unsupported by Aeneas or excluded by cfg)
 
 ## How to re-check
 
@@ -103,64 +87,67 @@ Functions: 0/43 at full-correctness (9 verified or fixed)
 
 | Gate | Pass | Detail |
 |---|---|---|
-| real code | NO | upstream archive SHA-256 not pinned in vpipe.toml (this run: 5f9d28e38dcb613309c036523202e50241cdea899e8af524de6397dad594bf61) |
-| every function | NO | 9/43 functions verified or fixed; targets/features covered not declared in [coverage] |
+| real code | NO | tool-only patches without a proved equivalence: ['patches/0002-simd-readable-by-aeneas.patch'] |
+| every function | NO | 30/46 functions verified or fixed |
 | all inputs | yes | no bounded-only evidence |
 | full strength | NO | entry strength unlabelled |
 | spec first | NO | need [scope].properties, [scope].written (date) and [scope].reviewed_by |
-| not vacuous | NO | no planted-bug run on this commit (`vpipe mutate`); [scope].test_vectors missing |
-| trusted base | NO | forbidden: 13; axioms not listed in [trust]: []; std models not listed: ['core.fmt.Formatter.debug_struct', 'core.fmt.builders.DebugStruct', 'core.fmt.builders.DebugStruct.finish'] |
+| not vacuous | NO | no planted-bug run on this commit (`vpipe mutate`) |
+| trusted base | NO | forbidden: 32; axioms not listed in [trust]: []; std models not listed: []; leanchecker replay not run |
 | cross check | NO | no [crosscheck] commands |
-| reproducible | NO | 1 matching clean run(s) on this toolchain; no container digest pinned in toolchain/versions.toml [container] |
+| reproducible | NO | 0 matching clean run(s) on this toolchain; no container digest pinned in toolchain/versions.toml [container] |
 | two reviews | NO | need [review].maintainer and [review].adversarial |
 
 ## Per-function results
 
 | Function | Status | Label | Evidence |
 |---|---|---|---|
-| `src/baseline.rs:fold_16` | verified | unlabelled | fold_16_eq |
-| `src/baseline.rs:update_fast_16` | verified | unlabelled | inner_unfold, inner_body_none, inner_body_some, inner_eq |
-| `src/baseline.rs:update_slow` | verified | unlabelled | update_slow_loop_unfold, update_slow_body_some, update_slow_body_none, update_slow_loop_eq |
-| `src/combine.rs:multiply` | verified | unlabelled | multiply_body_some, multiply_body_none, multiply_unfold, multiply_loop_eq |
-| `src/combine.rs:combine` | verified | unlabelled | combine_body_some, combine_body_none, combine_unfold, combine_loop_eq |
-| `src/combine.rs:golden` | open | none |  |
-| `src/lib.rs:hash` | verified | unlabelled | hasher_combine_eq, combine_eq_hash, hash_eq, update_update_eq_hash |
-| `src/lib.rs:Hasher::new` | verified | unlabelled | combine_eq_hash, new_with_initial_len_eq, new_eq, update_update_eq_hash |
-| `src/lib.rs:Hasher::new_with_initial` | verified | unlabelled | new_with_initial_len_eq |
-| `src/lib.rs:Hasher::new_with_initial_len` | verified | unlabelled | new_with_initial_len_eq |
-| `src/lib.rs:Hasher::internal_new_baseline` | open | none |  |
-| `src/lib.rs:Hasher::internal_new_specialized` | open | none |  |
+| `src/baseline.rs:fold_16` | verified | full-correctness | fold_16_eq |
+| `src/baseline.rs:update_fast_16` | verified | full-correctness | inner_unfold, inner_body_none, inner_body_some, inner_eq |
+| `src/baseline.rs:update_slow` | verified | full-correctness | update_slow_loop_unfold, update_slow_body_some, update_slow_body_none, update_slow_loop_eq |
+| `src/combine.rs:multiply` | verified | full-correctness | multiply_body_some, multiply_body_none, multiply_unfold, multiply_loop_eq |
+| `src/combine.rs:combine` | verified | full-correctness | combine_body_some, combine_body_none, combine_unfold, combine_loop_eq |
+| `src/lib.rs:hash` | verified | full-correctness | hasher_combine_exact, hasher_combine_eq, hash_eq, update_update_eq_hash |
+| `src/lib.rs:Hasher::new` | verified | full-correctness | default_eq, new_with_initial_len_eq, new_with_initial_eq, new_eq |
+| `src/lib.rs:Hasher::new_with_initial` | verified | full-correctness | new_with_initial_len_eq, new_with_initial_eq |
+| `src/lib.rs:Hasher::new_with_initial_len` | verified | full-correctness | new_with_initial_len_eq |
+| `src/lib.rs:Hasher::internal_new_baseline` | verified | full-correctness | internal_new_baseline_eq |
+| `src/lib.rs:Hasher::internal_new_specialized` | verified | full-correctness | internal_new_specialized_eq |
 | `src/lib.rs:Hasher::update` | open | none |  |
 | `src/lib.rs:Hasher::total_len` | open | none |  |
 | `src/lib.rs:Hasher::finalize` | open | none |  |
 | `src/lib.rs:Hasher::reset` | open | none |  |
 | `src/lib.rs:Hasher::combine` | open | none |  |
-| `src/lib.rs:fmt::Debug for Hasher::fmt` | open | none |  |
-| `src/lib.rs:Default for Hasher::default` | open | none |  |
-| `src/lib.rs:hash::Hasher for Hasher::write` | open | none |  |
-| `src/lib.rs:hash::Hasher for Hasher::finish` | open | none |  |
+| `src/lib.rs:fmt::Debug for Hasher::fmt` | verified | full-correctness | fmt_eq |
+| `src/lib.rs:Default for Hasher::default` | verified | full-correctness | default_eq |
+| `src/lib.rs:hash::Hasher for Hasher::write` | verified | full-correctness | default_eq |
+| `src/lib.rs:hash::Hasher for Hasher::finish` | verified | full-correctness | write_eq |
 | `src/specialized/aarch64.rs:State::new@L8` | open | none |  |
 | `src/specialized/aarch64.rs:State::new@L19` | open | none |  |
 | `src/specialized/aarch64.rs:State::update` | open | none |  |
-| `src/specialized/aarch64.rs:calculate` | open | none |  |
+| `src/specialized/aarch64.rs:calculate` | verified | full-correctness | avx2_body_ge, avx2_body_lt, avx2_unfold, avx2_loop_eq |
 | `src/specialized/aarch64.rs:crc_quads` | open | none |  |
+| `src/specialized/aarch64.rs:split_quads` | open | none |  |
 | `src/specialized/aarch64.rs:crc_bytes` | open | none |  |
-| `src/specialized/mod.rs:State::new` | open | none |  |
+| `src/specialized/mod.rs:State::new` | verified | full-correctness | state_new_eq |
 | `src/specialized/mod.rs:State::update` | open | none |  |
-| `src/specialized/pclmulqdq.rs:State::detect@L42` | open | none |  |
-| `src/specialized/pclmulqdq.rs:State::detect@L65` | open | none |  |
-| `src/specialized/pclmulqdq.rs:State::new` | open | none |  |
+| `src/specialized/pclmulqdq.rs:State::detect@L42` | verified | full-correctness | detect_eq |
+| `src/specialized/pclmulqdq.rs:State::detect@L65` | verified | full-correctness | detect_eq |
+| `src/specialized/pclmulqdq.rs:State::new` | verified | full-correctness | state_new_eq |
 | `src/specialized/pclmulqdq.rs:State::update` | open | none |  |
-| `src/specialized/pclmulqdq.rs:calculate` | open | none |  |
-| `src/specialized/pclmulqdq.rs:calculate_avx2` | open | none |  |
-| `src/specialized/pclmulqdq.rs:calculate_avx512` | open | none |  |
-| `src/specialized/pclmulqdq.rs:reduce_128_to_crc` | open | none |  |
-| `src/specialized/pclmulqdq.rs:reduce128` | open | none |  |
-| `src/specialized/pclmulqdq.rs:reduce256` | open | none |  |
-| `src/specialized/pclmulqdq.rs:reduce512` | open | none |  |
-| `src/specialized/pclmulqdq.rs:get` | open | none |  |
-| `src/specialized/pclmulqdq.rs:get256` | open | none |  |
-| `src/specialized/pclmulqdq.rs:get512` | open | none |  |
+| `src/specialized/pclmulqdq.rs:calculate` | verified | full-correctness | avx2_body_ge, avx2_body_lt, avx2_unfold, avx2_loop_eq |
+| `src/specialized/pclmulqdq.rs:calculate_avx2` | verified | full-correctness | avx2_body_ge, avx2_body_lt, avx2_unfold, avx2_loop_eq |
+| `src/specialized/pclmulqdq.rs:calculate_avx512` | verified | full-correctness | avx512_body_ge, avx512_body_lt, avx512_unfold, avx512_loop_eq |
+| `src/specialized/pclmulqdq.rs:reduce_128_to_crc` | verified | full-correctness | r128_body_ge, r128_body_lt, r128_unfold, r128_loop_eq |
+| `src/specialized/pclmulqdq.rs:reduce128` | verified | full-correctness | reduce128_eq |
+| `src/specialized/pclmulqdq.rs:reduce256` | verified | full-correctness | reduce256_eq |
+| `src/specialized/pclmulqdq.rs:reduce512` | verified | full-correctness | reduce512_eq |
+| `src/specialized/pclmulqdq.rs:get` | verified | full-correctness | get256_eq, get512_eq, get_eq |
+| `src/specialized/pclmulqdq.rs:load128` | open | none |  |
+| `src/specialized/pclmulqdq.rs:get256` | verified | full-correctness | get256_eq |
+| `src/specialized/pclmulqdq.rs:load256` | open | none |  |
+| `src/specialized/pclmulqdq.rs:load512` | open | none |  |
+| `src/specialized/pclmulqdq.rs:get512` | verified | full-correctness | get512_eq |
 
 ## Credits
 - not recorded
@@ -168,4 +155,4 @@ Functions: 0/43 at full-correctness (9 verified or fixed)
 ## Review
 - Maintainer sign-off: NOT YET
 - Adversarial review: NOT YET
-- Last clean CI re-check: 2026-10-24T07:07:32Z
+- Last clean CI re-check: no clean run yet

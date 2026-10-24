@@ -46,16 +46,23 @@ Work: /mnt/project-files/helix-verify/selection/ (model/, lean/, difftest/, axio
 ### Parsers/utilities thread ("Verify Helix parsers": command_line, snippets/*, uri, fuzzy, diff, editor_config, config, diagnostic)
 Work dirs: helix-verify/utils-real/ (REAL-CODE proofs, see README), helix-verify/utils/ (model, now only `tested`),
 helix-verify/command_line/, snippets_parse/, snippets_render/ (helper agents; each has STATUS.md).
+All real-code theorems: axioms only propext, Classical.choice, Quot.sound; no sorry.
 - BUG editor_config.rs `is_glob_relative`: `|close| idx + close` should be `open + close`, and `source[..open]` should be
   `source[idx..open]`. Wrong answers: "a[/]", "ab[c][d/]", "[a/]b[c]" return true (should be false). Panic: glob "éé[ab]"
   (section header `[éé[ab]]`) slices inside 'é', so reading such an .editorconfig crashes Helix. Confirmed by running upstream.
-- V (real code, fork fix) `is_glob_relative`: fixed real Rust (2-line patch utils-real/fix-is_glob_relative.patch) extracted
-  by Aeneas; Lean `fix_is_glob_relative_spec`: no panic on any input, result = EditorConfig rule. Std models difftested 100k.
-- tested only (model proofs + difftests): uri.rs, diagnostic.rs, config.rs, fuzzy.rs; editor_config text_eq/trim/
-  parse_unsigned/parse_nonzero; diff.rs difftest. Need redoing on real code.
-- Aeneas blockers on real code: fuzzy LazyMutex (fn-pointer field, "Arrow types"), config::user_lang_loader closure
-  (early return in loop), str::strip_suffix and Box AsRef (Ini::from_str, EditorConfig::find).
-- All other functions in these modules: O.
+- V (real code, fork fix) `is_glob_relative`: `fix_is_glob_relative_spec`: no panic on any input, result = EditorConfig rule.
+- V (real code) `EditorConfig::from_pairs`, default and unicode-lines builds: `from_pairs_spec` = exact output for every map.
+- Gate 8 (editor_config): extracted Lean run against compiled upstream/fork Rust, 240k cases, 0 mismatches
+  (utils-real/gate8/run.sh; planted differences are caught). Std models difftested 150k cases, 0 mismatches.
+- command_line.rs (helper, command_line/STATUS.md): 27 of 45 V on real code, no bugs. 17 D (Aeneas crashes on
+  str::pattern, dyn traits, lifetime constraints): split, Flag/ExpansionKind consts, Display, parse_unquoted, parse_quoted,
+  parse_percent_token, parse_quoted_balanced, Iterator::next, read_token, parse, push, first/get/get_flag, Index, IntoIterator
+  for &Args. Its std contracts (HashMap assoc list, str eq) still need gate-7 difftests.
+- tested only (model proofs + difftests): uri.rs, diagnostic.rs, config.rs, fuzzy.rs; editor_config Ini::from_str, find;
+  diff.rs. snippets: see helper STATUS files (bugs B1-B6 in snippets_render).
+- Aeneas blockers on real code: str::pattern (crash), fmt (Formatter opaque, so no Display/Debug), fuzzy fn-pointer field,
+  config::user_lang_loader early return in closure loop, str::strip_suffix closure and Box AsRef (Ini::from_str, find),
+  diff FnMut closures, diagnostic serde derives.
 ### movement.rs, textobject.rs, match_brackets.rs, surround.rs, object.rs, search.rs (72 fns) — thread "Verify Helix movement and objects"
 Work: /mnt/project-files/helix-verify/motion/ (model crate, Lean project HelixMotion, difftest/run_difftest.sh, real-probe/).
 Under the admission standards (2026-10-24) NOTHING here counts as verified yet: all proofs below are about a model crate (label M = model proved in Lean + difftested 200k, no model-to-code proof). Every function is O for admission.
@@ -63,9 +70,20 @@ Text model: RopeSlice = list of `Ch` (code point + Unicode facts as data). Lines
 - M search: find_nth_char
 - M movement: move_horizontally, word_move + 12 wrappers, range_to_target, is_word/long_word/sub_word_boundary, reached_target, skip_while, backwards_skip_while, move_prev/next_paragraph, move_vertically, move_vertically_visual (soft_wrap=false, no inline annotations only; soft wrap open)
 - M textobject: find_word_boundary, textobject_word, textobject_paragraph, Display for TextObject
-- in progress (model): match_brackets plain-text fns, surround plain-text fns, textobject_pair_surround*; tree-sitter fns via an abstract tree model
+- M match_brackets: BRACKETS, PAIRS, get_pair, is_{open,close,valid}_{bracket,pair}, find_matching_bracket_plaintext
+- M surround (syntax=None paths): find_nth_open_pair, find_nth_close_pair, find_nth_pairs_pos, find_nth_closest_pairs_plain, find_nth_closest_pairs_pos, get_surround_pos, Display for Error
+- M textobject: textobject_pair_surround, _closest, _impl (syntax=None)
+- in progress (model): tree-sitter fns and Some(syntax) paths via an abstract tree model
 - Real-code probe (Aeneas fdebf20 on unmodified helix-core, deps ropey/unicode-segmentation/tree-house opaque): only find_nth_char, skip_while, as_char translate with no sorry anywhere. The rest hit Aeneas limits: non-ASCII char literals (most common), closures/arrow types, lifetime constraints, continue-to-outer-loop. A worker is extending Aeneas (char literals first).
+- Likely bug (not reported, needs a verified fix): find_nth_closest_pairs_plain shifts close positions by one when the range starts at 0 (`close_pos = pos.saturating_sub(1)`). On ")(" with cursor 0 it returns (1,1); so get_surround_pos(None) can return a duplicate position and surround delete/replace build overlapping changes. Proved on the model (closestPlain_oddity) and confirmed on upstream by difftest.
 - Odd behaviour seen (not reported): `miW`/`maW` with cursor on whitespace or \n right after a WORD selects that WORD (`miw` selects nothing); count=0 paragraph motions can move the wrong way (callers pass >=1); backwards_skip_while doc says "saturating" but returns None when all chars match.
+### history.rs, auto_pairs.rs, comment.rs, indent.rs, increment/*, text_annotations.rs, doc_formatter.rs — thread "Verify Helix editing helpers"
+Work: /mnt/project-files/helix-verify/helpers/ (indent_ts/ = tree-sitter part of indent.rs: model, difftest, Lean project IndentTS).
+Under the admission standards NOTHING here counts as verified yet (model proofs only, label M = model proved in Lean, no sorry, + difftest).
+- indent.rs (tree-sitter part) difftest vs real upstream: 106 files, 10 languages, 2120 positions incl. 45 injections, all agree.
+- M indent.rs text helpers (line/byte/char conversions, whitespace, tab width, indent_level_for_line), injection_base_level, get_scopes, parent walk, has_header, last_preceding_child, deepest_last, opaque_hit / is_opaque_interior / any_opaque_hit, candidate_body_for_new_line, extend_nodes, is_outdent_token_at upward walk, account_node capture scan. In progress: account_node, containment_accounting, query side (IndentQuery::new, are_satisfied, process_match, query_indents), treesitter_indent_for_pos.
+- BUG (confirmed on real upstream, not filed): injection_base_level panics (ropey slice.rs:515) when Enter is pressed inside an injection on the last line with no trailing newline, e.g. `<script>foo();</script>` at EOF in HTML. Fix `(bl + 1).min(total - 1)` proved on the model; patch helpers/indent_ts/patches/, issue draft helpers/indent_ts/issues/.
+- history.rs, increment/*, auto_pairs.rs, comment.rs, indent.rs (non-tree-sitter), text_annotations.rs, doc_formatter.rs: workers in progress; doc_formatter infinite-loop finding is listed under position.rs above.
 ### All other helix-core modules: O
 command_line.rs 40, movement.rs 29, indent.rs 27, graphemes.rs 26, text_annotations.rs 24,
 history.rs 22, auto_pairs.rs 18, snippets/* 52, match_brackets.rs 15, line_ending.rs 15, uri 9,
@@ -93,3 +111,12 @@ Decision (Yerin, 2026-10-24): verify the used parts of ropey, smartstring and sm
 - unicode-segmentation, unicode-width, regex, tree-house — selection.rs, graphemes, movement
 - unicode-general-category 1.1, str_indices, textwrap 0.16.2 — chars.rs, graphemes.rs, wrap.rs (text helpers thread)
 - log 0.4 — logging only
+- Parsers thread (functions used):
+  - helix_stdx (Helix's own crate, not third-party: Url is a String newtype; Url::scheme/from_file_path/to_file_path/clone,
+    path::normalize) — uri.rs. Extracts with Charon `--include helix_stdx::uri`; proved together with uri.rs.
+  - percent_encoding (percent_encode, percent_decode, NON_ALPHANUMERIC, AsciiSet::remove) — via helix_stdx::uri
+  - dunce::simplified — via helix_stdx::path::normalize
+  - globset: GlobBuilder::new/literal_separator/backslash_escape/empty_alternates/build, Glob::compile_matcher, GlobMatcher::is_match — editor_config.rs
+  - encoding_rs: UTF_8, UTF_16LE, UTF_16BE, WINDOWS_1252 statics (modelled by name only) — editor_config.rs
+  - nucleo (Matcher, Config, pattern matching) — fuzzy.rs; imara-diff (Diff, intern) — diff.rs
+  - toml + serde (Deserialize derives, from_str) — config.rs, diagnostic.rs, snippets; helix_loader (config paths) — config.rs

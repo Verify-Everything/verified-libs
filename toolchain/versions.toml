@@ -25,6 +25,11 @@ cache_dirs = ["/mnt/project-files/verification-notes/cache", "cache"]   # relati
 
 [framac]
 # From nixpkgs (opam.ocaml.org is blocked). alt-ergo is unfree in nixpkgs, so provers are z3 + cvc5.
+# Pinned nixpkgs (the rev the registry resolved to on 2026-10-24: Frama-C 33.0, CBMC 6.11.0). A
+# tarball URL with narHash, not github:, because api.github.com is blocked here; the GitHub archive
+# of the same rev is the fallback.
+nixpkgs = "https://releases.nixos.org/nixpkgs/nixpkgs-26.11pre1097770.5adc50831c25/nixexprs.tar.zst?narHash=sha256-hVMDyAXU0kxRuG3GygbZkzf5x%2BaBNEC0NYEJ6KwHtD4%3D"
+nixpkgs_fallback = "https://github.com/NixOS/nixpkgs/archive/5adc50831c259f87faeb09ddf930d43597197473.tar.gz"
 nix_packages = ["frama-c", "why3", "z3", "cvc5", "cbmc"]   # cbmc: bounded evidence (label "bounded", candidates only)
 provers = ["z3", "cvc5"]
 wp_timeout = 20
@@ -32,4 +37,5 @@ wp_timeout = 20
 [container]
 # Admission gate 9: CI re-checks every entry from clean inside a container pinned by digest.
 # Set digest to the image's sha256 once the toolkit publishes one; CI exports VPIPE_CONTAINER_DIGEST.
-digest = ""
+image = "ghcr.io/verify-everything/verified-libs-toolchain"
+digest = ""                  # "sha256:<64 hex>", exactly as CI exports VPIPE_CONTAINER_DIGEST

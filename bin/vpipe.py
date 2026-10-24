@@ -178,8 +178,8 @@ def _setup(which):
                 ",".join(v["rust"]["components"])], capture=True)
         info.update(json.loads(r.stdout.strip().splitlines()[-1]))
     if which in ("framac", "all"):
-        r = sh(["bash", ROOT / "toolchain/setup-framac.sh", " ".join(v["framac"]["nix_packages"])],
-               capture=True)
+        r = sh(["bash", ROOT / "toolchain/setup-framac.sh", " ".join(v["framac"]["nix_packages"]),
+                v["framac"].get("nixpkgs", "nixpkgs"), v["framac"].get("nixpkgs_fallback", "")], capture=True)
         info.update(json.loads(r.stdout.strip().splitlines()[-1]))
     (VH / "installed.json").write_text(json.dumps(info, indent=2))
     return info
@@ -798,11 +798,13 @@ def scan_rust_functions(crate: Path):
             if "/*" in line and "*/" not in line.split("/*", 1)[1]:
                 line, in_block_comment = line.split("/*", 1)[0], True
             code = _strip_rust(line)
-            if re.search(r"#\[cfg\(test\)\]", code):
-                pending_test = True
+            if re.search(r"#\[(?:cfg\(test\)|test|bench)\]", code):
+                pending_test = True  # a test module, or a single #[test]/#[bench] fn (crc32fast golden)
             if test_until is None:
                 mt = RUST_FN_RE.match(code)
-                if mt:
+                if mt and pending_test:
+                    pass  # the test fn itself; its body is skipped through test_until below
+                elif mt:
                     owner = next((c[1] for c in reversed(ctx) if c[1]), "")
                     name = f"{owner}::{mt.group(1)}" if owner else mt.group(1)
                     out.append({"id": f"{f.relative_to(crate)}:{name}", "file": str(f.relative_to(crate)),
@@ -901,7 +903,7 @@ def _unique_ids(fns):
     return fns
 
 
-def function_inventory(m, tree, proj, res):
+def function_inventory(m, tree, proj, res, patched=None):
     lib = m["name"]
     overrides = {}
     of = proj / "functions.toml"
@@ -915,6 +917,14 @@ def function_inventory(m, tree, proj, res):
         if not (crate / "src").exists():  # extract crate_dir is a model crate added by a patch
             crate = tree
         fns = _unique_ids(scan_rust_functions(crate))
+        if patched and Path(patched) != Path(tree):
+            # Patches may add helpers (crc32fast: load128, split_quads). Every function in the pinned
+            # source counts, and so does every function a patch adds.
+            pc = Path(patched) / (m.get("functions", {}).get("crate_dir") or m.get("extract", {}).get("crate_dir", "."))
+            if not (pc / "src").exists():
+                pc = Path(patched)
+            have = {f["id"] for f in fns}
+            fns += [dict(f, added_by_patch=True) for f in _unique_ids(scan_rust_functions(pc)) if f["id"] not in have]
         defs = aeneas_defs(proj / extracted_rel(m))
         thm_status = {t["name"]: t["status"] for t in res.get("prove", {}).get("theorems", [])}
         stmts = theorem_statements(proj, m) if thm_status else {}
@@ -1152,7 +1162,7 @@ def run_variants(m, src, proj, extract_only, clean=False):
             continue
         ex = extract_rust(mv, tree, local)
         pr = prove_lean(mv, local) if ex["ok"] and not extract_only else None
-        per[v["name"]] = {"extract": ex, "prove": pr, "local": str(local)}
+        per[v["name"]] = {"extract": ex, "prove": pr, "local": str(local), "tree": str(tree)}
         # Keep generated code and first-time External models visible in the variant folder.
         for rel in (extracted_rel(mv), externals_rel(mv)):
             if (local / rel).exists():
@@ -1260,7 +1270,7 @@ def run(lib, use_agent=False, rounds=3, budget=60, extract_only=False, clean=Fal
         if pr:
             res["prove"] = pr
         invs = {n: function_inventory(variant_manifest(m, next(v for v in variants(m) if v["name"] == n)),
-                                      pristine, Path(r["local"]), {"prove": r.get("prove") or {}})
+                                      pristine, Path(r["local"]), {"prove": r.get("prove") or {}}, r.get("tree"))
                 for n, r in per.items() if r.get("local") and r["extract"].get("ok")}
         if invs:
             res["functions"] = merge_inventories(invs)
@@ -1290,7 +1300,8 @@ def run(lib, use_agent=False, rounds=3, budget=60, extract_only=False, clean=Fal
         log(f"round {i + 1}: {p['proved']}/{p['total']} proved; handing to agent")
         agent(m, proj, res, budget)
     if res.get("prove") or res.get("extract", {}).get("ok"):
-        res["functions"] = function_inventory(m, pristine, proj if tool != "lean-aeneas" else WORK / lib / "proj", res)
+        res["functions"] = function_inventory(m, pristine, proj if tool != "lean-aeneas" else WORK / lib / "proj", res,
+                                              src if tool == "lean-aeneas" else None)
     return finish(lib, m, res, proj, src, {"main": WORK / lib / "proj"} if tool == "lean-aeneas" else {})
 
 
@@ -1366,6 +1377,16 @@ def forbidden_scan(m, res, locals_):
                 line = (local / h["file"]).read_text(errors="replace").splitlines()[h["line"] - 1]
                 mm = re.search(r"axiom\s+([^\s:({\[]+)", line)
                 if mm and (mm.group(1) in listed or mm.group(1).split(".")[-1] in listed):
+                    continue
+            if h["construct"] == "opaque":
+                # An opaque value in the std/environment models (External/, Aeneas FunsExternal) stands
+                # for a fact outside the code's control (CPU features, fmt sink); allowed when listed in
+                # [trust].models. Opaque anywhere else (specs, proofs) stays forbidden.
+                rel = Path(h["file"])
+                in_models = rel.is_relative_to(externals_rel(m)) or rel.name in ("FunsExternal.lean", "TypesExternal.lean")
+                line = (local / h["file"]).read_text(errors="replace").splitlines()[h["line"] - 1]
+                mm = re.search(r"opaque\s+([^\s:({\[]+)", line)
+                if in_models and mm and (mm.group(1) in listed or mm.group(1).split(".")[-1] in listed):
                     continue
             if h["construct"] == "sorry" and Path(h["file"]).parts[:2] == tuple(Path(extracted_rel(m)).parts[:2]):
                 h["construct"] = "sorry (generated: item Aeneas could not translate)"

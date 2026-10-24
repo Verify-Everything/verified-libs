@@ -11,6 +11,9 @@
 3. Inside `def PercentDecode.decode_utf8_lossy`, the call to the free function
    `decode_utf8_lossy` resolves to the method itself (Lean name lookup in the
    `PercentDecode` namespace). Qualify it as `percent_encoding.decode_utf8_lossy`.
+
+Check (no edit): the std model of `core::mem::size_of` returns 4, which is only right
+for u32. Fail if the extracted code ever calls it at another type.
 """
 import re, sys, pathlib
 p = pathlib.Path(sys.argv[1]) / "Funs.lean"
@@ -23,5 +26,9 @@ s = pat.sub('\n', s)
 pat3 = re.compile(r'(def PercentDecode\.decode_utf8_lossy\b.*?\n  )decode_utf8_lossy ', re.S)
 n_q = len(pat3.findall(s))
 s = pat3.sub(r'\1percent_encoding.decode_utf8_lossy ', s)
+calls = re.findall(r'core\.mem\.size_of\s+(\S+)', s)
+bad = [c for c in calls if c != "Std.U32"]
+if bad:
+    sys.exit(f"postprocess: core.mem.size_of called at {bad}; the model only covers Std.U32")
 p.write_text(s)
 print(f"postprocess: replaced {n_rem} U32.rem, removed {n_sh} size_hint fields, qualified {n_q} decode_utf8_lossy call")

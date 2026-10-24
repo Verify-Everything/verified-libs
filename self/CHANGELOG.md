@@ -99,3 +99,31 @@ Snapshots for rollback are in self/snapshots/.
 - check: command lines built for each CLI, bad names refused; quick gate passed. codex and gemini
   are not installed in this container, so neither ran end to end here (the toolkit thread tested
   the CLIs themselves).
+
+## 2026-10-24T07:40Z v0.2.3 function scanner fixes (crc32fast thread)
+- what: the Rust scanner skips #[test], #[bench] and #[cfg(test)] functions at any level (it only
+  skipped cfg(test) modules). The inventory now counts every function of the pinned upstream source
+  plus every function that [patches] (or a variant's patches) add, marked added_by_patch.
+- why: src/combine.rs:golden (a top-level #[test] fn) showed as an open library function; crc32fast
+  patches add helpers (load128/256/512, split_quads) that must be verified too.
+- check: scanner fixture (test, bench, cfg(test) fns and modules skipped; library fns kept);
+  crc32fast now has 42 functions (golden gone); quick gate passed.
+
+## 2026-10-24T07:52Z v0.2.4 listed opaque models allowed (crc32fast thread)
+- what: the forbidden scan allows an `opaque` in the std/environment model files (External/ or
+  *FunsExternal.lean / *TypesExternal.lean) when its name is in [trust].models, like listed axioms.
+  An unlisted opaque, or an opaque anywhere else (specs, proofs), still fails gate 7.
+- why: crc32fast models CPU feature flags, align_to splits and the fmt sink as opaque values and
+  proves every theorem for all values; the standard allows listed models and forbids opaque in specs.
+- check: fixture: listed opaque in External/ passes, unlisted one and one in a spec file are flagged;
+  quick gate passed.
+
+## 2026-10-24T07:58Z v0.2.5 pinned nixpkgs, container image name (toolkit thread)
+- what: [framac].nixpkgs pins the nixpkgs revision (5adc5083, tarball URL with narHash; GitHub archive
+  fallback, since github: flakes need the blocked api.github.com). setup-framac.sh builds from it with
+  --out-link $VPIPE_HOME/nix/<pkg> (GC roots, so `nix store gc` keeps the tools) and records cbmc and
+  nixpkgs in installed.json. [container].image added.
+- why: nixpkgs floated, so native installs could differ from the container (CBMC 6.11 via nix vs
+  6.4.1 via .deb).
+- check: `vpipe setup framac` gives the same store paths as before (Frama-C 33.0, CBMC 6.11.0,
+  Z3 5.1.0, CVC5 1.4.0, Why3 1.8.2); quick gate passed.

@@ -740,16 +740,27 @@ def kernel_replay(proj, m):
     # crc32fast x86_64 variants (exit 137, empty log); each alone passes.
     t0 = dt.datetime.now()
     env = {"LEAN_PATH": lean_search_path(proj), "PATH": f"{tc}:" + os.environ.get("PATH", "")}
-    failed, logs = [], []
+    failed, logs, mem = [], [], {}
+    full_env = dict(os.environ, **env)
     for mod in mods:
-        r = sh([str(exe), mod], cwd=proj, check=False, capture=True, timeout=6 * 3600, env=env)
-        out = (r.stdout or "") + (r.stderr or "")
-        if r.returncode != 0 or "found a problem" in out:
-            why = ("killed (out of memory)" if r.returncode in (137, -9) else f"exit {r.returncode}")
+        log("$", exe.name, mod)
+        # Popen + wait4 to get each module's peak memory (CI runners have 16 GB; toolkit thread).
+        logf = WORK / "leanchecker.out"
+        with open(logf, "wb") as fh:
+            pr = subprocess.Popen([str(exe), mod], cwd=proj, env=full_env, stdin=subprocess.DEVNULL, stdout=fh,
+                                  stderr=subprocess.STDOUT)
+            _, status, ru = os.wait4(pr.pid, 0)
+            pr.returncode = rc = os.waitstatus_to_exitcode(status)
+        mem[mod] = round(ru.ru_maxrss / 1048576, 2)  # GB (ru_maxrss is KB on Linux)
+        out_b = logf.read_bytes()
+        out = out_b.decode(errors="replace")
+        if rc != 0 or "found a problem" in out:
+            why = ("killed (out of memory)" if rc in (137, -9) else f"exit {rc}")
             failed.append({"module": mod, "why": why})
             logs.append(f"{mod}: {why}\n{out[-1500:]}")
+    top = sorted(mem.items(), key=lambda kv: -kv[1])[:5]
     return {"ok": not failed, "tool": "leanchecker", "modules": len(mods), "failed": failed,
-            "seconds": (dt.datetime.now() - t0).seconds, "log": "\n".join(logs)[-3000:]}
+            "peak_gb": top, "seconds": (dt.datetime.now() - t0).seconds, "log": "\n".join(logs)[-3000:]}
 
 
 # ---------------------------------------------------------------- frama-c

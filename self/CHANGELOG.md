@@ -184,3 +184,9 @@ Snapshots for rollback are in self/snapshots/.
   passed; failed modules are listed per variant, a missing replay as "replay not run".
 - why: gate 7 read the top-level replay, which variant runs never filled ("replay not run").
 - check: merge cases (all ok; one variant out of memory; one variant without replay); quick gate passed.
+
+## 2026-10-24T09:20Z v0.2.11 peak memory per replayed module
+- what: kernel_replay records each module's peak memory (os.wait4) and lists the top five as
+  prove.replay.peak_gb, so the module that needs the most memory can be split.
+- why: toolkit thread measured a 12.7 GB peak for crc32fast on a 16 GB CI runner, which leaves little margin.
+- check: crc32fast single-target build: 14/14 pass, top module Crc32fast.Table 2.85 GB; quick gate passed.

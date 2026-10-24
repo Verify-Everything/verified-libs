@@ -33,10 +33,11 @@ body:
     attributes:
       label: Target strength level
       options:
-        - functional
-        - contracts
-        - safety
-        - bounded
+        - full-correctness (required for admission)
+        - safety-contracts (candidate only)
+        - no-ub (candidate only)
+        - bounded (candidate only)
+        - tested (candidate only)
     validations:
       required: true
   - type: textarea
@@ -44,6 +45,13 @@ body:
     attributes:
       label: Success criteria
       description: Which properties, at which level, for which parts of the library. What will count as done?
+    validations:
+      required: true
+  - type: textarea
+    id: prior
+    attributes:
+      label: Prior verification search
+      description: Where you looked for existing verification of this library, and what you found.
     validations:
       required: true
   - type: textarea

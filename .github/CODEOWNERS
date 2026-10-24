@@ -1,0 +1,5 @@
+# The acceptance gate and its fixtures judge every engine change, so maintainers review them.
+/self/gate.py      @blooddimmedtide
+/selftest/         @blooddimmedtide
+/toolchain/        @blooddimmedtide
+/.github/          @blooddimmedtide

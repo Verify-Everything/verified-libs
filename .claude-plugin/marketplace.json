@@ -1,0 +1,11 @@
+{
+  "name": "verify-everything",
+  "owner": { "name": "Verify-Everything" },
+  "plugins": [
+    {
+      "name": "verify-everything",
+      "source": "./",
+      "description": "Formal verification workflow skills for the verified-libs toolkit."
+    }
+  ]
+}

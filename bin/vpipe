@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+exec python3 /mnt/project-files/pipeline/bin/vpipe.py "$@"

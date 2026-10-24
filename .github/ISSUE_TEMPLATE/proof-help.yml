@@ -1,0 +1,15 @@
+name: Proof help
+description: Stuck on a goal, a spec question, or an Aeneas/Frama-C limitation.
+title: "help(<lib>): <goal or question>"
+labels: ["help"]
+body:
+  - type: input
+    id: lib
+    attributes: { label: Library and branch/PR }
+  - type: textarea
+    id: goal
+    attributes: { label: The goal or error, render: text }
+    validations: { required: true }
+  - type: textarea
+    id: tried
+    attributes: { label: What you tried }

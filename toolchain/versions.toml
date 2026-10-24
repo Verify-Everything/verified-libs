@@ -1,0 +1,30 @@
+# Pinned tool versions. One place to change; every run records what it used.
+# `vpipe upgrade-tools` proposes bumps here and keeps them only if `vpipe selftest` passes.
+
+[aeneas]
+# Release tarball bundles aeneas, charon, charon-driver and the Lean library sources.
+tag = "nightly-2026.10.23-fdebf20"
+commit = "fdebf20d78e8007bb92fc17068f17fc2e6cfbbbf"
+url = "https://github.com/AeneasVerif/aeneas/releases/download/{tag}/aeneas-linux-x86_64.tar.gz"
+
+[lean]
+# Must equal backends/lean/lean-toolchain inside the Aeneas release (setup checks this).
+version = "4.35.0"
+# release.lean-lang.org is blocked here, so fetch from GitHub and link into elan.
+url = "https://github.com/leanprover/lean4/releases/download/v{version}/lean-{version}-linux.tar.zst"
+elan_init = "https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh"
+
+[rust]
+# Must equal the channel in the Aeneas release's rust-toolchain file (setup reads it from there).
+components = ["rustc-dev", "llvm-tools", "rust-src", "miri"]
+
+[mathlib]
+# The mathlib cache server is blocked in this environment, so mathlib builds from source (slow).
+# Setup restores a prebuilt .lake/packages tarball from these folders when one matches.
+cache_dirs = ["/mnt/project-files/verification-notes/cache", "cache"]   # relative = inside the pipeline folder
+
+[framac]
+# From nixpkgs (opam.ocaml.org is blocked). alt-ergo is unfree in nixpkgs, so provers are z3 + cvc5.
+nix_packages = ["frama-c", "why3", "z3", "cvc5"]
+provers = ["z3", "cvc5"]
+wp_timeout = 20

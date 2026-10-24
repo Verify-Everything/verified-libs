@@ -1,0 +1,19 @@
+# Library manifest. `vpipe run {name}` reads this. Created {date}.
+name = "{name}"
+lang = "{lang}"
+tool = "{tool}"
+upstream = "{upstream}"
+commit = "{commit}"
+version = "{version}"
+thread = ""
+
+[framac]
+# Files to analyse, relative to the repo. Annotated copies in libraries/{name}/src/ override them.
+files = []
+cpp_args = []                # e.g. ["-cpp-extra-args=-DINI_USE_STACK=1"]
+functions = []               # empty = every function in the files
+wp_args = ["-wp-rte"]        # -wp-rte adds runtime-error goals (overflow, bounds, null)
+
+[scope]
+properties = []
+exclusions = []

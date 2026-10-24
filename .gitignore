@@ -1,0 +1,10 @@
+.lake/
+target/
+__pycache__/
+*.part
+pipeline/cache/*
+!pipeline/cache/.keep
+pipeline/self/snapshots/*
+!pipeline/self/snapshots/.keep
+pipeline/self/.*.lock
+*.tar.zst

@@ -1,0 +1,664 @@
+diff -Nur a/model/Cargo.toml b/model/Cargo.toml
+--- a/model/Cargo.toml	1970-01-01 00:00:00.000000000 +0000
++++ b/model/Cargo.toml	2026-10-24 05:46:17.855423480 +0000
+@@ -0,0 +1,17 @@
++[package]
++name = "semver_model"
++version = "0.1.0"
++edition = "2021"
++
++[lib]
++path = "src/lib.rs"
++
++[features]
++debug = []
++
++[[test]]
++name = "differential"
++required-features = ["debug"]
++
++[dev-dependencies]
++semver = { path = ".." }
+diff -Nur a/model/src/lib.rs b/model/src/lib.rs
+--- a/model/src/lib.rs	1970-01-01 00:00:00.000000000 +0000
++++ b/model/src/lib.rs	2026-10-24 05:46:17.852846969 +0000
+@@ -0,0 +1,491 @@
++//! A safe, Aeneas-friendly model of the `semver` crate (dtolnay/semver 1.0.28).
++//!
++//! Each function mirrors one upstream function, with these changes:
++//! - `Identifier` (unsafe pointer packing) is replaced by a plain `Vec<u8>`.
++//! - `&str` inputs are `&[u8]`, and sub-slices are passed as index ranges.
++//! - `str::split('.')` is replaced by explicit index loops.
++//! - Display writes bytes into a `Vec<u8>` instead of a `fmt::Formatter`
++//!   (width/fill padding is not modelled).
++//! - Error kinds keep the position but drop the offending `char`.
++//!
++//! `tests/differential.rs` checks the model against upstream semver.
++
++use std::cmp::Ordering;
++use std::vec::Vec;
++
++#[derive(Clone, Copy, PartialEq, Eq)]
++#[cfg_attr(feature = "debug", derive(Debug))]
++pub enum Position {
++    Major,
++    Minor,
++    Patch,
++    Pre,
++    Build,
++}
++
++#[derive(Clone, Copy, PartialEq, Eq)]
++#[cfg_attr(feature = "debug", derive(Debug))]
++pub enum ErrorKind {
++    Empty,
++    UnexpectedEnd(Position),
++    LeadingZero(Position),
++    Overflow(Position),
++    EmptySegment(Position),
++    UnexpectedChar(Position),
++    UnexpectedCharAfter(Position),
++}
++
++#[derive(Clone, PartialEq, Eq)]
++#[cfg_attr(feature = "debug", derive(Debug))]
++pub struct Prerelease {
++    pub ident: Vec<u8>,
++}
++
++#[derive(Clone, PartialEq, Eq)]
++#[cfg_attr(feature = "debug", derive(Debug))]
++pub struct BuildMetadata {
++    pub ident: Vec<u8>,
++}
++
++#[derive(Clone, PartialEq, Eq)]
++#[cfg_attr(feature = "debug", derive(Debug))]
++pub struct Version {
++    pub major: u64,
++    pub minor: u64,
++    pub patch: u64,
++    pub pre: Prerelease,
++    pub build: BuildMetadata,
++}
++
++// ---------------------------------------------------------------------------
++// Byte helpers
++// ---------------------------------------------------------------------------
++
++pub fn is_digit(b: u8) -> bool {
++    b >= b'0' && b <= b'9'
++}
++
++/// Index of the first `.` at or after `start`, or `s.len()`.
++pub fn segment_end(s: &[u8], start: usize) -> usize {
++    let mut i = start;
++    while i < s.len() {
++        if s[i] == b'.' {
++            return i;
++        }
++        i += 1;
++    }
++    s.len()
++}
++
++/// `s[a..a_end].bytes().all(is_ascii_digit)`
++pub fn all_digits(s: &[u8], a: usize, a_end: usize) -> bool {
++    let mut i = a;
++    while i < a_end {
++        if !is_digit(s[i]) {
++            return false;
++        }
++        i += 1;
++    }
++    true
++}
++
++/// Lexicographic `Ord::cmp(&s[a..a_end], &t[b..b_end])`.
++pub fn cmp_bytes(s: &[u8], a: usize, a_end: usize, t: &[u8], b: usize, b_end: usize) -> Ordering {
++    let mut i = a;
++    let mut j = b;
++    while i < a_end && j < b_end {
++        let x = s[i];
++        let y = t[j];
++        if x < y {
++            return Ordering::Less;
++        }
++        if x > y {
++            return Ordering::Greater;
++        }
++        i += 1;
++        j += 1;
++    }
++    if i < a_end {
++        Ordering::Greater
++    } else if j < b_end {
++        Ordering::Less
++    } else {
++        Ordering::Equal
++    }
++}
++
++pub fn cmp_usize(a: usize, b: usize) -> Ordering {
++    if a < b {
++        Ordering::Less
++    } else if a > b {
++        Ordering::Greater
++    } else {
++        Ordering::Equal
++    }
++}
++
++pub fn cmp_u64(a: u64, b: u64) -> Ordering {
++    if a < b {
++        Ordering::Less
++    } else if a > b {
++        Ordering::Greater
++    } else {
++        Ordering::Equal
++    }
++}
++
++/// First index in `a..a_end` whose byte is not `'0'` (`trim_start_matches('0')`).
++pub fn skip_zeros(s: &[u8], a: usize, a_end: usize) -> usize {
++    let mut i = a;
++    while i < a_end {
++        if s[i] != b'0' {
++            return i;
++        }
++        i += 1;
++    }
++    a_end
++}
++
++// ---------------------------------------------------------------------------
++// Ordering (impls.rs)
++// ---------------------------------------------------------------------------
++
++/// One prerelease segment comparison. `None` means "keep going" (equal);
++/// `Some(o)` means the loop returns `o`.
++pub fn pre_segment_cmp(l: &[u8], i: usize, le: usize, r: &[u8], j: usize, re: usize) -> Ordering {
++    match (all_digits(l, i, le), all_digits(r, j, re)) {
++        (true, true) => match cmp_usize(le - i, re - j) {
++            Ordering::Equal => cmp_bytes(l, i, le, r, j, re),
++            o => o,
++        },
++        (true, false) => Ordering::Less,
++        (false, true) => Ordering::Greater,
++        (false, false) => cmp_bytes(l, i, le, r, j, re),
++    }
++}
++
++pub fn build_segment_cmp(l: &[u8], i: usize, le: usize, r: &[u8], j: usize, re: usize) -> Ordering {
++    match (all_digits(l, i, le), all_digits(r, j, re)) {
++        (true, true) => {
++            let li = skip_zeros(l, i, le);
++            let rj = skip_zeros(r, j, re);
++            match cmp_usize(le - li, re - rj) {
++                Ordering::Equal => match cmp_bytes(l, li, le, r, rj, re) {
++                    Ordering::Equal => cmp_usize(le - i, re - j),
++                    o => o,
++                },
++                o => o,
++            }
++        }
++        (true, false) => Ordering::Less,
++        (false, true) => Ordering::Greater,
++        (false, false) => cmp_bytes(l, i, le, r, j, re),
++    }
++}
++
++/// Walk the `.`-separated segments of `l` and `r` together.
++/// `build` selects the BuildMetadata segment rule instead of the Prerelease one.
++pub fn cmp_segments(l: &[u8], r: &[u8], build: bool) -> Ordering {
++    let mut i = 0;
++    let mut j = 0;
++    let mut r_done = false;
++    loop {
++        let le = segment_end(l, i);
++        if r_done {
++            return Ordering::Greater;
++        }
++        let re = segment_end(r, j);
++        let o = if build {
++            build_segment_cmp(l, i, le, r, j, re)
++        } else {
++            pre_segment_cmp(l, i, le, r, j, re)
++        };
++        match o {
++            Ordering::Equal => {}
++            _ => return o,
++        }
++        if re == r.len() {
++            r_done = true;
++        } else {
++            j = re + 1;
++        }
++        if le == l.len() {
++            break;
++        }
++        i = le + 1;
++    }
++    if r_done {
++        Ordering::Equal
++    } else {
++        Ordering::Less
++    }
++}
++
++/// `impl Ord for Prerelease`.
++/// Upstream first returns `Equal` when both identifiers share a representation
++/// (`ptr_eq`). That fast path only fires on equal strings; for two empty
++/// strings it changes the answer, so it is modelled here. For non-empty equal
++/// strings the general path also returns `Equal` (proved in Lean).
++pub fn prerelease_cmp(lhs: &Prerelease, rhs: &Prerelease) -> Ordering {
++    let l: &[u8] = &lhs.ident;
++    let r: &[u8] = &rhs.ident;
++    if l.len() == 0 && r.len() == 0 {
++        return Ordering::Equal;
++    }
++    if l.len() == 0 {
++        return Ordering::Greater;
++    }
++    if r.len() == 0 {
++        return Ordering::Less;
++    }
++    cmp_segments(l, r, false)
++}
++
++/// `impl Ord for BuildMetadata`.
++pub fn build_cmp(lhs: &BuildMetadata, rhs: &BuildMetadata) -> Ordering {
++    let l: &[u8] = &lhs.ident;
++    let r: &[u8] = &rhs.ident;
++    if l.len() == 0 && r.len() == 0 {
++        return Ordering::Equal;
++    }
++    cmp_segments(l, r, true)
++}
++
++/// `#[derive(Ord)] for Version`: fields in declaration order.
++pub fn version_cmp(a: &Version, b: &Version) -> Ordering {
++    match cmp_u64(a.major, b.major) {
++        Ordering::Equal => {}
++        o => return o,
++    }
++    match cmp_u64(a.minor, b.minor) {
++        Ordering::Equal => {}
++        o => return o,
++    }
++    match cmp_u64(a.patch, b.patch) {
++        Ordering::Equal => {}
++        o => return o,
++    }
++    match prerelease_cmp(&a.pre, &b.pre) {
++        Ordering::Equal => {}
++        o => return o,
++    }
++    build_cmp(&a.build, &b.build)
++}
++
++// ---------------------------------------------------------------------------
++// Parsing (parse.rs)
++// ---------------------------------------------------------------------------
++
++/// Returns `(value, end)` where `end` is the index after the digits.
++pub fn numeric_identifier(input: &[u8], start: usize, pos: Position) -> Result<(u64, usize), ErrorKind> {
++    let mut len: usize = 0;
++    let mut value: u64 = 0;
++    while start + len < input.len() {
++        let digit = input[start + len];
++        if digit < b'0' || digit > b'9' {
++            break;
++        }
++        if value == 0 && len > 0 {
++            return Err(ErrorKind::LeadingZero(pos));
++        }
++        match value.checked_mul(10) {
++            Some(v10) => match v10.checked_add((digit - b'0') as u64) {
++                Some(sum) => value = sum,
++                None => return Err(ErrorKind::Overflow(pos)),
++            },
++            None => return Err(ErrorKind::Overflow(pos)),
++        }
++        len += 1;
++    }
++    if len > 0 {
++        Ok((value, start + len))
++    } else if start < input.len() {
++        Err(ErrorKind::UnexpectedChar(pos))
++    } else {
++        Err(ErrorKind::UnexpectedEnd(pos))
++    }
++}
++
++pub fn dot(input: &[u8], start: usize, pos: Position) -> Result<usize, ErrorKind> {
++    if start < input.len() && input[start] == b'.' {
++        Ok(start + 1)
++    } else if start < input.len() {
++        Err(ErrorKind::UnexpectedCharAfter(pos))
++    } else {
++        Err(ErrorKind::UnexpectedEnd(pos))
++    }
++}
++
++pub fn is_ident_char_nondigit(b: u8) -> bool {
++    (b >= b'A' && b <= b'Z') || (b >= b'a' && b <= b'z') || b == b'-'
++}
++
++/// Upstream `identifier`. Returns the end index of the identifier
++/// (the identifier is `input[start..end]`).
++/// The byte past the end of input is read as 0, which (like the real end)
++/// is neither an identifier character nor `.`.
++pub fn identifier(input: &[u8], start: usize, is_pre: bool) -> Result<usize, ErrorKind> {
++    let pos = if is_pre { Position::Pre } else { Position::Build };
++    let mut accumulated_len: usize = 0;
++    let mut segment_len: usize = 0;
++    let mut segment_has_nondigit = false;
++    loop {
++        let k = start + accumulated_len + segment_len;
++        let c: u8 = if k < input.len() { input[k] } else { 0 };
++        if is_ident_char_nondigit(c) {
++            segment_len += 1;
++            segment_has_nondigit = true;
++        } else if is_digit(c) {
++            segment_len += 1;
++        } else {
++            let is_dot = c == b'.';
++            if segment_len == 0 {
++                if accumulated_len == 0 && !is_dot {
++                    return Ok(start);
++                } else {
++                    return Err(ErrorKind::EmptySegment(pos));
++                }
++            }
++            if is_pre && segment_len > 1 && !segment_has_nondigit {
++                if input[start + accumulated_len] == b'0' {
++                    return Err(ErrorKind::LeadingZero(pos));
++                }
++            }
++            accumulated_len += segment_len;
++            if is_dot {
++                accumulated_len += 1;
++                segment_len = 0;
++                segment_has_nondigit = false;
++            } else {
++                return Ok(start + accumulated_len);
++            }
++        }
++    }
++}
++
++pub fn push_all(out: &mut Vec<u8>, s: &[u8], start: usize, end: usize) {
++    let mut i = start;
++    while i < end {
++        out.push(s[i]);
++        i += 1;
++    }
++}
++
++pub fn copy_range(input: &[u8], start: usize, end: usize) -> Vec<u8> {
++    let mut out: Vec<u8> = Vec::new();
++    push_all(&mut out, input, start, end);
++    out
++}
++
++/// `impl FromStr for Version`.
++pub fn parse_version(text: &[u8]) -> Result<Version, ErrorKind> {
++    if text.len() == 0 {
++        return Err(ErrorKind::Empty);
++    }
++    let (major, k) = numeric_identifier(text, 0, Position::Major)?;
++    let k = dot(text, k, Position::Major)?;
++    let (minor, k) = numeric_identifier(text, k, Position::Minor)?;
++    let k = dot(text, k, Position::Minor)?;
++    let (patch, k) = numeric_identifier(text, k, Position::Patch)?;
++    let mut pos = Position::Patch;
++
++    if k == text.len() {
++        return Ok(Version {
++            major,
++            minor,
++            patch,
++            pre: Prerelease { ident: Vec::new() },
++            build: BuildMetadata { ident: Vec::new() },
++        });
++    }
++
++    let mut k = k;
++    let pre = if text[k] == b'-' {
++        pos = Position::Pre;
++        let e = identifier(text, k + 1, true)?;
++        if e == k + 1 {
++            return Err(ErrorKind::EmptySegment(pos));
++        }
++        let p = copy_range(text, k + 1, e);
++        k = e;
++        p
++    } else {
++        Vec::new()
++    };
++
++    let build = if k < text.len() && text[k] == b'+' {
++        pos = Position::Build;
++        let e = identifier(text, k + 1, false)?;
++        if e == k + 1 {
++            return Err(ErrorKind::EmptySegment(pos));
++        }
++        let b = copy_range(text, k + 1, e);
++        k = e;
++        b
++    } else {
++        Vec::new()
++    };
++
++    if k < text.len() {
++        return Err(ErrorKind::UnexpectedCharAfter(pos));
++    }
++
++    Ok(Version {
++        major,
++        minor,
++        patch,
++        pre: Prerelease { ident: pre },
++        build: BuildMetadata { ident: build },
++    })
++}
++
++/// `Prerelease::new` / `impl FromStr for Prerelease`.
++pub fn parse_prerelease(text: &[u8]) -> Result<Prerelease, ErrorKind> {
++    let e = identifier(text, 0, true)?;
++    if e == text.len() {
++        Ok(Prerelease { ident: copy_range(text, 0, e) })
++    } else {
++        Err(ErrorKind::UnexpectedCharAfter(Position::Pre))
++    }
++}
++
++/// `BuildMetadata::new` / `impl FromStr for BuildMetadata`.
++pub fn parse_build(text: &[u8]) -> Result<BuildMetadata, ErrorKind> {
++    let e = identifier(text, 0, false)?;
++    if e == text.len() {
++        Ok(BuildMetadata { ident: copy_range(text, 0, e) })
++    } else {
++        Err(ErrorKind::UnexpectedCharAfter(Position::Build))
++    }
++}
++
++// ---------------------------------------------------------------------------
++// Display (display.rs)
++// ---------------------------------------------------------------------------
++
++/// Append the decimal digits of `n` (what `write!(f, "{}", n)` produces).
++pub fn push_u64(out: &mut Vec<u8>, n: u64) {
++    if n >= 10 {
++        push_u64(out, n / 10);
++    }
++    out.push(b'0' + (n % 10) as u8);
++}
++
++/// `impl Display for Version` (without width/fill padding).
++pub fn version_to_bytes(v: &Version) -> Vec<u8> {
++    let mut out: Vec<u8> = Vec::new();
++    push_u64(&mut out, v.major);
++    out.push(b'.');
++    push_u64(&mut out, v.minor);
++    out.push(b'.');
++    push_u64(&mut out, v.patch);
++    if v.pre.ident.len() != 0 {
++        out.push(b'-');
++        push_all(&mut out, &v.pre.ident, 0, v.pre.ident.len());
++    }
++    if v.build.ident.len() != 0 {
++        out.push(b'+');
++        push_all(&mut out, &v.build.ident, 0, v.build.ident.len());
++    }
++    out
++}
+diff -Nur a/model/tests/differential.rs b/model/tests/differential.rs
+--- a/model/tests/differential.rs	1970-01-01 00:00:00.000000000 +0000
++++ b/model/tests/differential.rs	2026-10-24 05:46:17.852990314 +0000
+@@ -0,0 +1,144 @@
++//! Differential test: the model must agree with upstream semver.
++use semver_model as m;
++use std::cmp::Ordering;
++
++struct Rng(u64);
++impl Rng {
++    fn next(&mut self) -> u64 {
++        self.0 ^= self.0 << 13;
++        self.0 ^= self.0 >> 7;
++        self.0 ^= self.0 << 17;
++        self.0
++    }
++    fn below(&mut self, n: u64) -> u64 {
++        self.next() % n
++    }
++}
++
++const ALPHA: &[u8] = b"0123456789.-+azAZx*";
++
++fn random_text(r: &mut Rng) -> Vec<u8> {
++    let n = r.below(24);
++    (0..n).map(|_| ALPHA[r.below(ALPHA.len() as u64) as usize]).collect()
++}
++
++fn random_ident(r: &mut Rng, segs: u64) -> String {
++    let parts: Vec<String> = (0..segs)
++        .map(|_| {
++            let len = 1 + r.below(4);
++            (0..len)
++                .map(|_| match r.below(5) {
++                    0 => '0',
++                    1 => (b'1' + r.below(9) as u8) as char,
++                    2 => ['a', 'b', 'Z', '-'][r.below(4) as usize],
++                    _ => (b'0' + r.below(10) as u8) as char,
++                })
++                .collect()
++        })
++        .collect();
++    parts.join(".")
++}
++
++fn num(r: &mut Rng) -> u64 {
++    match r.below(6) {
++        0 => u64::MAX - r.below(3),
++        1 => r.next(),
++        _ => r.below(12),
++    }
++}
++
++/// Mostly well-formed versions, so the Ok paths and cmp get exercised.
++fn structured_text(r: &mut Rng) -> Vec<u8> {
++    let mut s = format!("{}.{}.{}", num(r), num(r), num(r));
++    if r.below(2) == 0 {
++        let k = 1 + r.below(3);
++        s.push('-');
++        s.push_str(&random_ident(r, k));
++    }
++    if r.below(3) == 0 {
++        let k = 1 + r.below(3);
++        s.push('+');
++        s.push_str(&random_ident(r, k));
++    }
++    let mut b = s.into_bytes();
++    if r.below(5) == 0 && !b.is_empty() {
++        // Mutate one byte.
++        let i = r.below(b.len() as u64) as usize;
++        b[i] = ALPHA[r.below(ALPHA.len() as u64) as usize];
++    }
++    b
++}
++
++fn check_version(text: &[u8], ok: &mut Vec<(semver::Version, m::Version)>) {
++    let s = std::str::from_utf8(text).unwrap();
++    let up = semver::Version::parse(s);
++    let md = m::parse_version(text);
++    match (&up, &md) {
++        (Ok(u), Ok(v)) => {
++            assert_eq!(u.major, v.major, "{s}");
++            assert_eq!(u.minor, v.minor, "{s}");
++            assert_eq!(u.patch, v.patch, "{s}");
++            assert_eq!(u.pre.as_str().as_bytes(), &v.pre.ident[..], "{s}");
++            assert_eq!(u.build.as_str().as_bytes(), &v.build.ident[..], "{s}");
++            assert_eq!(u.to_string().as_bytes(), &m::version_to_bytes(v)[..], "{s}");
++            ok.push((u.clone(), v.clone()));
++        }
++        (Err(_), Err(_)) => {}
++        _ => panic!("disagree on {s:?}: upstream {up:?}, model {md:?}"),
++    }
++    // Prerelease / BuildMetadata parsers on the same text.
++    let up = semver::Prerelease::new(s);
++    let md = m::parse_prerelease(text);
++    assert_eq!(up.is_ok(), md.is_ok(), "pre {s:?}");
++    if let (Ok(u), Ok(v)) = (up, md) {
++        assert_eq!(u.as_str().as_bytes(), &v.ident[..]);
++    }
++    let up = semver::BuildMetadata::new(s);
++    let md = m::parse_build(text);
++    assert_eq!(up.is_ok(), md.is_ok(), "build {s:?}");
++    if let (Ok(u), Ok(v)) = (up, md) {
++        assert_eq!(u.as_str().as_bytes(), &v.ident[..]);
++    }
++}
++
++#[test]
++fn differential() {
++    let mut r = Rng(0x9E3779B97F4A7C15);
++    let mut ok = Vec::new();
++    for _ in 0..200_000 {
++        let t = random_text(&mut r);
++        check_version(&t, &mut ok);
++        let t = structured_text(&mut r);
++        check_version(&t, &mut ok);
++    }
++    for t in ["0.0.0", "1.2.3-alpha.1+build.5", "1.0.0-0", "1.0.0-00", "1.0.0+00", "01.0.0",
++              "1.0.0-", "1.0.0+", "1.0.0-a..b", "18446744073709551615.0.0", "18446744073709551616.0.0"] {
++        check_version(t.as_bytes(), &mut ok);
++    }
++    assert!(ok.len() > 10_000, "only {} valid versions", ok.len());
++    let mut n = 0;
++    for i in 0..ok.len() {
++        for d in [1usize, 2, 7, 31] {
++            let j = (i * 7 + d) % ok.len();
++            let (ua, ma) = &ok[i];
++            let (ub, mb) = &ok[j];
++            assert_eq!(ua.cmp(ub), m::version_cmp(ma, mb), "{ua} vs {ub}");
++            assert_eq!(ua.pre.cmp(&ub.pre), m::prerelease_cmp(&ma.pre, &mb.pre), "{ua} vs {ub}");
++            assert_eq!(ua.build.cmp(&ub.build), m::build_cmp(&ma.build, &mb.build), "{ua} vs {ub}");
++            n += 1;
++        }
++    }
++    // Pairs that differ only in pre/build, to hit the segment comparisons.
++    for i in 0..ok.len().min(20000) {
++        let (ua, ma) = &ok[i];
++        let (ub, mb) = &ok[(i * 13 + 5) % ok.len()];
++        let mut ub2 = ub.clone();
++        ub2.major = ua.major; ub2.minor = ua.minor; ub2.patch = ua.patch;
++        let mut mb2 = mb.clone();
++        mb2.major = ma.major; mb2.minor = ma.minor; mb2.patch = ma.patch;
++        assert_eq!(ua.cmp(&ub2), m::version_cmp(ma, &mb2), "{ua} vs {ub2}");
++        n += 1;
++    }
++    eprintln!("checked {} versions, {} comparisons", ok.len(), n);
++    let _ = Ordering::Equal;
++}

@@ -1,0 +1,42 @@
+# Library manifest. `vpipe run semver` reads this. Created 2026-10-24.
+name = "semver"
+lang = "rust"
+tool = "lean-aeneas"
+upstream = "https://github.com/dtolnay/semver"
+commit = "280ebcb6edac3aa4cdc545dbff8a26c5ac4861fe"   # 1.0.28
+version = "1.0.28"
+thread = "Verify semver in Lean"
+
+# Upstream packs identifiers with unsafe pointer tricks, which Aeneas cannot translate.
+# rust/model.patch adds a safe model crate (model/) that mirrors upstream's Version
+# parse, print and ordering code. The differential test below checks the model against
+# the pinned upstream crate on 160k random and structured inputs before anything is proved.
+[patches]
+files = ["rust/model.patch"]
+dir = "."
+
+[test]
+commands = ["cd model && cargo test --release --features debug --quiet"]
+
+[extract]
+crate_dir = "model"
+module = "SemverModel"
+subdir = "SemverModel/Code"
+charon_args = ["--preset=aeneas"]
+cargo_args = []
+aeneas_args = ["-namespace", "semver_model"]
+
+[scope]
+properties = [
+  "version_cmp is a lawful total order (Std.TransCmp + Std.LawfulEqCmp)",
+  "parse_version never panics",
+  "parse then print: parse_version s = Ok v implies version_to_bytes v = s",
+  "print then parse: valid v (prerelease/build accepted alone, text fits) parses back to v",
+  "parse_prerelease / parse_build accept exactly what identWholeM accepts",
+]
+exclusions = [
+  "Proofs are about the safe model, linked to upstream by the differential test, not by proof",
+  "Identifier's unsafe inline/heap packing (identifier.rs) is not yet covered",
+  "VersionReq, Comparator and matching (parse.rs, eval.rs) are not yet covered",
+  "Display, Debug, error messages and serde are not yet covered",
+]

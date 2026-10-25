@@ -1,0 +1,28 @@
+diff -ru a/src/std/fmt.rs b/src/std/fmt.rs
+--- a/src/std/fmt.rs
++++ b/src/std/fmt.rs
+@@ -2,8 +2,24 @@
+ #[cfg(creusot)]
+ use core::fmt::{Debug, Formatter, Result};
+ 
++/// Abstract sink model (percent-encoding patch): the sink state after writing `s` to `w`, and
++/// whether that write succeeded. Both are deterministic in (state, data); nothing else is assumed.
++#[logic(opaque)]
++pub fn sink_after<'a, W: ?Sized>(w: &'a W, s: Seq<char>) -> &'a W {
++    dead
++}
++
++#[logic(opaque)]
++pub fn sink_ok<W: ?Sized>(w: &W, s: Seq<char>) -> bool {
++    dead
++}
++
+ extern_spec! {
+     impl<'a> Formatter<'a> {
++        // Same contract as `<Formatter as fmt::Write>::write_str`: in core both bodies are
++        // `self.buf.write_str(data)`.
++        #[ensures(&^self == sink_after(&*self, data@))]
++        #[ensures((result == Ok(())) == sink_ok(&*self, data@))]
+         fn write_str(&mut self, data: &str) -> Result;
+ 
+         fn debug_struct_field1_finish<'b>(

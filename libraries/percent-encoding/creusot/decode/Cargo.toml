@@ -1,0 +1,13 @@
+[package]
+name = "percent-encoding-creusot-decode"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+creusot-std = "=0.14.0"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(creusot)'] }
+
+[workspace]

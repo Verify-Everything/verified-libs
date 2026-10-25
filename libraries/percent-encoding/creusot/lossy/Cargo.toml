@@ -1,0 +1,18 @@
+[package]
+name = "percent-encoding-creusot-lossy"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+creusot-std = "=0.14.0"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(creusot)'] }
+
+# Release semantics: `debug_assert!` is compiled out, as in every release build. With debug
+# assertions on, the original's `ptr::eq` check cannot be proved in Creusot 0.14 (README.md).
+[profile.dev]
+debug-assertions = false
+
+[workspace]

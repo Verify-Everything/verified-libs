@@ -84,8 +84,8 @@ id = "src/lib.rs:Iterator for PercentEncode::next"
 lean = "PercentEncode.Insts.CoreIterTraitsIteratorIteratorSharedAStr.next"
 theorems = ["encode_next_spec", "next_chunk_spec"]
 status = "open"
-why = "proved only on the patched body; the patch is not yet proved equivalent to the original (admission gate 1)"
-note = "patched body (next_chunk); equivalence to the original not yet proved"
+why = "original body proved equal to the patched body in Creusot (creusot/run.sh, run by hand 2026-10-25); vpipe and CI do not run that check yet, so gate 1 is not re-checked"
+note = "Lean proves the patched body (next_chunk); creusot/encode proves original == patched (spec chunk_ok/step), 7/7 planted bugs rejected"
 
 [[function]]
 id = "src/lib.rs:Iterator for PercentEncode::size_hint"
@@ -98,8 +98,8 @@ id = "src/lib.rs:fmt::Display for PercentEncode::fmt"
 lean = "PercentEncode.Insts.CoreFmtDisplay.fmt"
 theorems = ["display_fmt_spec", "write_chunks_spec", "write_chunks_buffer"]
 status = "open"
-why = "proved only on the patched body; the patch is not yet proved equivalent to the original (admission gate 1)"
-note = "patched body (write_chunks); equivalence to the original not yet proved"
+why = "original body proved equal to the patched body in Creusot (creusot/run.sh, run by hand 2026-10-25); vpipe and CI do not run that check yet, so gate 1 is not re-checked"
+note = "Lean proves the patched body (write_chunks); creusot/encode proves original == patched (spec display_ok, same write_str calls), 5/5 planted bugs rejected"
 
 [[function]]
 id = "src/lib.rs:From for Cow::from@L195"
@@ -130,8 +130,8 @@ id = "src/lib.rs:Iterator for PercentDecode::next"
 lean = "PercentDecode.Insts.CoreIterTraitsIteratorIteratorU8.next"
 theorems = ["decode_next_spec"]
 status = "open"
-why = "proved only on the patched body; the patch is not yet proved equivalent to the original (admission gate 1)"
-note = "patched body (closure replaced by match); equivalence to the original not yet proved"
+why = "original body proved equal to the patched body in Creusot (creusot/run.sh, run by hand 2026-10-25); vpipe and CI do not run that check yet, so gate 1 is not re-checked"
+note = "Lean proves the patched body (match); creusot/decode proves original (Option::map closure) == patched (spec dstep), 5/5 planted bugs rejected"
 
 [[function]]
 id = "src/lib.rs:Iterator for PercentDecode::size_hint"
@@ -151,8 +151,8 @@ id = "src/lib.rs:PercentDecode::if_any"
 lean = "PercentDecode.if_any"
 theorems = ["if_any_spec", "decode_if_any_spec"]
 status = "open"
-why = "proved only on the patched body; the patch is not yet proved equivalent to the original (admission gate 1)"
-note = "patched body (decode_if_any); equivalence to the original not yet proved"
+why = "original body proved equal to the patched body in Creusot (creusot/run.sh, run by hand 2026-10-25); vpipe and CI do not run that check yet, so gate 1 is not re-checked"
+note = "Lean proves the patched body (decode_if_any); creusot/decode proves original (while any(..)) == patched (spec if_any_ok), 6/6 planted bugs rejected"
 
 [[function]]
 id = "src/lib.rs:PercentDecode::decode_utf8"
@@ -171,8 +171,8 @@ id = "src/lib.rs:decode_utf8_lossy"
 lean = "decode_utf8_lossy"
 theorems = ["free_decode_utf8_lossy_spec"]
 status = "open"
-why = "proved only on the patched body; the patch is not yet proved equivalent to the original (admission gate 1)"
-note = "patched body (debug_assert!(ptr::eq) removed); equivalence to the original not yet proved"
+why = "original proved equal to the patched body in Creusot with debug assertions off (creusot/run.sh, by hand 2026-10-25); with debug assertions on, the original's debug_assert!(ptr::eq) cannot be proved (Creusot models ref-to-pointer casts as fresh pointers); vpipe/CI do not run the check yet"
+note = "Lean proves the patched body; creusot/lossy proves original == patched when debug assertions are off, 3/3 planted bugs rejected; debug builds open"
 
 # Helpers added by rust/aeneas-friendly.patch (vpipe also lists the patched tree's functions).
 [[function]]

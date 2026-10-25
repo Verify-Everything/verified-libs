@@ -17,17 +17,17 @@ STD_SHA256="b019630da7e585ab18eff475d7ea820474c3fc0cd05a57706facf37f67ab2705"   
 
 echo "== 1. proved bodies are the real code"
 python3 -I "$HERE/check_verbatim.py" --upstream "$UP" --patched "$PA" \
-  "$HERE/encode/src/lib.rs" "$HERE/decode/src/lib.rs"
+  "$HERE/encode/src/lib.rs" "$HERE/decode/src/lib.rs" "$HERE/lossy/src/lib.rs"
 
 echo "== 2. creusot-std 0.14.0 + creusot-std-fmt.patch"
 rm -rf "$WORK"; mkdir -p "$WORK"
-cp -r "$HERE/encode" "$HERE/decode" "$WORK/"
+cp -r "$HERE/encode" "$HERE/decode" "$HERE/lossy" "$WORK/"
 ( cd "$WORK/encode" && cargo fetch -q )
 CRATE="$(ls "${CARGO_HOME:-$HOME/.cargo}"/registry/cache/*/creusot-std-0.14.0.crate | head -1)"
 echo "$STD_SHA256  $CRATE" | sha256sum -c -
 mkdir -p "$WORK/std" && tar -xzf "$CRATE" -C "$WORK/std"
 patch -s -p1 -d "$WORK/std/creusot-std-0.14.0" -i "$HERE/creusot-std-fmt.patch"
-for c in encode decode; do
+for c in encode decode lossy; do
   printf '\n[patch.crates-io]\ncreusot-std = { path = "%s" }\n' "$WORK/std/creusot-std-0.14.0" >> "$WORK/$c/Cargo.toml"
 done
 
@@ -35,7 +35,8 @@ echo "== 3. translate and prove"
 export DUNE_DIR_LOCATIONS="why3find:lib:$HOME/.local/share/creusot/share/why3find"
 export WHY3CONFIG="$HOME/.local/share/creusot/creusot_why3.conf"
 fail=0
-for c in encode decode; do
+grep -q "^debug-assertions = false" "$WORK/lossy/Cargo.toml" || { echo "lossy: debug-assertions must be off"; exit 1; }
+for c in encode decode lossy; do
   ( cd "$WORK/$c" && CARGO_INCREMENTAL=0 cargo creusot --dry-run-why3find >/dev/null ) \
     || { echo "FAIL $c: creusot translation"; fail=1; continue; }
   while read -r f; do

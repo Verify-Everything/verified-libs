@@ -392,6 +392,7 @@ impl<'a> Iterator for PercentEncode<'a> {
                 // The unsafe blocks here are appropriate because the bytes are
                 // confirmed as a subset of UTF-8 in should_percent_encode.
                 #[invariant(produced.len() <= remaining@.len())]
+                #[variant(remaining@.len() - produced.len())]
                 #[invariant(forall<k: Int> 0 <= k && k < produced.len() ==> produced[k].0@ == k && *produced[k].1 == remaining@[k])]
                 #[invariant(forall<j: Int> 0 <= j && j < produced.len() ==> !self.ascii_set.enc(remaining@[j]))]
                 for (i, &byte) in remaining.iter().enumerate() {
@@ -446,6 +447,7 @@ impl fmt::Display for PercentEncode<'_> {
         let f0 = snapshot!(&*formatter);
         snapshot! { count_spec(*self.ascii_set, self.bytes@) };
         #[invariant(wr_n(*f0, *self.ascii_set, self.bytes@, produced.len()) == (&*formatter, true))]
+        #[variant(count(*self.ascii_set, self.bytes@) - produced.len())]
         for c in (*self).clone() {
             snapshot! { compose(*self.ascii_set, self.bytes@, produced.len() - 1) };
             snapshot! { wr_err_stable_imp(*f0, *self.ascii_set, self.bytes@, produced.len(), count(*self.ascii_set, self.bytes@)) };

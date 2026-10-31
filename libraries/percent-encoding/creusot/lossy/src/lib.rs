@@ -4,7 +4,8 @@
 // `debug_assert!(core::ptr::eq(..))`) meet the same exact spec `lossy_spec`.
 // With debug assertions ON the original also evaluates `ptr::eq(utf8.as_bytes(), &*bytes)` and
 // panics if it is false. Creusot 0.14 models `&x as *const _` as a fresh pointer unrelated to
-// `x`, so that assertion cannot be proved here: see README.md (open for debug builds).
+// `x`, so that assertion cannot be proved here. Debug builds are covered by the named assumption
+// A-lossy-ptr and a written argument in README.md, not by this crate.
 #![allow(unused)]
 use creusot_std::prelude::*;
 use std::borrow::Cow;

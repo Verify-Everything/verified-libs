@@ -171,8 +171,8 @@ id = "src/lib.rs:decode_utf8_lossy"
 lean = "decode_utf8_lossy"
 theorems = ["free_decode_utf8_lossy_spec"]
 status = "open"
-why = "original proved equal to the patched body in Creusot with debug assertions off (creusot/run.sh, by hand 2026-10-25); with debug assertions on, the original's debug_assert!(ptr::eq) cannot be proved (Creusot models ref-to-pointer casts as fresh pointers); vpipe/CI do not run the check yet"
-note = "Lean proves the patched body; creusot/lossy proves original == patched when debug assertions are off, 3/3 planted bugs rejected; debug builds open"
+why = "original proved equal to the patched body in Creusot with debug assertions off (creusot/run.sh, by hand 2026-10-25); with debug assertions on, covered only under the named assumption A-lossy-ptr by a written argument, not by Creusot (it models ref-to-pointer casts as fresh pointers); vpipe/CI do not run the Creusot check yet"
+note = "Lean proves the patched body. Proved (Creusot, creusot/lossy): original == patched for every input when debug assertions are off; 3/3 planted bugs rejected. Assumed (A-lossy-ptr, [trust].models: non-empty valid UTF-8 input gives Cow::Borrowed at the input's address and length; tested against real std by rust/modeltest, not proved): with debug assertions on, the original's debug_assert!(ptr::eq) holds, so the two agree, for every input the only caller (PercentDecode::decode_utf8_lossy) passes, since if_any's owned output is non-empty (if_any_ok, creusot/decode). Not equal for every input: on Cow::Owned of an empty Vec with spare capacity, the debug-build original panics and the patched body returns \"\" (run 2026-10-31); the crate never passes that input. See creusot/README.md"
 
 # Helpers added by rust/aeneas-friendly.patch (vpipe also lists the patched tree's functions).
 [[function]]

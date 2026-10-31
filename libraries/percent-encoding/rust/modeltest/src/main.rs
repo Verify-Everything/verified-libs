@@ -37,6 +37,28 @@ fn utf8_line(out: &mut impl Write, b: &[u8]) {
         Cow::Owned(s) => ("O", s.as_bytes()),
     };
     writeln!(out, "utf8|{}|{}{}{}", hex(b), if valid { "V" } else { "I" }, var, hex(bytes)).unwrap();
+    lossy_borrow_check(b, valid);
+}
+
+// Named assumption A-lossy-ptr (creusot/README.md): for NON-EMPTY valid UTF-8 `v`,
+// String::from_utf8_lossy(v) is Cow::Borrowed at v's own address and length. Checked on a slice
+// and on a Vec's buffer (the case in decode_utf8_lossy). Empty input is excluded on purpose: std
+// returns a static "" there, which can sit at a different address (README.md).
+fn lossy_borrow_check(b: &[u8], valid: bool) {
+    if b.is_empty() || !valid {
+        return;
+    }
+    let owned = b.to_vec();
+    for v in [b, &owned[..]] {
+        let ok = match String::from_utf8_lossy(v) {
+            Cow::Borrowed(s) => std::ptr::eq(s.as_bytes() as *const [u8], v as *const [u8]),
+            Cow::Owned(_) => false,
+        };
+        if !ok {
+            eprintln!("A-lossy-ptr fails for input {}", hex(v));
+            std::process::exit(1);
+        }
+    }
 }
 
 fn main() {

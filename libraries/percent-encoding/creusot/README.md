@@ -28,7 +28,7 @@ proves partial correctness only; a wrong variant is rejected, checked).
 | `fmt::Display for PercentEncode::fmt` | `for c in (*self).clone() { formatter.write_str(c)? }` vs `write_chunks` | encode | proved, spec `display_ok` |
 | `Iterator for PercentDecode::next` | `Option::map` with a closure capturing `&mut self.bytes` vs `match` | decode | proved, spec `dstep` |
 | `PercentDecode::if_any` | `while bytes_iter.any(..)` with early `return` vs `decode_if_any` (+ `decode_from_percent`, `position_of_percent`) | decode | proved, spec `if_any_ok` |
-| `decode_utf8_lossy` | `debug_assert!(ptr::eq(..))` vs dropped | lossy | proved with debug assertions off; **open with debug assertions on** (below) |
+| `decode_utf8_lossy` | `debug_assert!(ptr::eq(..))` vs dropped | lossy | proved with debug assertions off; with them on, **assumed** under A-lossy-ptr for every input the only caller passes, by the written argument below (not checked by Creusot) |
 
 Also proved: `after_percent_sign` (the same in both trees), including that
 `h as u8 * 0x10 + l as u8` cannot overflow, and that `initial_bytes.len() - bytes_iter.len() - 3`
@@ -39,13 +39,40 @@ Planted bugs (each must make a proof fail): encoder `next` 7/7, `Display` 5/5, d
 
 ### decode_utf8_lossy with debug assertions on
 With `debug-assertions` on, the original also evaluates
-`core::ptr::eq(utf8.as_bytes() as *const [u8], &*bytes)` and panics if it is false. It is true
-whenever `String::from_utf8_lossy` returns `Cow::Borrowed` of its own input, which std's code
-does. Creusot 0.14 translates a reference-to-pointer cast as a *fresh* pointer
-(`Opaque.fresh_ptr`, only the length is kept), so the two addresses are unrelated and this
-assertion cannot be proved; the same crate with debug assertions on fails exactly at that goal
-(checked). Closing it needs a tool with an address model for references (or a std contract about
-pointer identity that this check does not add).
+`core::ptr::eq(utf8.as_bytes() as *const [u8], &*bytes)` and panics if it is false. Creusot
+0.14.0 cannot prove this assertion, and no contract can fix that: the two casts
+(`&[u8] as *const [u8]`) are in the original body itself, not in a std call, and Creusot
+translates every reference-to-pointer cast as `Opaque.fresh_ptr`, i.e. `any` with
+postcondition `true`, keeping only the slice length (`creusot/src/backend/program.rs`,
+`RValue::Ptr`; `prelude.coma`, `module Opaque`). The two addresses are therefore unrelated
+in Creusot, whatever `from_utf8_lossy`, `as_bytes` or `ptr::eq` promise. The same crate with
+debug assertions on fails exactly at that goal (checked 2026-10-25).
+
+So the debug case is covered by the named assumption **A-lossy-ptr** (T5 below, maintainer
+decision 2026-10-31) and this argument, which is written here, **not machine-checked**:
+1. The debug-only lines have no effect besides the possible panic: `str::as_bytes` and
+   `ptr::eq` only read, and `raw_utf8` is not used again. So if the assertion holds, the
+   debug-on original behaves as the debug-off original, which Creusot proves equal to the
+   patched body.
+2. The assertion holds when `bytes` is non-empty: `from_utf8_lossy(&bytes)` returned
+   `Cow::Borrowed(utf8)`, so by A-lossy-ptr `utf8` has the address and length of `&*bytes`
+   (both derefs of the same unchanged `Vec`, so the same buffer); `str::as_bytes` keeps
+   address and length; `ptr::eq` on `*const [u8]` compares both (T2).
+3. `bytes` is never empty here. The only caller is `PercentDecode::decode_utf8_lossy`
+   (upstream `src/lib.rs:330`), which passes `self.into()`; `From<PercentDecode> for Cow<[u8]>`
+   (`src/lib.rs:281`) gives `Cow::Owned(vec)` only for `if_any() == Some(vec)`, and
+   `if_any_ok` (proved for the original `if_any` in `decode/`) gives
+   `vec.len() == i + 1 + dcount(rest) >= 1`.
+
+**Empty input is a real exception, so the assumption is stated for non-empty input only.** For
+an empty input std returns `Cow::Borrowed("")`, a static string, not a view of the input. Run
+2026-10-31 on rustc 1.97.0: `from_utf8_lossy` of an empty `Vec::with_capacity(16)` borrows at
+`0x1` while the Vec's buffer is elsewhere, so `ptr::eq` is false; the verbatim upstream
+`decode_utf8_lossy(Cow::Owned(Vec::with_capacity(16)))` panics on this assertion in a debug
+build and returns `""` in release. (`Vec::new()` happens to pass: its dangling pointer is also
+`0x1`.) So with debug assertions on, the original and patched private function differ on that
+input. They agree on every input the crate can pass (point 3). Gate 1 holds for this function
+only in that sense: in its calling context, under A-lossy-ptr.
 
 ## What "agree" means
 Same return value and same final state of `self`, where slices, slice iterators, `Vec`s,
@@ -72,6 +99,14 @@ string (`sink_after`/`sink_ok`).
 - **T4** `creusot-std-fmt.patch`: gives `Formatter::write_str` the same contract as
   `<Formatter as fmt::Write>::write_str` (in core both are `self.buf.write_str(data)`).
   creusot-std 0.14.0 ships `Formatter::write_str` with no contract at all.
+- **T5 A-lossy-ptr** (named assumption, maintainer decision 2026-10-31; narrowed to non-empty
+  input, see above): when `v` is non-empty valid UTF-8, std's `String::from_utf8_lossy(v)`
+  returns `Cow::Borrowed(s)` with `s` at `v`'s own address and length. Used only for
+  `decode_utf8_lossy` with debug assertions on, through the written argument above, not as a
+  Creusot contract. Tested, not proved: `rust/modeltest` checks it against real std on every
+  non-empty valid input it generates (all inputs of 1–2 bytes, all 3–4 byte inputs over 25
+  UTF-8 edge bytes, and 200,000 random inputs of up to 16 bytes; 38,654 valid ones on
+  2026-10-31), on a slice and on a `Vec` buffer, and exits 1 if it fails.
 - Creusot 0.14.0 and its `creusot-std` specs, Why3 and the four SMT solvers.
 
 ## Not yet done
@@ -79,3 +114,5 @@ string (`sink_after`/`sink_ok`).
   still lists these functions as open. Running it from vpipe needs Creusot pinned in
   `toolchain/versions.toml` and the selftest (an engine PR, separate from this library).
 - The derived `Debug` for `PercentDecode` (Aeneas emits `sorry`) is not covered here.
+- `decode_utf8_lossy` with debug assertions on rests on A-lossy-ptr and a hand-written
+  argument. A tool with an address model for references could check points 1–3 by machine.

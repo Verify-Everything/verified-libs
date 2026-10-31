@@ -5,7 +5,7 @@ source: https://github.com/servo/rust-url.git
 commit: 00a6ce58d02f4e0d43c5ca0702c0bedb8b1ebf3a
 archive_sha256: 42645e863db93f5da119118a8337f4e09c545794ad0cfefafca4dc8aac6f3286
 tool: Lean 4 + Aeneas
-tool_version: aeneas nightly-2026.10.23-fdebf20, charon_rust nightly-2026-09-17, lean 4.35.0; sha256:e70fa595928911df6c112e8841481da9137b4febfbb51887cd0eba6938a1a858
+tool_version: aeneas nightly-2026.10.23-fdebf20, charon_rust nightly-2026-09-17, lean 4.35.0, frama_c 33.0 (Arsenic), cbmc 6.11.0 (n/a); sha256:4c13b9af415895d410093b482e740a334b2d55ed2b76dc58a79f9aa440284f1f
 strength: tested  # lowest label; real value: unlabelled (functions without a label in functions.toml, or open)
 status: candidate
 functions: 28/33
@@ -43,7 +43,7 @@ Functions: 28/33 at full-correctness (28 verified or fixed)
 - Matches standard / test vectors: WHATWG URL Standard, percent-encoding (https://url.spec.whatwg.org/#percent-encoded-bytes): percent-encode a byte, percent-decode; upstream unit tests pass on the patched crate
 
 ## Proof
-- Tool(s) and versions: lean-aeneas; aeneas nightly-2026.10.23-fdebf20, charon_rust nightly-2026-09-17, lean 4.35.0; toolchain digest sha256:e70fa595928911df6c112e8841481da9137b4febfbb51887cd0eba6938a1a858; container digest NOT IN A PINNED CONTAINER
+- Tool(s) and versions: lean-aeneas; aeneas nightly-2026.10.23-fdebf20, charon_rust nightly-2026-09-17, lean 4.35.0, frama_c 33.0 (Arsenic), cbmc 6.11.0 (n/a); toolchain digest sha256:4c13b9af415895d410093b482e740a334b2d55ed2b76dc58a79f9aa440284f1f; container digest NOT IN A PINNED CONTAINER
 - Kernel replay (leanchecker): passed
 - Theorems / goals: 123/123 proved, 0 sorries, 0 with extra axioms
 - Per-function results: below, and functions.toml for declared labels and evidence
@@ -52,8 +52,9 @@ Functions: 28/33 at full-correctness (28 verified or fixed)
 
 ## Trusted base
 - Axioms reported by the checker: Classical.choice, Quot.sound, propext
-- Std or library models: none listed
+- Std or library models: A-lossy-ptr (assumed, maintainer decision 2026-10-31): for non-empty valid UTF-8 v, std's String::from_utf8_lossy(v) returns Cow::Borrowed at v's own address and length (false for empty input, where std returns a static ""; the crate never passes empty owned input there). Covers decode_utf8_lossy with debug assertions on, by a written argument (creusot/README.md), not proved; tested against real std by rust/modeltest
 - Tool assumptions: Charon and Aeneas translate the (patched) Rust faithfully; cross-checked by tests/CrossCheck.lean against the compiled upstream crate
+- Translator: stock Aeneas/Charon release
 - Unsafe / FFI boundaries: two str::from_utf8_unchecked calls and one String::from_utf8_unchecked: their models fail on invalid UTF-8, so the proofs show each call gets valid UTF-8
 - Patches applied: rust/aeneas-friendly.patch
 - Forbidden constructs found: 1
@@ -133,4 +134,4 @@ Functions: 28/33 at full-correctness (28 verified or fixed)
 ## Review
 - Maintainer sign-off: 
 - Adversarial review: 
-- Last clean CI re-check: no clean run yet
+- Last clean CI re-check: no clean run yet (https://github.com/Verify-Everything/verified-libs/actions/runs/40304743822)

@@ -11,7 +11,8 @@ creusot-std = "=0.14.0"
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(creusot)'] }
 
 # Release semantics: `debug_assert!` is compiled out, as in every release build. With debug
-# assertions on, the original's `ptr::eq` check cannot be proved in Creusot 0.14 (README.md).
+# assertions on, the original's `ptr::eq` check cannot be proved in Creusot 0.14; that case rests
+# on the named assumption A-lossy-ptr (README.md).
 [profile.dev]
 debug-assertions = false
 

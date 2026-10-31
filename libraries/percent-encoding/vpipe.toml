@@ -68,7 +68,12 @@ exclusions = [
 targets = ["default features (std, alloc)", "no_std without alloc (subset of the same functions)", "all targets (no arch code; usize width abstract)"]
 
 [trust]
-models = []      # no axioms remain; std models are definitions in external/FunsExternal.lean
+# No Lean axioms remain; std models are definitions in external/FunsExternal.lean. `models` is the
+# list CLAIM.md prints as "Std or library models"; the entry below is a named std assumption used by
+# the gate-1 argument for decode_utf8_lossy (creusot/README.md, T5), not a Lean axiom name.
+models = [
+  "A-lossy-ptr (assumed, maintainer decision 2026-10-31): for non-empty valid UTF-8 v, std's String::from_utf8_lossy(v) returns Cow::Borrowed at v's own address and length (false for empty input, where std returns a static \"\"; the crate never passes empty owned input there). Covers decode_utf8_lossy with debug assertions on, by a written argument (creusot/README.md), not proved; tested against real std by rust/modeltest",
+]
 axioms = []
 std_models = "external/FunsExternal.lean (31 functions), differential-tested against real std by tests/ModelTest.lean (rust/modeltest: 744k vectors incl. every UTF-8 input up to 2 bytes)"
 tool_assumptions = "Charon and Aeneas translate the (patched) Rust faithfully; cross-checked by tests/CrossCheck.lean against the compiled upstream crate"

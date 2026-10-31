@@ -1,0 +1,104 @@
+diff -ru a/creusot-std-0.14.0/src/std/iter/zip.rs b/creusot-std-0.14.0/src/std/iter/zip.rs
+--- a/src/std/iter/zip.rs	2006-07-24 01:21:28.000000000 +0000
++++ b/src/std/iter/zip.rs	2026-10-31 15:46:03.356550123 +0000
+@@ -1,3 +1,5 @@
++#[cfg(creusot)]
++use crate::resolve::structural_resolve;
+ use crate::{invariant::*, prelude::*, std::iter::ExactSizeIteratorSpec};
+ use core::iter::Zip;
+ 
+@@ -21,6 +23,20 @@
+     }
+ }
+ 
++// crc32fast gate 1: dropping a `Zip` drops both iterators (as for `Chain`, `Enumerate`, ...).
++impl<A: Iterator, B: Iterator> Resolve for Zip<A, B> {
++    #[logic(open, prophetic, inline)]
++    fn resolve(self) -> bool {
++        resolve(self.iter_a()) && resolve(self.iter_b())
++    }
++
++    #[trusted]
++    #[logic(prophetic)]
++    #[requires(structural_resolve(self))]
++    #[ensures(self.resolve())]
++    fn resolve_coherence(self) {}
++}
++
+ impl<A: Iterator, B: Iterator> Invariant for Zip<A, B> {
+     #[logic(prophetic, open, inline)]
+     fn invariant(self) -> bool {
+diff -ru a/creusot-std-0.14.0/src/std/slice.rs b/creusot-std-0.14.0/src/std/slice.rs
+--- a/src/std/slice.rs	2006-07-24 01:21:28.000000000 +0000
++++ b/src/std/slice.rs	2026-10-31 15:09:57.096546844 +0000
+@@ -810,3 +810,70 @@
+         fn len(&self) -> usize;
+     }
+ }
++
++// crc32fast gate 1: a model of `ChunksExact` (the chunks not yet returned, and the remainder,
++// fixed when the iterator is made), and contracts for `chunks_exact` and `remainder` (std docs).
++pub trait ChunksExactExt<'a, T> {
++    #[logic]
++    fn chunks(self) -> Seq<&'a [T]>;
++
++    #[logic]
++    fn rem(self) -> &'a [T];
++}
++
++impl<'a, T> ChunksExactExt<'a, T> for ChunksExact<'a, T> {
++    #[logic(opaque)]
++    fn chunks(self) -> Seq<&'a [T]> {
++        dead
++    }
++
++    #[logic(opaque)]
++    fn rem(self) -> &'a [T] {
++        dead
++    }
++}
++
++impl<'a, T> IteratorSpec for ChunksExact<'a, T> {
++    #[logic(open, prophetic)]
++    fn completed(&mut self) -> bool {
++        pearlite! { resolve(self) && (*self).chunks() == Seq::empty() }
++    }
++
++    #[logic(open)]
++    fn produces(self, visited: Seq<Self::Item>, o: Self) -> bool {
++        pearlite! { self.chunks() == visited.concat(o.chunks()) && self.rem() == o.rem() }
++    }
++
++    #[logic(law)]
++    #[ensures(self.produces(Seq::empty(), self))]
++    fn produces_refl(self) {
++        let _ = Seq::<Self::Item>::concat_empty;
++    }
++
++    #[logic(law)]
++    #[requires(a.produces(ab, b))]
++    #[requires(b.produces(bc, c))]
++    #[ensures(a.produces(ab.concat(bc), c))]
++    fn produces_trans(a: Self, ab: Seq<Self::Item>, b: Self, bc: Seq<Self::Item>, c: Self) {
++        let _ = Seq::<Self::Item>::concat_assoc;
++    }
++}
++
++extern_spec! {
++    impl<T> [T] {
++        #[check(ghost)]
++        #[requires(chunk_size@ > 0)]
++        #[ensures(result.chunks().len() == self@.len() / chunk_size@)]
++        #[ensures(forall<i: Int> 0 <= i && i < result.chunks().len() ==>
++            result.chunks()[i]@ == self@.subsequence(i * chunk_size@, i * chunk_size@ + chunk_size@))]
++        #[ensures(result.rem()@ ==
++            self@.subsequence(self@.len() / chunk_size@ * chunk_size@, self@.len()))]
++        fn chunks_exact(&self, chunk_size: usize) -> ChunksExact<'_, T>;
++    }
++
++    impl<'a, T> ChunksExact<'a, T> {
++        #[check(ghost)]
++        #[ensures(result == self.rem())]
++        fn remainder(&self) -> &'a [T];
++    }
++}

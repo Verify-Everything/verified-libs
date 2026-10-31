@@ -18,8 +18,11 @@ aeneas_args = []
 
 # Applied in order to the pinned source before every variant.
 # 0001 is a fix (see functions.toml, status = "fixed"): the byte count wraps instead of panicking.
-# 0002 only makes the SIMD code readable by Aeneas (no behaviour change); it is NOT proved
-# equivalent yet, so gate 1 stays open until it ships in a published fork or gets a proof.
+# 0002 only makes the SIMD code readable by Aeneas (no behaviour change). equivalence/ (run by
+# hand 2026-10-31, see equivalence/README.md): Creusot proves the original and patched aarch64.rs
+# bodies equal; rustc emits identical x86_64 assembly with and without the pclmulqdq.rs part.
+# vpipe and CI do not run that check yet and gate 1 only reads Lean equivalence_theorems, so
+# gate 1 stays open until the engine runs equivalence/run.sh (an engine PR) or 0002 ships in a fork.
 [patches]
 files = ["patches/0001-hasher-wrapping-add.patch", "patches/0002-simd-readable-by-aeneas.patch"]
 

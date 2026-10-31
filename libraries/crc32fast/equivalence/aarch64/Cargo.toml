@@ -1,0 +1,14 @@
+[package]
+name = "crc32fast-creusot-aarch64"
+version = "0.1.0"
+# Same edition as crc32fast 1.5.3, so the copied bodies mean the same thing.
+edition = "2021"
+publish = false
+
+[dependencies]
+creusot-std = "=0.14.0"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(creusot)'] }
+
+[workspace]

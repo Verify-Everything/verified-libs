@@ -362,3 +362,35 @@ Result: full functional correctness of encoder + decoder + round trip, standard 
 - Patched Aeneas (helix-verify/motion/aeneas-patches/, build.sh via Nix) adds non-ASCII char literals, string escapes and `match` on char. Upstream fdebf20 also mis-printed `'\''`, `'\\'` and Latin-1 chars (invalid UTF-8 in Funs.lean).
 - Remaining hard blockers on idiomatic code (each more than a day in Aeneas): nested borrows (`x.chars_at(..).method(..)`), `&dyn Fn` closures, fn items passed as closures (late-bound regions), `iter().find(|..|)` lifetime constraints, loops with several exits (`?`/return inside an inner loop), and some "Unexpected error"s. Plan for a rewrite (fork) or another tool when code is iterator/closure heavy.
 - Charon's `--start-from` builds leave a big incremental cache in target/: set CARGO_INCREMENTAL=0 (it filled 11 GB here). Saturn's test suite stalls a Nix OCaml build: disable its tests.
+
+## 2026-10-31 crc32fast: gate 1 for a SIMD tool patch (Creusot + identical assembly)
+- Setup without apt, as for percent-encoding (branch claude/kind-maxwell-pxy456 has those notes):
+  opam, gmp, rsync, pkg-config and zlib from the pinned nixpkgs (`nix build --impure --expr
+  "(import (builtins.fetchTarball \"$NIXPKGS\") {}).opam"`, same for `gmp.dev`, `gmp.out`,
+  `zlib.dev`, `zlib.out`); zlib's `.pc` is under `share/pkgconfig`. Run `opam init --bare
+  --disable-sandboxing -n` first, then Creusot v0.14.0's `./INSTALL` with `OPAMNODEPEXTS=1
+  OPAMVAR_in_creusot_ci=true OPAMYES=1`. ~20 min. Binaries land in ~/.local/share/creusot/bin.
+- A patch that only moves an expression into an `#[inline]` helper can be checked by comparing
+  `cargo rustc --release -- --emit asm -C codegen-units=1` output for both trees, ignoring
+  `.file`/`.loc`/`.ident` lines. Do every feature set and debug-assertions on/off, check the
+  kernels appear in the output, and plant a change in the helper to show the check can fail.
+  This is compiler-checked evidence, not a source proof; say so. Loop rewrites do not compile to
+  identical code, so they still need a proof.
+- Creusot cannot relate two `as_ptr()` calls (no contract), so pointer-load helpers are out of
+  reach for it; `align_to` is fine as an opaque function of the slice (same as the Lean model).
+- creusot-std 0.14.0 has no `ChunksExact` and no `Iterator::fold`. The iterator model must live
+  in creusot-std (orphan rule: both the trait and the type are foreign), so it goes in a
+  creusot-std patch; re-prove its laws in your own crate, since dependency laws are axioms.
+- creusot-std 0.14.0's `Zip` has no `Resolve` impl, so after `for .. in (&mut a).zip(&mut b)`
+  Creusot knows nothing about `b`'s final state. Symptom: facts about the first iterator prove,
+  the same facts about the second do not. Fix: give `Zip` the same `Resolve` impl as `Chain`.
+- To read a failing goal fast, prove with `-t 2s -X`, then `grep -o "src/lib.rs:[0-9]*\] vc_[a-z_]* \[[^]]*\]"`
+  on the output to list the source lines of the failing subgoals. Running without splitting
+  (`-d 3 -H 1`) hides which subgoal fails.
+- Lemma for the spec's "exactly one result": avoid `forall<x: u64> x@ == e ==> ...` in a spec;
+  creusot-std has no Int-to-u64 conversion, so the existence of the witness is hard to prove.
+  Pass the number (`len2@`) to the opaque logic function instead; then the spec is `res == expr`.
+- For a `while let Some(x) = it.next()` loop, keep a ghost `let mut done = snapshot!(Seq::empty())`
+  and grow it with `done = snapshot!((*done).concat(Seq::singleton(x)));` (not `push_back`: the
+  iterator laws are stated with `concat`), with invariant `it0.produces(*done, it)`. That mirrors
+  what Creusot's `for` loop gives for free.

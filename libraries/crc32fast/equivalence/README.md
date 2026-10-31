@@ -35,6 +35,13 @@ the patched `split_quads`), copied verbatim. Each pair is proved to meet one exa
 Every loop has a `#[variant]`, so these are total-correctness proofs: both versions terminate,
 and neither can panic (indexing, overflow of `n3 * 8`, `i + 4`).
 
+Planted bugs (`mutants.sh`, run after `run.sh` on its work folder): 16 one-line edits to the
+original and patched bodies (wrong word, wrong stream, wrong start value, `>=` to `>`, wrong
+slice, wrong length, missing inversion, ...) and one wrong loop variant. 17/17 rejected
+(2026-10-31, 50 min). "Rejected" means the proof does not go through within the same per-file
+cap `run.sh` uses; that run did not record which failed outright and which ran out of time
+(the script now prints which).
+
 ## x86: identical assembly
 Creusot cannot prove the x86 half. The change moves `_mm_loadu_si128(a.as_ptr() as *const _)` into
 a helper, and Creusot 0.14 gives no contract to `<[T]>::as_ptr`, so it cannot show that two

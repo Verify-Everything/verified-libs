@@ -39,7 +39,8 @@ PY
   local f="verif/crc32fast_creusot_aarch64_rlib/$mod/$fn.coma" out
   out=$(cd "$M" && timeout "$CAP" why3find prove -j 4 --no-autodetect-provers -t 10s "$f" 2>&1); local rc=$?
   if [ $rc = 0 ] && ! grep -q "✘" <<<"$out"; then echo "BAD  $name: proof still passes"; bad=1
-  else echo "ok   $name: rejected"; fi
+  elif [ $rc = 124 ]; then echo "ok   $name: rejected (not proved within ${CAP}s, the cap run.sh uses)"
+  else echo "ok   $name: rejected (goal failed)"; fi
 }
 
 # original crc_quads

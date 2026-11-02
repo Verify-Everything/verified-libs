@@ -1,0 +1,2543 @@
+{
+ "library": "semver",
+ "entry": "semver",
+ "commit": "280ebcb6edac3aa4cdc545dbff8a26c5ac4861fe",
+ "version": "1.0.28",
+ "tool": "lean-aeneas",
+ "started": "2026-10-24T11:18:10Z",
+ "pipeline_version": "0.2.11",
+ "toolchain": {
+  "aeneas": "nightly-2026.10.23-fdebf20",
+  "charon_rust": "nightly-2026-09-17",
+  "lean": "4.35.0",
+  "aeneas_dir": "/home/runner/.vpipe/aeneas-nightly-2026.10.23-fdebf20",
+  "frama_c": "33.0 (Arsenic)",
+  "cbmc": "6.11.0 (n/a)",
+  "why3_provers": "CVC5 ;CVC5  (counterexamples);CVC5  (strings);CVC5  (strings+counterexamples);Z3 5.1.0;Z3 5.1.0 (counterexamples);Z3 5.1.0 (noBV);",
+  "nixpkgs": "https://releases.nixos.org/nixpkgs/nixpkgs-26.11pre1097770.5adc50831c25/nixexprs.tar.zst?narHash=sha256-hVMDyAXU0kxRuG3GygbZkzf5x%2BaBNEC0NYEJ6KwHtD4%3D"
+ },
+ "clean": false,
+ "toolchain_digest": "sha256:4c13b9af415895d410093b482e740a334b2d55ed2b76dc58a79f9aa440284f1f",
+ "container_digest": null,
+ "ci_run": "https://github.com/Verify-Everything/verified-libs/actions/runs/40085700990",
+ "agent_cli": null,
+ "archive_sha256": "ccd7b1baee6ac4acc4a56a80c78c0397d94af4ad15c2f8fe722c509bba9bcf73",
+ "source": {
+  "patches": [
+   "rust/model.patch"
+  ],
+  "tests": [
+   {
+    "cmd": "cd model && cargo test --release --features debug --quiet",
+    "ok": true,
+    "tail": "\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 1 test\n.\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.48s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n"
+   }
+  ]
+ },
+ "extract": {
+  "ok": true,
+  "stage": "aeneas",
+  "aeneas_rc": 0,
+  "postprocess": [],
+  "translator": {
+   "patched": false
+  },
+  "unexpected_errors": [],
+  "unsupported": [],
+  "assumed_axioms": [],
+  "external_template_changes": [],
+  "warnings": [],
+  "log": "[Info ] Imported: /home/runner/vpipe-work/semver/semver.llbc\n[Info ] Generated: /home/runner/vpipe-work/semver/proj/SemverModel/Code/Types.lean\n[Info ] Generated: /home/runner/vpipe-work/semver/proj/SemverModel/Code/Funs.lean\n[Info ] Total execution time: 2.512266 seconds\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+ },
+ "prove": {
+  "ok": true,
+  "seconds": 286,
+  "replay": {
+   "ok": true,
+   "tool": "leanchecker",
+   "modules": 14,
+   "failed": [],
+   "peak_gb": [
+    [
+     "SemverModel",
+     11.84
+    ],
+    [
+     "SemverModel.Proofs.RefineParse",
+     2.23
+    ],
+    [
+     "SemverModel.Proofs.RefineVersion",
+     2.23
+    ],
+    [
+     "SemverModel.Proofs.RoundTrip",
+     2.23
+    ],
+    [
+     "SemverModel.Proofs.Main",
+     2.22
+    ]
+   ],
+   "seconds": 134,
+   "log": ""
+  },
+  "theorems": [
+   {
+    "name": "parse_version_total",
+    "file": "SemverModel/Proofs/Main.lean",
+    "line": 14,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "parse_then_print",
+    "file": "SemverModel/Proofs/Main.lean",
+    "line": 19,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "print_then_parse",
+    "file": "SemverModel/Proofs/Main.lean",
+    "line": 33,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "parse_prerelease_accepts",
+    "file": "SemverModel/Proofs/Main.lean",
+    "line": 50,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "parse_build_accepts",
+    "file": "SemverModel/Proofs/Main.lean",
+    "line": 67,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "eq_ok_of_spec",
+    "file": "SemverModel/Proofs/Order.lean",
+    "line": 15,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "version_cmp_ok",
+    "file": "SemverModel/Proofs/Order.lean",
+    "line": 18,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "prerelease_cmp_ok",
+    "file": "SemverModel/Proofs/Order.lean",
+    "line": 21,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "build_cmp_ok",
+    "file": "SemverModel/Proofs/Order.lean",
+    "line": 24,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "version_cmp_eq_versionOrd",
+    "file": "SemverModel/Proofs/Order.lean",
+    "line": 30,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "toP_inj",
+    "file": "SemverModel/Proofs/Order.lean",
+    "line": 33,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "version_cmp_total_order",
+    "file": "SemverModel/Proofs/Order.lean",
+    "line": 52,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "is_digit_spec",
+    "file": "SemverModel/Proofs/RefineCmp.lean",
+    "line": 10,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "segment_end_spec",
+    "file": "SemverModel/Proofs/RefineCmp.lean",
+    "line": 15,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "all_digits_spec",
+    "file": "SemverModel/Proofs/RefineCmp.lean",
+    "line": 33,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "cmp_bytes_spec",
+    "file": "SemverModel/Proofs/RefineCmp.lean",
+    "line": 53,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "cmp_usize_spec",
+    "file": "SemverModel/Proofs/RefineCmp.lean",
+    "line": 76,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "cmp_u64_spec",
+    "file": "SemverModel/Proofs/RefineCmp.lean",
+    "line": 81,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "skip_zeros_spec",
+    "file": "SemverModel/Proofs/RefineCmp.lean",
+    "line": 86,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "pre_segment_cmp_spec",
+    "file": "SemverModel/Proofs/RefineCmp.lean",
+    "line": 102,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "build_segment_cmp_spec",
+    "file": "SemverModel/Proofs/RefineCmp.lean",
+    "line": 109,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "cmp_segments_loop_spec",
+    "file": "SemverModel/Proofs/RefineCmp.lean",
+    "line": 119,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "deref_val",
+    "file": "SemverModel/Proofs/RefineCmp.lean",
+    "line": 159,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "slice_len_eq_zero",
+    "file": "SemverModel/Proofs/RefineCmp.lean",
+    "line": 162,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "prerelease_cmp_spec",
+    "file": "SemverModel/Proofs/RefineCmp.lean",
+    "line": 168,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "build_cmp_spec",
+    "file": "SemverModel/Proofs/RefineCmp.lean",
+    "line": 175,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "version_cmp_spec",
+    "file": "SemverModel/Proofs/RefineCmp.lean",
+    "line": 186,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "resMap_ok",
+    "file": "SemverModel/Proofs/RefineParse.lean",
+    "line": 13,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "resMap_err",
+    "file": "SemverModel/Proofs/RefineParse.lean",
+    "line": 14,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "numLoop_unfold",
+    "file": "SemverModel/Proofs/RefineParse.lean",
+    "line": 16,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "numeric_identifier_loop_spec",
+    "file": "SemverModel/Proofs/RefineParse.lean",
+    "line": 33,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "numeric_identifier_spec",
+    "file": "SemverModel/Proofs/RefineParse.lean",
+    "line": 51,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "dot_spec",
+    "file": "SemverModel/Proofs/RefineParse.lean",
+    "line": 56,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "is_ident_char_nondigit_spec",
+    "file": "SemverModel/Proofs/RefineParse.lean",
+    "line": 64,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "identLoop_unfold",
+    "file": "SemverModel/Proofs/RefineParse.lean",
+    "line": 70,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "isIdentNonDigit_zero",
+    "file": "SemverModel/Proofs/RefineParse.lean",
+    "line": 90,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "isDig_zero",
+    "file": "SemverModel/Proofs/RefineParse.lean",
+    "line": 93,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "identifier_loop_spec",
+    "file": "SemverModel/Proofs/RefineParse.lean",
+    "line": 108,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "sub_succ",
+    "file": "SemverModel/Proofs/RefinePrint.lean",
+    "line": 9,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "sub_self",
+    "file": "SemverModel/Proofs/RefinePrint.lean",
+    "line": 15,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "push_all_loop_spec",
+    "file": "SemverModel/Proofs/RefinePrint.lean",
+    "line": 18,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "push_all_spec",
+    "file": "SemverModel/Proofs/RefinePrint.lean",
+    "line": 41,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "copy_range_spec",
+    "file": "SemverModel/Proofs/RefinePrint.lean",
+    "line": 47,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "decimal_unfold",
+    "file": "SemverModel/Proofs/RefinePrint.lean",
+    "line": 54,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "decimal_length_pos",
+    "file": "SemverModel/Proofs/RefinePrint.lean",
+    "line": 59,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "digit_eq",
+    "file": "SemverModel/Proofs/RefinePrint.lean",
+    "line": 62,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "push_u64_spec",
+    "file": "SemverModel/Proofs/RefinePrint.lean",
+    "line": 71,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "sub_zero_full",
+    "file": "SemverModel/Proofs/RefinePrint.lean",
+    "line": 96,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "version_to_bytes_spec",
+    "file": "SemverModel/Proofs/RefinePrint.lean",
+    "line": 100,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "numLoop_le",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 15,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "dotM_ok",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 20,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "identLoop_bounds",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 24,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "spec_exists",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 30,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "identifier_spec0",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 33,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "identifier_spec",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 39,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "numeric_identifier_spec'",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 48,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "dot_spec'",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 57,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "parse_prerelease_spec",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 73,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "parse_build_spec",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 91,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "usize_eq_len",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 110,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "usize_eq_iff",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 113,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "usize_lt_len",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 115,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "u8_eq_iff",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 118,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "branch_ok_eq",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 120,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "branch_err_eq",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 122,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "residual_eq",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 124,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "branch_spec'",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 131,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "getElem_bang",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 136,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "vec_new_val",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 139,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "parse_version_spec",
+    "file": "SemverModel/Proofs/RefineVersion.lean",
+    "line": 149,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "decimal_lt10",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 16,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "ofNat_congr",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 20,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "decimal_snoc",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 23,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "digit_byte",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 32,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "sub_one",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 39,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "sub_append",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 42,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "numLoop_read",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 51,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "numM_read",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 87,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "dotM_read",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 91,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "identM_read",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 100,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "byte_at",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 104,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "sub_len_ne",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 110,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "parse_print",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 114,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "decimal_ne_nil",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 198,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "decimal_isDig",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 201,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "numLoop_step",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 215,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "numLoop_stop",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 226,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "get_mid",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 237,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "decimal_split",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 241,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "numLoop_dec",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 246,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "numM_dec",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 280,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "getElem!_mid",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 302,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "identLoop_ctx",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 306,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "numM_at",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 350,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "dotM_at",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 355,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "getElem!_at",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 360,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "sub_at",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 365,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "identM_whole",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 373,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "identM_at",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 380,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "stopper_nil",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 388,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "stopper_plus",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 389,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "nd_dot",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 391,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "nd_dash",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 393,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "nd_plus",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 395,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "nd_nil",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 397,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "prefix_parse",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 399,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "print_parse",
+    "file": "SemverModel/Proofs/RoundTrip.lean",
+    "line": 418,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "sub_cons",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 15,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "sub_nil",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 22,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "sub_length",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 25,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "allDigits_eq",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 31,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "cmpBytes_eq",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 45,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "compareLex_byteCmp",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 80,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "bytesN_inj",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 91,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "skipZeros_eq",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 99,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "cmpNat_eq",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 129,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "preSegCmp_eq",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 133,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "trim_decomp",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 145,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "eq_of_trim_eq",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 161,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "buildSegCmp_eq",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 164,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "segEnd_dot",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 192,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "segEnd_nodot",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 199,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "splitFrom_unfold",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 221,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "splitFrom_ne_nil",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 226,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "sub_full",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 229,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "drop_split",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 232,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "intercalate_splitFrom",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 240,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "splitDot_inj",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 254,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "cmpSegsLoop_eq",
+    "file": "SemverModel/Spec/Lists.lean",
+    "line": 262,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "cmpBytes_step",
+    "file": "SemverModel/Spec/Mirror.lean",
+    "line": 41,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "cmpBytes_stop",
+    "file": "SemverModel/Spec/Mirror.lean",
+    "line": 49,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "skipZeros_step",
+    "file": "SemverModel/Spec/Mirror.lean",
+    "line": 62,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "skipZeros_stop",
+    "file": "SemverModel/Spec/Mirror.lean",
+    "line": 66,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "skipZeros_bounds",
+    "file": "SemverModel/Spec/Mirror.lean",
+    "line": 69,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "segEnd_ge",
+    "file": "SemverModel/Spec/Mirror.lean",
+    "line": 98,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "segEnd_le",
+    "file": "SemverModel/Spec/Mirror.lean",
+    "line": 101,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "segEnd_ge'",
+    "file": "SemverModel/Spec/Mirror.lean",
+    "line": 104,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "cmpSegsLoop_unfold",
+    "file": "SemverModel/Spec/Mirror.lean",
+    "line": 124,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "segEnd_bounds",
+    "file": "SemverModel/Spec/Mirror.lean",
+    "line": 139,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "transCmp_pullback",
+    "file": "SemverModel/Spec/Order.lean",
+    "line": 18,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "lawfulEqCmp_pullback",
+    "file": "SemverModel/Spec/Order.lean",
+    "line": 24,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "splitDot_nil",
+    "file": "SemverModel/Spec/Order.lean",
+    "line": 74,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "preCmp_eq",
+    "file": "SemverModel/Spec/Order.lean",
+    "line": 78,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "buildCmp_eq",
+    "file": "SemverModel/Spec/Order.lean",
+    "line": 93,
+    "axioms": [],
+    "status": "proved"
+   },
+   {
+    "name": "versionCmp_eq",
+    "file": "SemverModel/Spec/Order.lean",
+    "line": 113,
+    "axioms": [],
+    "status": "proved"
+   }
+  ],
+  "proved": 145,
+  "total": 145,
+  "generated_sorries": 0,
+  "sorries": 0,
+  "axiom_thms": 0,
+  "unaudited": 0,
+  "errors": [],
+  "log": "\u2714 [1761/1775] Built SemverModel.Code.Types (1.6s)\n\u26a0 [1762/1775] Built SemverModel.Spec.Mirror (2.8s)\nwarning: SemverModel/Spec/Mirror.lean:47:39: This simp argument is unused:\n  List.getElem!_eq_getElem?_getD\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h1, h2, ha, hb, List.getElem?_eq_getElem]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Spec/Mirror.lean:47:71: This simp argument is unused:\n  List.getElem?_eq_getElem\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h1, h2, ha, hb, List.getElem!_eq_getElem?_getD]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Spec/Mirror.lean:51:31: `if_false` has been deprecated: Use `ite_false` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335f\u0335a\u0335l\u0335s\u0335e\u0335i\u0332t\u0332e\u0332_\u0332f\u0332a\u0332l\u0332s\u0332e\u0332\nwarning: SemverModel/Spec/Mirror.lean:64:32: This simp argument is unused:\n  List.getElem!_eq_getElem?_getD\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h1, ha, List.getElem?_eq_getElem]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Spec/Mirror.lean:64:64: This simp argument is unused:\n  List.getElem?_eq_getElem\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h1, ha, List.getElem!_eq_getElem?_getD]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Spec/Mirror.lean:108:5: Variable name `hi` is not explicitly referenced.\n\nHint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:\n  [apply] _hi\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`\n\u2714 [1763/1775] Built SemverModel.Code.Funs (3.2s)\n\u26a0 [1764/1775] Built SemverModel.Spec.Lists (3.5s)\nwarning: SemverModel/Spec/Lists.lean:290:29: This simp argument is unused:\n  ite_true\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [hle, hre, ite_false]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\n\u2714 [1765/1775] Built SemverModel.Spec.Order (3.4s)\n\u2714 [1766/1775] Built SemverModel.Spec.ParseMirror (5.0s)\n\u26a0 [1767/1775] Built SemverModel.Proofs.RefineCmp (12s)\nwarning: SemverModel/Proofs/RefineCmp.lean:156:47: This simp argument is unused:\n  eq_comm (a := Ordering.eq)\n\nHint: Omit it from the simp argument list.\n  [apply] simp only at *\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Proofs/RefineCmp.lean:144:31: Unused tactic linter: `(try simp only [eq_comm (a := Ordering.eq)] at *)` does nothing.\n\nNote: This linter can be disabled with `set_option linter.unusedTactic false`\nwarning: SemverModel/Proofs/RefineCmp.lean:190:41: This simp argument is unused:\n  eq_comm (a := Ordering.eq)\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [eq_comm (a := Ordering.lt), eq_comm (a := Ordering.gt)] at *\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\n\u2714 [1768/1775] Built SemverModel.Proofs.Order (3.1s)\n\u26a0 [1769/1775] Built SemverModel.Proofs.RefinePrint (10s)\nwarning: SemverModel/Proofs/RefinePrint.lean:87:47: This simp argument is unused:\n  ite_false\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [*, List.append_assoc, ite_true, List.nil_append]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Proofs/RefinePrint.lean:87:58: This simp argument is unused:\n  List.nil_append\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [*, List.append_assoc, ite_true, ite_false]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Proofs/RefinePrint.lean:94:18: This simp argument is unused:\n  List.append_assoc\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [*, ite_true, ite_false, List.nil_append]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Proofs/RefinePrint.lean:94:37: This simp argument is unused:\n  ite_true\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [*, List.append_assoc, ite_false, List.nil_append]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Proofs/RefinePrint.lean:111:88: Unused tactic linter: `done` does nothing.\n\nNote: This linter can be disabled with `set_option linter.unusedTactic false`\n\u26a0 [1770/1775] Built SemverModel.Proofs.RefineParse (70s)\nwarning: SemverModel/Proofs/RefineParse.lean:61:62: Unused tactic linter: `<;>` should be replaced with `;` or be removed.\n\nNote: This linter can be disabled with `set_option linter.unusedTactic false`\n\u26a0 [1771/1775] Built SemverModel.Proofs.RefineVersion (33s)\nwarning: SemverModel/Proofs/RefineVersion.lean:158:6: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: SemverModel/Proofs/RefineVersion.lean:158:18: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\n\u2714 [1772/1775] Built SemverModel.Proofs.RoundTrip (5.5s)\n\u2714 [1773/1775] Built SemverModel.Proofs.Main (2.0s)\n\u2714 [1774/1775] Built SemverModel (1.9s)\nBuild completed successfully (1775 jobs).\n"
+ },
+ "functions": {
+  "total": 116,
+  "verified": 28,
+  "fixed": 0,
+  "open": 88,
+  "complete": false,
+  "functions": [
+   {
+    "id": "src/display.rs:Display for Version::fmt",
+    "file": "src/display.rs",
+    "line": 5,
+    "name": "fmt",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/display.rs:Display for VersionReq::fmt",
+    "file": "src/display.rs",
+    "line": 34,
+    "name": "fmt",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/display.rs:Display for Comparator::fmt",
+    "file": "src/display.rs",
+    "line": 49,
+    "name": "fmt",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/display.rs:Display for Prerelease::fmt",
+    "file": "src/display.rs",
+    "line": 80,
+    "name": "fmt",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/display.rs:Display for BuildMetadata::fmt",
+    "file": "src/display.rs",
+    "line": 86,
+    "name": "fmt",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/display.rs:Debug for Version::fmt",
+    "file": "src/display.rs",
+    "line": 92,
+    "name": "fmt",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/display.rs:Debug for Prerelease::fmt",
+    "file": "src/display.rs",
+    "line": 109,
+    "name": "fmt",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/display.rs:Debug for BuildMetadata::fmt",
+    "file": "src/display.rs",
+    "line": 115,
+    "name": "fmt",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/display.rs:pad",
+    "file": "src/display.rs",
+    "line": 120,
+    "name": "pad",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/display.rs:digits",
+    "file": "src/display.rs",
+    "line": 156,
+    "name": "digits",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/error.rs:Display for Error::fmt",
+    "file": "src/error.rs",
+    "line": 33,
+    "name": "fmt",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/error.rs:Display for Position::fmt",
+    "file": "src/error.rs",
+    "line": 93,
+    "name": "fmt",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/error.rs:Debug for Error::fmt",
+    "file": "src/error.rs",
+    "line": 105,
+    "name": "fmt",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/error.rs:Display for QuotedChar::fmt",
+    "file": "src/error.rs",
+    "line": 116,
+    "name": "fmt",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/eval.rs:matches_req",
+    "file": "src/eval.rs",
+    "line": 3,
+    "name": "matches_req",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/eval.rs:matches_comparator",
+    "file": "src/eval.rs",
+    "line": 26,
+    "name": "matches_comparator",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/eval.rs:matches_impl",
+    "file": "src/eval.rs",
+    "line": 30,
+    "name": "matches_impl",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/eval.rs:matches_exact",
+    "file": "src/eval.rs",
+    "line": 42,
+    "name": "matches_exact",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/eval.rs:matches_greater",
+    "file": "src/eval.rs",
+    "line": 62,
+    "name": "matches_greater",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/eval.rs:matches_less",
+    "file": "src/eval.rs",
+    "line": 88,
+    "name": "matches_less",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/eval.rs:matches_tilde",
+    "file": "src/eval.rs",
+    "line": 114,
+    "name": "matches_tilde",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/eval.rs:matches_caret",
+    "file": "src/eval.rs",
+    "line": 134,
+    "name": "matches_caret",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/eval.rs:pre_is_compatible",
+    "file": "src/eval.rs",
+    "line": 170,
+    "name": "pre_is_compatible",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/identifier.rs:Identifier::empty",
+    "file": "src/identifier.rs",
+    "line": 90,
+    "name": "empty",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/identifier.rs:Identifier::new_unchecked",
+    "file": "src/identifier.rs",
+    "line": 104,
+    "name": "new_unchecked",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/identifier.rs:Identifier::is_empty",
+    "file": "src/identifier.rs",
+    "line": 167,
+    "name": "is_empty",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/identifier.rs:Identifier::is_inline",
+    "file": "src/identifier.rs",
+    "line": 178,
+    "name": "is_inline",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/identifier.rs:Identifier::is_empty_or_inline",
+    "file": "src/identifier.rs",
+    "line": 183,
+    "name": "is_empty_or_inline",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/identifier.rs:Identifier::as_str",
+    "file": "src/identifier.rs",
+    "line": 188,
+    "name": "as_str",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/identifier.rs:Identifier::ptr_eq",
+    "file": "src/identifier.rs",
+    "line": 200,
+    "name": "ptr_eq",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/identifier.rs:Clone for Identifier::clone",
+    "file": "src/identifier.rs",
+    "line": 206,
+    "name": "clone",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/identifier.rs:Drop for Identifier::drop",
+    "file": "src/identifier.rs",
+    "line": 241,
+    "name": "drop",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/identifier.rs:PartialEq for Identifier::eq",
+    "file": "src/identifier.rs",
+    "line": 261,
+    "name": "eq",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/identifier.rs:ptr_to_repr",
+    "file": "src/identifier.rs",
+    "line": 281,
+    "name": "ptr_to_repr",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/identifier.rs:repr_to_ptr",
+    "file": "src/identifier.rs",
+    "line": 298,
+    "name": "repr_to_ptr",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/identifier.rs:repr_to_ptr_mut",
+    "file": "src/identifier.rs",
+    "line": 308,
+    "name": "repr_to_ptr_mut",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/identifier.rs:inline_len",
+    "file": "src/identifier.rs",
+    "line": 317,
+    "name": "inline_len",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/identifier.rs:inline_as_str",
+    "file": "src/identifier.rs",
+    "line": 337,
+    "name": "inline_as_str",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/identifier.rs:decode_len",
+    "file": "src/identifier.rs",
+    "line": 356,
+    "name": "decode_len",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/identifier.rs:decode_len_cold",
+    "file": "src/identifier.rs",
+    "line": 373,
+    "name": "decode_len_cold",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/identifier.rs:ptr_as_str",
+    "file": "src/identifier.rs",
+    "line": 397,
+    "name": "ptr_as_str",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/identifier.rs:bytes_for_varint",
+    "file": "src/identifier.rs",
+    "line": 408,
+    "name": "bytes_for_varint",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/impls.rs:Default for Identifier::default",
+    "file": "src/impls.rs",
+    "line": 9,
+    "name": "default",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/impls.rs:Hash for Identifier::hash",
+    "file": "src/impls.rs",
+    "line": 17,
+    "name": "hash",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/impls.rs:Deref for Prerelease::deref",
+    "file": "src/impls.rs",
+    "line": 25,
+    "name": "deref",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/impls.rs:Deref for BuildMetadata::deref",
+    "file": "src/impls.rs",
+    "line": 33,
+    "name": "deref",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/impls.rs:PartialOrd for Prerelease::partial_cmp",
+    "file": "src/impls.rs",
+    "line": 39,
+    "name": "partial_cmp",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/impls.rs:PartialOrd for BuildMetadata::partial_cmp",
+    "file": "src/impls.rs",
+    "line": 45,
+    "name": "partial_cmp",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/impls.rs:Ord for Prerelease::cmp",
+    "file": "src/impls.rs",
+    "line": 51,
+    "name": "cmp",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/impls.rs:Ord for BuildMetadata::cmp",
+    "file": "src/impls.rs",
+    "line": 108,
+    "name": "cmp",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/impls.rs:FromIterator for VersionReq::from_iter",
+    "file": "src/impls.rs",
+    "line": 153,
+    "name": "from_iter",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/lib.rs:Version::new",
+    "file": "src/lib.rs",
+    "line": 389,
+    "name": "new",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/lib.rs:Version::parse",
+    "file": "src/lib.rs",
+    "line": 422,
+    "name": "parse",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/lib.rs:Version::cmp_precedence",
+    "file": "src/lib.rs",
+    "line": 466,
+    "name": "cmp_precedence",
+    "lean": "push_u64",
+    "theorems": [
+     "push_u64_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:VersionReq::parse",
+    "file": "src/lib.rs",
+    "line": 507,
+    "name": "parse",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/lib.rs:VersionReq::matches",
+    "file": "src/lib.rs",
+    "line": 513,
+    "name": "matches",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/lib.rs:Default for VersionReq::default",
+    "file": "src/lib.rs",
+    "line": 520,
+    "name": "default",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/lib.rs:Comparator::parse",
+    "file": "src/lib.rs",
+    "line": 526,
+    "name": "parse",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/lib.rs:Comparator::matches",
+    "file": "src/lib.rs",
+    "line": 530,
+    "name": "matches",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/lib.rs:Prerelease::new",
+    "file": "src/lib.rs",
+    "line": 540,
+    "name": "new",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/lib.rs:Prerelease::as_str",
+    "file": "src/lib.rs",
+    "line": 544,
+    "name": "as_str",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/lib.rs:Prerelease::is_empty",
+    "file": "src/lib.rs",
+    "line": 548,
+    "name": "is_empty",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/lib.rs:BuildMetadata::new",
+    "file": "src/lib.rs",
+    "line": 558,
+    "name": "new",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/lib.rs:BuildMetadata::as_str",
+    "file": "src/lib.rs",
+    "line": 562,
+    "name": "as_str",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/lib.rs:BuildMetadata::is_empty",
+    "file": "src/lib.rs",
+    "line": 566,
+    "name": "is_empty",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/parse.rs:FromStr for Version::from_str",
+    "file": "src/parse.rs",
+    "line": 28,
+    "name": "from_str",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/parse.rs:FromStr for VersionReq::from_str",
+    "file": "src/parse.rs",
+    "line": 87,
+    "name": "from_str",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/parse.rs:FromStr for Comparator::from_str",
+    "file": "src/parse.rs",
+    "line": 111,
+    "name": "from_str",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/parse.rs:FromStr for Prerelease::from_str",
+    "file": "src/parse.rs",
+    "line": 125,
+    "name": "from_str",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/parse.rs:FromStr for BuildMetadata::from_str",
+    "file": "src/parse.rs",
+    "line": 137,
+    "name": "from_str",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/parse.rs:Error::new",
+    "file": "src/parse.rs",
+    "line": 147,
+    "name": "new",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/parse.rs:numeric_identifier",
+    "file": "src/parse.rs",
+    "line": 156,
+    "name": "numeric_identifier",
+    "lean": "numeric_identifier",
+    "theorems": [
+     "numeric_identifier_loop_spec",
+     "numeric_identifier_spec",
+     "numeric_identifier_spec'"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/parse.rs:wildcard",
+    "file": "src/parse.rs",
+    "line": 186,
+    "name": "wildcard",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/parse.rs:dot",
+    "file": "src/parse.rs",
+    "line": 198,
+    "name": "dot",
+    "lean": "dot",
+    "theorems": [
+     "dot_spec",
+     "dotM_ok",
+     "dot_spec'",
+     "dotM_read",
+     "dotM_at",
+     "nd_dot",
+     "segEnd_dot",
+     "segEnd_nodot"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/parse.rs:prerelease_identifier",
+    "file": "src/parse.rs",
+    "line": 208,
+    "name": "prerelease_identifier",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/parse.rs:build_identifier",
+    "file": "src/parse.rs",
+    "line": 214,
+    "name": "build_identifier",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/parse.rs:identifier",
+    "file": "src/parse.rs",
+    "line": 220,
+    "name": "identifier",
+    "lean": "identifier",
+    "theorems": [
+     "numeric_identifier_loop_spec",
+     "numeric_identifier_spec",
+     "identifier_loop_spec",
+     "identifier_spec0",
+     "identifier_spec",
+     "numeric_identifier_spec'"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/parse.rs:op",
+    "file": "src/parse.rs",
+    "line": 262,
+    "name": "op",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/parse.rs:comparator",
+    "file": "src/parse.rs",
+    "line": 287,
+    "name": "comparator",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/parse.rs:version_req",
+    "file": "src/parse.rs",
+    "line": 366,
+    "name": "version_req",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/serde.rs:Serialize for Version::serialize",
+    "file": "src/serde.rs",
+    "line": 7,
+    "name": "serialize",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/serde.rs:Serialize for VersionReq::serialize",
+    "file": "src/serde.rs",
+    "line": 16,
+    "name": "serialize",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/serde.rs:Serialize for Comparator::serialize",
+    "file": "src/serde.rs",
+    "line": 25,
+    "name": "serialize",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/serde.rs:Deserialize for Version::deserialize",
+    "file": "src/serde.rs",
+    "line": 34,
+    "name": "deserialize",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/serde.rs:Visitor for VersionVisitor::expecting",
+    "file": "src/serde.rs",
+    "line": 43,
+    "name": "expecting",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/serde.rs:Visitor for VersionVisitor::visit_str",
+    "file": "src/serde.rs",
+    "line": 47,
+    "name": "visit_str",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/serde.rs:Deserialize for VersionReq::deserialize",
+    "file": "src/serde.rs",
+    "line": 60,
+    "name": "deserialize",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/serde.rs:Visitor for VersionReqVisitor::expecting",
+    "file": "src/serde.rs",
+    "line": 69,
+    "name": "expecting",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/serde.rs:Visitor for VersionReqVisitor::visit_str",
+    "file": "src/serde.rs",
+    "line": 73,
+    "name": "visit_str",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/serde.rs:Deserialize for Comparator::deserialize",
+    "file": "src/serde.rs",
+    "line": 86,
+    "name": "deserialize",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/serde.rs:Visitor for ComparatorVisitor::expecting",
+    "file": "src/serde.rs",
+    "line": 95,
+    "name": "expecting",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/serde.rs:Visitor for ComparatorVisitor::visit_str",
+    "file": "src/serde.rs",
+    "line": 99,
+    "name": "visit_str",
+    "lean": null,
+    "theorems": [],
+    "status": "open",
+    "why": "not extracted (unsupported by Aeneas or excluded by cfg)",
+    "label": "none"
+   },
+   {
+    "id": "src/lib.rs:is_digit",
+    "file": "src/lib.rs",
+    "line": 64,
+    "name": "is_digit",
+    "added_by_patch": true,
+    "lean": "is_digit",
+    "theorems": [
+     "is_digit_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:segment_end",
+    "file": "src/lib.rs",
+    "line": 69,
+    "name": "segment_end",
+    "added_by_patch": true,
+    "lean": "segment_end",
+    "theorems": [
+     "segment_end_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:all_digits",
+    "file": "src/lib.rs",
+    "line": 81,
+    "name": "all_digits",
+    "added_by_patch": true,
+    "lean": "all_digits",
+    "theorems": [
+     "all_digits_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:cmp_bytes",
+    "file": "src/lib.rs",
+    "line": 93,
+    "name": "cmp_bytes",
+    "added_by_patch": true,
+    "lean": "cmp_bytes",
+    "theorems": [
+     "cmp_bytes_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:cmp_usize",
+    "file": "src/lib.rs",
+    "line": 117,
+    "name": "cmp_usize",
+    "added_by_patch": true,
+    "lean": "cmp_usize",
+    "theorems": [
+     "cmp_usize_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:cmp_u64",
+    "file": "src/lib.rs",
+    "line": 127,
+    "name": "cmp_u64",
+    "added_by_patch": true,
+    "lean": "cmp_u64",
+    "theorems": [
+     "cmp_u64_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:skip_zeros",
+    "file": "src/lib.rs",
+    "line": 138,
+    "name": "skip_zeros",
+    "added_by_patch": true,
+    "lean": "skip_zeros",
+    "theorems": [
+     "skip_zeros_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:pre_segment_cmp",
+    "file": "src/lib.rs",
+    "line": 155,
+    "name": "pre_segment_cmp",
+    "added_by_patch": true,
+    "lean": "pre_segment_cmp",
+    "theorems": [
+     "pre_segment_cmp_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:build_segment_cmp",
+    "file": "src/lib.rs",
+    "line": 167,
+    "name": "build_segment_cmp",
+    "added_by_patch": true,
+    "lean": "build_segment_cmp",
+    "theorems": [
+     "build_segment_cmp_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:cmp_segments",
+    "file": "src/lib.rs",
+    "line": 188,
+    "name": "cmp_segments",
+    "added_by_patch": true,
+    "lean": "cmp_segments",
+    "theorems": [
+     "cmp_segments_loop_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:prerelease_cmp",
+    "file": "src/lib.rs",
+    "line": 229,
+    "name": "prerelease_cmp",
+    "added_by_patch": true,
+    "lean": "prerelease_cmp",
+    "theorems": [
+     "prerelease_cmp_ok",
+     "prerelease_cmp_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:build_cmp",
+    "file": "src/lib.rs",
+    "line": 245,
+    "name": "build_cmp",
+    "added_by_patch": true,
+    "lean": "build_cmp",
+    "theorems": [
+     "build_cmp_ok",
+     "build_cmp_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:version_cmp",
+    "file": "src/lib.rs",
+    "line": 255,
+    "name": "version_cmp",
+    "added_by_patch": true,
+    "lean": "version_cmp",
+    "theorems": [
+     "version_cmp_ok",
+     "version_cmp_eq_versionOrd",
+     "version_cmp_total_order",
+     "version_cmp_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:numeric_identifier",
+    "file": "src/lib.rs",
+    "line": 280,
+    "name": "numeric_identifier",
+    "added_by_patch": true,
+    "lean": "numeric_identifier",
+    "theorems": [
+     "numeric_identifier_loop_spec",
+     "numeric_identifier_spec",
+     "numeric_identifier_spec'"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:dot",
+    "file": "src/lib.rs",
+    "line": 309,
+    "name": "dot",
+    "added_by_patch": true,
+    "lean": "dot",
+    "theorems": [
+     "dot_spec",
+     "dotM_ok",
+     "dot_spec'",
+     "dotM_read",
+     "dotM_at",
+     "nd_dot",
+     "segEnd_dot",
+     "segEnd_nodot"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:is_ident_char_nondigit",
+    "file": "src/lib.rs",
+    "line": 319,
+    "name": "is_ident_char_nondigit",
+    "added_by_patch": true,
+    "lean": "is_ident_char_nondigit",
+    "theorems": [
+     "is_ident_char_nondigit_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:identifier",
+    "file": "src/lib.rs",
+    "line": 327,
+    "name": "identifier",
+    "added_by_patch": true,
+    "lean": "identifier",
+    "theorems": [
+     "numeric_identifier_loop_spec",
+     "numeric_identifier_spec",
+     "identifier_loop_spec",
+     "identifier_spec0",
+     "identifier_spec",
+     "numeric_identifier_spec'"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:push_all",
+    "file": "src/lib.rs",
+    "line": 366,
+    "name": "push_all",
+    "added_by_patch": true,
+    "lean": "push_all",
+    "theorems": [
+     "push_all_loop_spec",
+     "push_all_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:copy_range",
+    "file": "src/lib.rs",
+    "line": 374,
+    "name": "copy_range",
+    "added_by_patch": true,
+    "lean": "copy_range",
+    "theorems": [
+     "copy_range_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:parse_version",
+    "file": "src/lib.rs",
+    "line": 381,
+    "name": "parse_version",
+    "added_by_patch": true,
+    "lean": "parse_version",
+    "theorems": [
+     "parse_version_total",
+     "parse_then_print",
+     "print_then_parse",
+     "parse_version_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:parse_prerelease",
+    "file": "src/lib.rs",
+    "line": 443,
+    "name": "parse_prerelease",
+    "added_by_patch": true,
+    "lean": "parse_prerelease",
+    "theorems": [
+     "parse_prerelease_accepts",
+     "parse_prerelease_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:parse_build",
+    "file": "src/lib.rs",
+    "line": 453,
+    "name": "parse_build",
+    "added_by_patch": true,
+    "lean": "parse_build",
+    "theorems": [
+     "parse_build_accepts",
+     "parse_build_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:push_u64",
+    "file": "src/lib.rs",
+    "line": 467,
+    "name": "push_u64",
+    "added_by_patch": true,
+    "lean": "push_u64",
+    "theorems": [
+     "push_u64_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   },
+   {
+    "id": "src/lib.rs:version_to_bytes",
+    "file": "src/lib.rs",
+    "line": 475,
+    "name": "version_to_bytes",
+    "added_by_patch": true,
+    "lean": "version_to_bytes",
+    "theorems": [
+     "parse_then_print",
+     "print_then_parse",
+     "version_to_bytes_spec"
+    ],
+    "status": "verified",
+    "label": "unlabelled"
+   }
+  ],
+  "overrides_not_found": []
+ },
+ "crosscheck": [],
+ "forbidden": [],
+ "model_crate": true,
+ "finished": "2026-10-24T11:23:01Z",
+ "admission": {
+  "status": "candidate",
+  "label": "unlabelled",
+  "gates": {
+   "real_code": {
+    "pass": false,
+    "detail": "upstream archive SHA-256 not pinned in vpipe.toml (this run: ccd7b1baee6ac4acc4a56a80c78c0397d94af4ad15c2f8fe722c509bba9bcf73)"
+   },
+   "every_function": {
+    "pass": false,
+    "detail": "28/116 functions verified or fixed; targets/features covered not declared in [coverage]"
+   },
+   "all_inputs": {
+    "pass": true,
+    "detail": "no bounded-only evidence"
+   },
+   "full_strength": {
+    "pass": false,
+    "detail": "entry strength unlabelled"
+   },
+   "spec_first": {
+    "pass": false,
+    "detail": "need [scope].properties, [scope].written (date) and [scope].reviewed_by"
+   },
+   "not_vacuous": {
+    "pass": false,
+    "detail": "no planted-bug run on this commit (`vpipe mutate`); [scope].test_vectors missing"
+   },
+   "trusted_base": {
+    "pass": true,
+    "detail": "clean; kernel replay passed"
+   },
+   "cross_check": {
+    "pass": false,
+    "detail": "no [crosscheck] commands"
+   },
+   "reproducible": {
+    "pass": false,
+    "detail": "0 matching clean run(s) on this toolchain; no container digest pinned in toolchain/versions.toml [container]"
+   },
+   "two_reviews": {
+    "pass": false,
+    "detail": "need [review].maintainer and [review].adversarial"
+   }
+  },
+  "passed": 2,
+  "soundness_bugs": [],
+  "admitted": false
+ }
+}

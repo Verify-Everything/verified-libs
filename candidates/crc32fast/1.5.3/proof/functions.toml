@@ -67,7 +67,7 @@ id = "src/lib.rs:Hasher::update"
 theorems = ["update_eq_any", "amount_after", "update_update_any", "update_update_eq_hash"]
 label = "full-correctness"
 status = "fixed"
-fix = "patches/0001-hasher-wrapping-add.patch"
+fix = "fork commit 990c6c1 (Verify-Everything/crc32fast): wrapping_add"
 note = "upstream panics in debug builds when the u64 byte count overflows (e.g. new_with_initial_len(_, u64::MAX) then update); fixed with wrapping_add, proved for every input"
 
 [[function]]
@@ -90,7 +90,7 @@ id = "src/lib.rs:Hasher::combine"
 theorems = ["hasher_combine_exact", "hasher_combine_eq", "combine_eq_hash"]
 label = "full-correctness"
 status = "fixed"
-fix = "patches/0001-hasher-wrapping-add.patch"
+fix = "fork commit 990c6c1 (Verify-Everything/crc32fast): wrapping_add"
 note = "same u64 overflow as update (amount += other.amount); fixed with wrapping_add"
 
 [[function]]
@@ -135,19 +135,22 @@ note = "variant aarch64"
 
 [[function]]
 id = "src/specialized/aarch64.rs:calculate"
+rewrite = "de4662afb648f638673178da002fbc93e518d1df"  # rewritten in the fork (commit b4227bf) so Aeneas reads it; proved against the spec
 theorems = ["calculate_eq"]
 label = "full-correctness"
 note = "variant aarch64: any length, any align_to split, 1-stream and 3-stream paths"
 
 [[function]]
 id = "src/specialized/aarch64.rs:split_quads"
+rewrite = "de4662afb648f638673178da002fbc93e518d1df"  # rewritten in the fork (commit b4227bf) so Aeneas reads it; proved against the spec
 lean = "specialized.aarch64.split_quads"  # kept opaque in extraction; modelled in External/FunsExternal.lean, checked against the CPU by crosscheck/models.sh
 theorems = ["split_eq", "calculate_eq"]
 label = "full-correctness"
-note = "helper added by patch 0002 around align_to; std model: prefix ++ u64s (little endian) ++ suffix for any split"
+note = "helper added by fork commit b4227bf around align_to; std model: prefix ++ u64s (little endian) ++ suffix for any split"
 
 [[function]]
 id = "src/specialized/aarch64.rs:crc_quads"
+rewrite = "de4662afb648f638673178da002fbc93e518d1df"  # rewritten in the fork (commit b4227bf) so Aeneas reads it; proved against the spec
 theorems = ["crc_quads_eq"]
 label = "full-correctness"
 note = "variant aarch64"
@@ -214,6 +217,7 @@ note = "AVX-512 + VPCLMULQDQ, any length"
 
 [[function]]
 id = "src/specialized/pclmulqdq.rs:reduce_128_to_crc"
+rewrite = "de4662afb648f638673178da002fbc93e518d1df"  # rewritten in the fork (commit b4227bf) so Aeneas reads it; proved against the spec
 theorems = ["r128_eq"]
 label = "full-correctness"
 
@@ -229,41 +233,48 @@ label = "full-correctness"
 
 [[function]]
 id = "src/specialized/pclmulqdq.rs:reduce512"
+rewrite = "de4662afb648f638673178da002fbc93e518d1df"  # rewritten in the fork (commit b4227bf) so Aeneas reads it; proved against the spec
 theorems = ["reduce512_eq"]
 label = "full-correctness"
 
 [[function]]
 id = "src/specialized/pclmulqdq.rs:load128"
+rewrite = "de4662afb648f638673178da002fbc93e518d1df"  # rewritten in the fork (commit b4227bf) so Aeneas reads it; proved against the spec
 lean = "specialized.pclmulqdq.load128"  # kept opaque in extraction; modelled in External/FunsExternal.lean, checked against the CPU by crosscheck/models.sh
 theorems = ["get_eq"]
 label = "full-correctness"
-note = "helper added by patch 0002 around _mm_loadu_si128; intrinsic model, used only with >= 16 bytes (proved at every call)"
+note = "helper added by fork commit b4227bf around _mm_loadu_si128; intrinsic model, used only with >= 16 bytes (proved at every call)"
 
 [[function]]
 id = "src/specialized/pclmulqdq.rs:load256"
+rewrite = "de4662afb648f638673178da002fbc93e518d1df"  # rewritten in the fork (commit b4227bf) so Aeneas reads it; proved against the spec
 lean = "specialized.pclmulqdq.load256"  # kept opaque in extraction; modelled in External/FunsExternal.lean, checked against the CPU by crosscheck/models.sh
 theorems = ["get256_eq"]
 label = "full-correctness"
-note = "helper added by patch 0002; intrinsic model, used only with >= 32 bytes"
+note = "helper added by fork commit b4227bf; intrinsic model, used only with >= 32 bytes"
 
 [[function]]
 id = "src/specialized/pclmulqdq.rs:load512"
+rewrite = "de4662afb648f638673178da002fbc93e518d1df"  # rewritten in the fork (commit b4227bf) so Aeneas reads it; proved against the spec
 lean = "specialized.pclmulqdq.load512"  # kept opaque in extraction; modelled in External/FunsExternal.lean, checked against the CPU by crosscheck/models.sh
 theorems = ["get512_eq"]
 label = "full-correctness"
-note = "helper added by patch 0002; intrinsic model, used only with >= 64 bytes"
+note = "helper added by fork commit b4227bf; intrinsic model, used only with >= 64 bytes"
 
 [[function]]
 id = "src/specialized/pclmulqdq.rs:get"
+rewrite = "de4662afb648f638673178da002fbc93e518d1df"  # rewritten in the fork (commit b4227bf) so Aeneas reads it; proved against the spec
 theorems = ["get_eq"]
 label = "full-correctness"
 
 [[function]]
 id = "src/specialized/pclmulqdq.rs:get256"
+rewrite = "de4662afb648f638673178da002fbc93e518d1df"  # rewritten in the fork (commit b4227bf) so Aeneas reads it; proved against the spec
 theorems = ["get256_eq"]
 label = "full-correctness"
 
 [[function]]
 id = "src/specialized/pclmulqdq.rs:get512"
+rewrite = "de4662afb648f638673178da002fbc93e518d1df"  # rewritten in the fork (commit b4227bf) so Aeneas reads it; proved against the spec
 theorems = ["get512_eq"]
 label = "full-correctness"

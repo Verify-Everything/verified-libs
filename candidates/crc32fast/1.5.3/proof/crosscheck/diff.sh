@@ -1,14 +1,24 @@
 #!/bin/bash
 # Differential test of the proved (patched) crc32fast tree against a bitwise reference CRC-32
 # and against the pristine upstream tree, on every x86_64 kernel (portable, SSE, AVX2, AVX-512)
-# and the std runtime-detection build. Usage: diff.sh <patched-tree> [cases] [pristine-tree]
+# and the std runtime-detection build. Usage: diff.sh <tree> [cases] <pristine commit or dir>
 set -euo pipefail
 TREE=$(cd "$1" && pwd); CASES=${2:-50000}
 HERE=$(cd "$(dirname "$0")" && pwd); W=$(mktemp -d); trap 'rm -rf "$W"' EXIT
-# Pristine upstream: vpipe keeps it next to the patched tree; otherwise pass it as $3.
-PRISTINE=${3:-$(dirname "$TREE")/src}
-[ -f "$PRISTINE/Cargo.toml" ] || { echo "pristine tree not found: $PRISTINE"; exit 1; }
-cp -a "$PRISTINE" "$W/pristine"; rm -rf "$W/pristine/.git" "$W/pristine/target"
+# Pristine upstream: $3 = a commit (taken with git archive from the tree's repository, or from
+# vpipe's src/ clone next to it), or a directory. The fork keeps upstream as branch upstream-1.5.3.
+P=${3:-}
+if [ -n "$P" ] && [ -d "$P" ]; then
+  cp -a "$P" "$W/pristine"; rm -rf "$W/pristine/.git" "$W/pristine/target"
+elif [ -n "$P" ]; then
+  G=$TREE; git -C "$G" rev-parse -q --verify "$P^{commit}" >/dev/null 2>&1 || G=$(dirname "$TREE")/src
+  git -C "$G" rev-parse -q --verify "$P^{commit}" >/dev/null 2>&1 || git -C "$G" fetch -q origin "$P" || true
+  mkdir -p "$W/pristine" && git -C "$G" archive "$P" | tar -x -C "$W/pristine" || { echo "cannot read pristine commit $P"; exit 1; }
+else
+  echo "usage: diff.sh <tree> [cases] <pristine commit or dir>"; exit 1
+fi
+[ -f "$W/pristine/Cargo.toml" ] || { echo "pristine tree not found"; exit 1; }
+if cmp -s "$W/pristine/src/lib.rs" "$TREE/src/lib.rs"; then echo "pristine equals the tree under test; pass the upstream base"; exit 1; fi
 # Instrumented copy: records which kernel State::new picked (only to confirm path selection).
 cp -a "$TREE" "$W/instr"; rm -rf "$W/instr/.git" "$W/instr/target"
 python3 - "$W/instr" <<'P'

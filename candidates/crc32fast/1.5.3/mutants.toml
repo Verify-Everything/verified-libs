@@ -1,0 +1,103 @@
+chosen_by = "adversarial reviewer agent (independent of the proof author), crc32fast thread, 2026-11-02"
+
+[[mutant]]
+file = "src/specialized/pclmulqdq.rs"
+find = "let k1k2 = arch::_mm_set_epi64x(K2, K1);"
+replace = "let k1k2 = arch::_mm_set_epi64x(K1, K2);"
+note = "SSE fold-by-4 keys swapped: the low and high qwords of each accumulator are multiplied by the wrong power of x. Reached by the SSE kernel (x86_64-std, any CPU with pclmulqdq+sse4.1+ssse3) for len >= 128, and by the AVX-512 tail restart. Not equivalent: K1 != K2, so x^(D+32) and x^(D-32) are exchanged and the result differs for nonzero data."
+
+[[mutant]]
+file = "src/specialized/pclmulqdq.rs"
+find = "const K_1024_LOW: i64 = 0x1e88ef372;"
+replace = "const K_1024_LOW: i64 = 0x1e88ef373;"
+note = "Wrong AVX2 fold constant (one bit flipped in reflect(x^1056 mod P)). Reached by the AVX2 kernel (x86_64-std, avx2+vpclmulqdq CPU) for len >= 256, and by the AVX-512 kernel for 256 <= len < 2048. Not equivalent: the loop folds v0..v3 with this constant whenever len >= 256, adding a nonzero clmul term for nonzero low qwords."
+
+[[mutant]]
+file = "src/specialized/pclmulqdq.rs"
+find = "let t2 = arch::_mm256_clmulepi64_epi128(a, keys, 0x11);"
+replace = "let t2 = arch::_mm256_clmulepi64_epi128(a, keys, 0x01);"
+note = "Wrong clmul immediate in reduce256: high qword of a times LOW key instead of high times high. AVX2 kernel (x86_64-std), len >= 256. Not equivalent: K_1024_LOW != K_1024_HIGH, so the product differs whenever the high qword of a stream is nonzero."
+
+[[mutant]]
+file = "src/specialized/pclmulqdq.rs"
+find = "arch::_mm512_extracti32x4_epi32(v2, 2)"
+replace = "arch::_mm512_extracti32x4_epi32(v2, 1)"
+note = "Wrong lane extract in the AVX-512 16-stream collapse: lane 1 of v2 is folded twice and lane 2 never. AVX-512 kernel (x86_64-std, avx512f+vpclmulqdq CPU), len >= 2048. Not equivalent: the two 128-bit lanes hold different streams, so the result changes whenever they differ."
+
+[[mutant]]
+file = "src/specialized/pclmulqdq.rs"
+find = "let crc = reduce_128_to_crc(x, &[]);"
+replace = "let crc = reduce_128_to_crc(x, data);"
+note = "AVX-512 remainder restart folds the remainder into the intermediate CRC and then hashes it again through calculate (data counted twice). AVX-512 kernel (x86_64-std), len >= 2048 with a remainder >= 128 after the 256-byte loop (e.g. len = 2048+128). Not equivalent: gives crc(prefix||rem||rem) instead of crc(prefix||rem)."
+
+[[mutant]]
+file = "src/specialized/pclmulqdq.rs"
+find = "arch::_mm_set1_epi8(n as i8 - 16)"
+replace = "arch::_mm_set1_epi8(n as i8 - 15)"
+note = "Off-by-one in the partial-block shuffle mask of reduce_128_to_crc (shared tail of SSE, AVX2, AVX-512). Reached for every x86 kernel when len >= 16 and len % 16 != 0. Not equivalent: for n = 15 the mask becomes the identity, so overflow = x and x is zeroed, which is not the n-byte shift (only n = 0 is skipped, and n is 1..15 here)."
+
+[[mutant]]
+file = "src/specialized/pclmulqdq.rs"
+find = "if is_x86_feature_detected!(\"avx512f\") && is_x86_feature_detected!(\"vpclmulqdq\") {"
+replace = "if is_x86_feature_detected!(\"avx2\") && is_x86_feature_detected!(\"vpclmulqdq\") {"
+note = "std detect() picks the AVX-512 kernel on a CPU that has avx2+vpclmulqdq but no avx512f: an unsupported-instruction fault (SIGILL) on such CPUs. x86_64-std build. Not equivalent on real hardware; it is killed only if the proofs tie each kernel to its CPU-feature precondition (the arithmetic output under pure intrinsic models is unchanged), so it tests whether the 'detect only returns supported kinds' SAFETY claim is actually proved."
+
+[[mutant]]
+file = "src/specialized/aarch64.rs"
+find = "let block_len = (n3 * 8) as u64;"
+replace = "let block_len = (n3 * 4) as u64;"
+note = "Wrong combine shift in the aarch64 3-stream path: each block is shifted by half its byte length. aarch64-std (crc CPU), quads.len() >= 192 (len >= ~1536+7). Not equivalent: combine(a, b, L) depends on L through x^(8L) mod P, and n3*4 != n3*8 for n3 >= 64."
+
+[[mutant]]
+file = "src/specialized/aarch64.rs"
+find = "let mut c1 = !0u32;"
+replace = "let mut c1 = 0u32;"
+note = "Stream B of the 3-stream path seeded with internal state 0 (finalized 0xFFFFFFFF) instead of the zero CRC. aarch64-std, quads.len() >= 192. Not equivalent: CRC is affine in the seed, a nonzero seed adds x^(8*block_len)*0xFFFFFFFF mod P != 0 to stream B's value for every input."
+
+[[mutant]]
+file = "src/specialized/aarch64.rs"
+find = "c2 = arch::__crc32d(c2, c[i]);"
+replace = "c2 = arch::__crc32d(c2, b[i]);"
+note = "3-stream remainder loop feeds stream C words from block B. Only reached when n3 % 4 != 0 (e.g. quads.len() = 195, n3 = 65), a narrow case that a proof restricted to unrolled chunks would miss. aarch64-std. Not equivalent: b[i] and c[i] are different input words, so the CRC differs whenever they differ."
+
+[[mutant]]
+file = "src/specialized/aarch64.rs"
+find = "c = arch::__crc32d(c, chunk[6]);"
+replace = "c = arch::__crc32d(c, chunk[5]);"
+note = "crc_quads 8-way unroll reads word 5 twice and skips word 6. aarch64-std, any input below the 3-stream crossover with >= 8 aligned u64 words. Not equivalent whenever chunk[5] != chunk[6]."
+
+[[mutant]]
+file = "src/baseline.rs"
+find = "CRC32_TABLE[0x9][block[0x6] as usize]"
+replace = "CRC32_TABLE[0x9][block[0x7] as usize]"
+note = "fold_16 looks up byte 7 instead of byte 6 for table 9 (byte 6 dropped, byte 7 counted twice). Portable path: riscv64 no_std, x86_64/aarch64 no_std without target features, and std fallback; any len >= 16. Not equivalent whenever block[6] != block[7]."
+
+[[mutant]]
+file = "src/combine.rs"
+find = "0x31fec169"
+replace = "0x31fec168"
+note = "Wrong X2N_TABLE entry 16 (one bit off). Only used when len2 has bit 16 set (len2 >= 65536): Hasher::combine with a long second block, all builds; tests that the proof is not just checked on small lengths. Not equivalent: multiply(a', p) != multiply(a, p) for p != 0 since multiply is a field product mod P."
+
+[[mutant]]
+file = "src/combine.rs"
+find = "for i in 0..32 {"
+replace = "for i in 0..31 {"
+note = "multiply drops the lowest coefficient bit of a (bit 0, i = 31). Wrong whenever an X2N entry with bit 0 set is used, e.g. entry 4 (0xa06a2517) for len2 with bit 4 set (len2 = 16). Hasher::combine on all builds and the aarch64 3-stream combine. Not equivalent: the dropped term b*x^31 mod P is nonzero for nonzero b."
+
+[[mutant]]
+file = "src/lib.rs"
+find = "Self::new_with_initial_len(init, 0)"
+replace = "Self::new_with_initial_len(init, 1)"
+note = "new_with_initial (and so new/default/hash) starts the byte count at 1. All builds. Breaks total_len and Hasher::combine (other.amount is one too many, so the first CRC is shifted by an extra zero byte). Not equivalent: total_len() of a fresh Hasher is 1, not 0; combine of two Hasher::new() states gives a different CRC."
+
+[[mutant]]
+file = "src/lib.rs"
+find = "self.amount = self.amount.wrapping_add(buf.len() as u64);"
+replace = "self.amount = self.amount.saturating_add(buf.len() as u64);"
+note = "Byte count saturates instead of wrapping mod 2^64. All builds. Only differs on overflow, e.g. new_with_initial_len(0, u64::MAX) then update(b\"a\"): total_len is u64::MAX instead of 0. Tests the 'amount wraps mod 2^64' claim; not equivalent for that input."
+
+[[mutant]]
+file = "src/table.rs"
+find = "0x0D7139D7"
+replace = "0x0D7139D6"
+note = "Wrong last entry of the slice-by-16 table CRC32_TABLE[15][255]. Used only by fold_16 when the low byte of (block[0..4] ^ crc) is 0xFF, never by update_slow: portable builds (riscv64, no_std x86/aarch64, std fallback), len >= 16. Not equivalent: flips bit 0 of the CRC for such inputs. Tests that the proof checks all 16 tables, not only table 0."

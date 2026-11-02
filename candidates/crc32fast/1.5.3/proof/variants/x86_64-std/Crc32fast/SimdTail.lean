@@ -1,51 +1,39 @@
-import Crc32fast.SimdSpec
+import Crc32fast.SimdTailBarrett
+import Crc32fast.SimdTailX1
+import Crc32fast.SimdTailX2
+import Crc32fast.SimdTailX3
+import Crc32fast.SimdTailX4
+import Crc32fast.SimdTailP1
+import Crc32fast.SimdTailP2
+import Crc32fast.SimdTailP3
+import Crc32fast.SimdTailP4
 
 /-!
 # The end of `reduce_128_to_crc`: the partial last block and the Barrett reduction
 
-Both are written here as pure functions that follow the Rust code step by step, so the
-code proofs only have to unfold the monadic version.
+Definitions are in `SimdTailDefs`; the kernel-checked basis cases are in `SimdTailBarrett`,
+`SimdTailX1..X4` and `SimdTailP1..P4` (split by tail length to keep each module's memory low).
 -/
 
 open x86
 
 namespace Crc32Spec
 
-def mask32 : BitVec 128 := 0#32 ++ 0#32 ++ 0#32 ++ (~~~0#32)
-def k5 : BitVec 128 := 0#64 ++ 0x163cd6124#64
-def pu : BitVec 128 := 0x1F7011641#64 ++ 0x1DB710641#64
-
-/-- The three folding steps after the last full block, ending in the 32-bit CRC register. -/
-def barrett (x : BitVec 128) : BitVec 32 :=
-  let x3 := clmulSel 16#32 x k3k4 ^^^ srliBytes 8#32 x
-  let x4 := clmulSel 0#32 (x3 &&& mask32) k5 ^^^ srliBytes 4#32 x3
-  let t1 := clmulSel 16#32 (x4 &&& mask32) pu
-  let t2 := clmulSel 0#32 (t1 &&& mask32) pu
-  extract32 1#32 (x4 ^^^ t2)
-
-def seqBytes : BitVec 128 :=
-  fromBytes 128 ((List.range 16).map fun i => BitVec.ofNat 8 i)
-
-def set1 (b : BitVec 8) : BitVec 128 := fromBytes 128 (List.replicate 16 b)
-
-/-- Shuffle controls for a tail of `n` bytes (`n - 16` as a byte, then XOR 0x80). -/
-def shlCtl (n : Nat) : BitVec 128 := addBytes seqBytes (set1 (BitVec.ofNat 8 (n + 240)))
-def shrCtl (n : Nat) : BitVec 128 := shlCtl n ^^^ set1 0x80#8
-
-/-- Merge the last `n < 16` bytes `p` (zero-padded block) into the register `x`. -/
-def tailStep (n : Nat) (x p : BitVec 128) : BitVec 128 :=
-  (shuffle x (shrCtl n) ^^^ shuffle p (shlCtl n)) ^^^ F k3k4 (shuffle x (shlCtl n))
-
-theorem barrett_basis : ∀ j, j < 128 → barrett (eW 128 j) = R16 (eW 128 j) := by
-  decide +kernel
-
 theorem tail_x_basis : ∀ n, n < 16 → 0 < n → ∀ j, j < 128 →
     R16 (tailStep n (eW 128 j) 0#128) = Zn n (R16 (eW 128 j)) := by
-  decide +kernel
+  intro n h1 h0
+  if h4 : n < 4 then exact tail_x_basis1 n h4 (by omega)
+  else if h8 : n < 8 then exact tail_x_basis2 n h8 (by omega)
+  else if h12 : n < 12 then exact tail_x_basis3 n h12 (by omega)
+  else exact tail_x_basis4 n h1 (by omega)
 
 theorem tail_p_basis : ∀ n, n < 16 → 0 < n → ∀ j, j < 128 →
     R16 (tailStep n 0#128 (eW 128 j)) = Rn (eW 128 j) n := by
-  decide +kernel
+  intro n h1 h0
+  if h4 : n < 4 then exact tail_p_basis1 n h4 (by omega)
+  else if h8 : n < 8 then exact tail_p_basis2 n h8 (by omega)
+  else if h12 : n < 12 then exact tail_p_basis3 n h12 (by omega)
+  else exact tail_p_basis4 n h1 (by omega)
 
 /-! ## Linearity, then the general statements -/
 

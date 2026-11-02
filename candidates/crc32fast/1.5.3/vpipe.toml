@@ -2,11 +2,20 @@
 name = "crc32fast"
 lang = "rust"
 tool = "lean-aeneas"
-upstream = "https://github.com/srijs/rust-crc32fast"
-commit = "d2363eab95ebc85fcf726d1c8fa845148e474591"   # v1.5.3
+# Yerin chose "Fork, and report overflow upstream" (2026-10-24 09:49). The verified code is the fork:
+# srijs/rust-crc32fast v1.5.3 (d2363eab, also branch upstream-1.5.3 in the fork) + 3 commits:
+# 990c6c1 overflow fix, b4227bf SIMD readable by Aeneas, de4662a VERIFIED.md.
+# Old patch-based entry: upstream d2363eab, archive_sha256 5f9d28e3..., patches/0001 + 0002.
+upstream = "https://github.com/Verify-Everything/crc32fast"
+commit = "de4662afb648f638673178da002fbc93e518d1df"
 version = "1.5.3"
-archive_sha256 = "5f9d28e38dcb613309c036523202e50241cdea899e8af524de6397dad594bf61"
+archive_sha256 = "5694352b4adc1de261b6eb50e9c3943730934c039d6d4622577d6443d23b1fe6"   # fork @ de4662a
 thread = "Verify crc32fast in Lean"
+
+[fork]
+of = "https://github.com/srijs/rust-crc32fast"
+base = "d2363eab95ebc85fcf726d1c8fa845148e474591"   # v1.5.3
+note = "Verify-Everything/crc32fast = srijs/rust-crc32fast d2363eab (v1.5.3) + 3 commits (overflow fix, Aeneas-readable SIMD, VERIFIED.md)"
 
 [extract]
 crate_dir = "."
@@ -16,12 +25,8 @@ cargo_args = ["--no-default-features", "--target", "riscv64gc-unknown-none-elf"]
 sysroot_default = true
 aeneas_args = []
 
-# Applied in order to the pinned source before every variant.
-# 0001 is a fix (see functions.toml, status = "fixed"): the byte count wraps instead of panicking.
-# 0002 only makes the SIMD code readable by Aeneas (no behaviour change); it is NOT proved
-# equivalent yet, so gate 1 stays open until it ships in a published fork or gets a proof.
-[patches]
-files = ["patches/0001-hasher-wrapping-add.patch", "patches/0002-simd-readable-by-aeneas.patch"]
+# No patches: the fork carries the changes as commits. patches/ keeps them for reference
+# (0001 = fork commit 990c6c1, 0002 = fork commit b4227bf).
 
 # Every target crc32fast has code for. Each variant is its own Lean project:
 # common/ plus variants/<name>/ (kernel proofs, Detect.lean, Variant.lean, External/ models).
@@ -70,7 +75,7 @@ properties = [
   "update_slow, update_fast_16, every SIMD kernel (SSE, AVX2, AVX-512, aarch64 CRC32) and hash equal the bit-at-a-time reference CRC-32, for inputs of any length",
   "Hasher::update then finalize equals hash of the concatenated input (incremental = single pass), with any kernel State::new picks",
   "combine and Hasher::combine equal the CRC of the concatenation",
-  "No function panics or fails on any input; the u64 byte count wraps modulo 2^64 (verified fix 0001)",
+  "No function panics or fails on any input; the u64 byte count wraps modulo 2^64 (fix in fork commit 990c6c1; upstream panics in debug builds)",
   "Debug writes exactly `crc32fast::Hasher`; Clone, Default, Hash::write/finish behave as documented",
 ]
 spec_files = ["common/Crc32fast/Spec.lean"]
@@ -101,4 +106,4 @@ models = [
 # std build. Random data, offsets, initial CRCs, split points and combine. Also checks the overflow fix.
 # models.sh: every CPU instruction the Lean models stand for, run on random inputs (x86 on this CPU,
 # aarch64 under qemu) and compared with the models evaluated in the built variant projects.
-commands = ["bash {proj}/crosscheck/diff.sh {tree} 50000", "bash {proj}/crosscheck/models.sh {build}/.."]
+commands = ["bash {proj}/crosscheck/diff.sh {tree} 50000 d2363eab95ebc85fcf726d1c8fa845148e474591", "bash {proj}/crosscheck/models.sh {build}/.."]

@@ -221,6 +221,8 @@ Result: full functional correctness of encoder + decoder + round trip, standard 
 - Aeneas `-filter-trait-methods` removes the trait-impl methods (e.g. `map`/`collect`/`position` in an `Iterator` impl) that the Lean library's trait structure lacks, so no hand edit of `Funs.lean` is needed. `-all-computable` makes the output `#eval`-able for gate 8. Stand-in axioms that the code still references (derive Debug/PartialEq helpers) then block compilation: `@[implemented_by f] axiom ...` gives them runtime code and keeps them axioms for `#print axioms` (script: helix-verify/snippets_render/tools/g8ext.py; merge it into the existing `@[rust_fun ...]` block, since two attribute blocks do not parse).
 - Gate 8 for code taking structs with private fields: append the generator as a `#[cfg(test)] #[path] mod` to the module that defines them, so it can build states directly and call private fns. Flag every line that falls outside a stand-in's scope (e.g. `Selection::new` vs normalize) and report those lines separately rather than dropping them. A planted-bug patch applied to the Rust tree, with the Lean side unchanged, shows the checker can fail.
 - In Lean `do` blocks inside `#eval` files, `name` cannot be used as a variable ("ill-formed syntax"), and `for (a, b) in` failed here too: bind the pair and project it.
+- Non-vacuity witnesses for Aeneas specs: a WP conclusion `f x ⦃ r => P r ⦄` becomes a concrete fact via `spec_mono h (fun r hr => …)`. A `dspec … (fun _ => False)` conclusion gives `f x ≠ ok v` via `rw [e, dspec_ok] at h`. Discharge a precondition like `primary_idx s sel = ok p0` with its own spec applied to the concrete data. Mathlib `interval_cases` may not be imported; `rcases i with _ | _ | _ | i` + `omega` works. (sniprender, 2026-10-26)
+- Contrary to the line-512 caution, Lake 4.35 here DID rebuild importers after a body-only edit of `Real/X/Funs.lean` (the proof then failed as expected). Still check the importer olean mtimes after each mutant. (sniprender, 2026-10-26)
 
 ## 2026-10-24 Helix text helpers: Aeneas and char literals (real code)
 - Aeneas rejects `match` on char literals ("Unsupported switch scrutinee", whole body becomes sorry) and cannot print
@@ -362,3 +364,178 @@ Result: full functional correctness of encoder + decoder + round trip, standard 
 - Patched Aeneas (helix-verify/motion/aeneas-patches/, build.sh via Nix) adds non-ASCII char literals, string escapes and `match` on char. Upstream fdebf20 also mis-printed `'\''`, `'\\'` and Latin-1 chars (invalid UTF-8 in Funs.lean).
 - Remaining hard blockers on idiomatic code (each more than a day in Aeneas): nested borrows (`x.chars_at(..).method(..)`), `&dyn Fn` closures, fn items passed as closures (late-bound regions), `iter().find(|..|)` lifetime constraints, loops with several exits (`?`/return inside an inner loop), and some "Unexpected error"s. Plan for a rewrite (fork) or another tool when code is iterator/closure heavy.
 - Charon's `--start-from` builds leave a big incremental cache in target/: set CARGO_INCREMENTAL=0 (it filled 11 GB here). Saturn's test suite stalls a Nix OCaml build: disable its tests.
+
+## Lessons from Helix editing helpers (2026-10-24)
+- External type axioms show up in `#print axioms` as soon as a theorem mentions a struct containing them; give external types placeholder definitions instead of axioms.
+- Make container models (e.g. List for HashSet) `@[reducible]`, or rewrites fail on type mismatches.
+- Mutation scripts must check the failure is a proof error in a proof file, not a compile error or missing dependency.
+- Rust >= 1.87 panics on `format!` widths above u16::MAX: grep for user-controlled widths.
+- Aeneas: a local variable named like a crate shadows that crate's namespace in the generated Lean; qualify with `_root_`.
+- Lean: when a translated function has a big repeated block, copy the block verbatim into a Lean `def` and state the larger spec with calls to it; `exact`/`WP.spec_mono` sees through the def by unfolding. Prove each `let acc ← if ... ` stage as its own small lemma and chain them with `let*`.
+- Lean: `scalar_tac` loops on hypotheses like `x = btl t y` together with `heq : l = line`; clear them before arithmetic goals, or use omega.
+
+## 2026-10-24 — globset model / difftest lessons (globset subagent)
+- Read the real code path before modelling options: in globset 0.4.18 `literal_separator`, `empty_alternates`, `case_insensitive` are never read by the parser, so they cannot affect `build()` Ok/Err. A "drop the empty_alternates check" mutant only makes sense as "wrongly add one"; a mutant that only changes data the oracle doesn't observe (e.g. class ranges) is *equivalent* — label it as a control instead of counting it as missed.
+- `GlobBuilder::build` never returns `ErrorKind::Regex`; `Glob::compile_matcher` `.expect`s and PANICS on regex-syntax `nest_limit` (250). Deeply nested `{…}` (from depth ~82 for `{a,b{a,b…}}`, 125 for `{a,{a,…}}`, 250 for `{{…a…}}`) in an `.editorconfig` section header crash Helix. Always difftest the follow-up call (`compile_matcher`) under `catch_unwind`, not just the fallible one.
+- Lean `#eval` checkers over ~2M cases: interpreted speed ~7k cases/s. Avoid `let p ← get; …; set {p with arr := p.arr.push x}` — the extra reference forces an array copy per push (quadratic on long inputs); use `modify fun p => {p with arr := p.arr.modify i f}`. Don't keep a whole saved state across a loop for rollback; save only the fields Rust saves.
+- Lean 4.35 String API: `String.trimRight` is gone and `String.take` returns `String.Slice` (no `Repr`); use `splitOn` / `String.ofList (s.toList.take n)`.
+- Mutation testing without polluting the model: textual replacement (must occur exactly once) + concatenating the mutated model with the checker body (minus its `import`) into one file run by `lake env lean`.
+
+## 2026-10-24 semver fork: serde, ledger, and local forks in vpipe
+- Aeneas rejects serde's traits (`Serialize`/`Serializer`/`SerializeSeq`... are mutually recursive).
+  Fix used in semver: keep serde.rs to one serde call per method, and move the logic (parse,
+  error mapping, `expecting` text) into plain functions in the crate, generic over a small private
+  trait (`DeError { from_parse_error }`) with a blanket `impl<E: serde::de::Error>` in serde.rs.
+  Extract without the serde feature. The 13 adapters left are listed as trusted and differential-tested.
+- Function ledger in Lean, not by grep: a `#ledger` command (semver lean/tools/Ledger.lean) walks
+  the environment, and for each def from the extracted Funs module lists the theorems whose
+  *statement* names it (abbrevs unfolded; `match_N` skipped; `f_loop`/`.body` count for `f`; a
+  trait-impl record counts when all its members do). It found 7 real gaps a text search missed.
+- Proving "a parse error never makes printing fail": carry `asciiTo s k` (every byte before k is
+  ASCII) through each parser as an invariant on the result; at an error offset it gives a UTF-8
+  char boundary on valid input, via `String.Pos.Raw.isValid_iff_isValidUTF8_extract_zero`.
+  The same invariant with end = length proves parsed identifiers are ASCII.
+- `Str` is `Slice U8` but not reducible, so `simp`/`rw [bind_ok]` on `ok text` often fails.
+  Use `WP.spec_bind (m := (ok text : Result (Slice U8))) (Pₘ := fun s => s = text)`.
+- vpipe `upstream` can be a local fork as a git bundle (`git bundle create x.bundle --all`).
+  A bare repo on /mnt/project-files fails with "dubious ownership". Delete a stale
+  ~/vpipe-work/<lib>/src when the upstream URL changes: vpipe reuses an existing checkout.
+
+## 2026-10-24 — helix uri.rs (Aeneas fdebf20 / Charon 0.1.293 / Lean 4.35)
+- Aeneas "Unreachable" (InterpExpansion.ml:449) on `peekable.peek().copied()`: no flag helps; extract a source variant with the same loop minus the `peek`, reuse its loop verbatim, hand-write only the prologue, flag it in GATE1, and cover it by gate 8.
+- `str::pattern::Pattern` stand-in: map each `trait_impl_id` separately (char vs &str); a blanket sed to `Pattern.char` silently mistypes `strip_prefix("//")`.
+- Aeneas `Iterator` impl_defs carry `peekable :=`/`collect :=` fields the Lean lib lacks: delete them in postprocess.
+- `Result` is coinductive: no `rfl`/`cases` on `ok a = ok b`; use `Std.bind_ok`, `Std.bind_tc_ok` (for `do (← …)` in lib defs), `Result.ok_injective`.
+- Tuple-let `let (a, b) ← …` in extracted code: after the bind reduces, `simp`/`dsimp`/`split` cannot reduce `match (x, y) with …` (module-private matcher). Use `show <the branch you expect>` (defeq) or `change`; in own models write `r.1`/`r.2`.
+- Loops: prove `f it r = do let x ← body it r; match x with | cont y => f y.1 y.2 | done z => ok z` by `rw [loop]; simp only [Std.bind_tc_eq]; congr 1; funext r; cases r <;> rfl`, then plain induction.
+- Do not `simp` inside `mkStr l h`/Slice args (rewrites in the proof make terms ill-typed): state helper lemmas whose RHS builds the proof cleanly (`strip_prefix_ss`, `find_slash`, `index_upto_slash`) and `rw` them.
+- `Str` vs `Slice U8` mismatches for lib lemmas (`Slice.len_val`, bind of `as_bytes`): give a type ascription `(x : Slice U8)` or a tiny bind lemma instead of `attribute [local reducible] Str` (avoids `allowUnsafeReducibility`).
+- String literals: `strBytes "file://" = [...]` by `decide +kernel` (plain `decide` gets stuck).
+- Grep Lean output for `error` not `error:` — tagged errors print as `error(lean.unknownIdentifier)`.
+
+## 2026-10-24 inih (Frama-C WP): goals that are true but drown in context
+
+- Symptom: a goal holds and a hand-trimmed copy proves in under a second, but the full
+  goal times out on all provers, even at 300 s. Goal splitting (-wp-split) and Wp.filter did not help.
+  Z3 random seeds flip it between proved and timeout, so it's search noise, not missing facts.
+- Fix 1, lemmas: WP sends every *global* lemma to every goal. Put helper predicates
+  and their lemmas inside an `axiomatic Name { ... }` block; WP then includes them only in
+  goals that use those symbols. Three of our general string lemmas alone were enough
+  to make an unrelated goal time out.
+- Fix 2, custom strategy: a 50-line WP plugin (inih-work/prune/inih_prune.ml) registers
+  `-wp-auto inih:prune`. For goals the provers fail, it makes a sub-goal with the same
+  conclusion that keeps only Type/Init facts and universally quantified hypotheses
+  (memory frames, call effects), and drops branches and plain facts. Sound by construction:
+  it only removes hypotheses. Build: `ocamlfind ocamlopt -thread -shared -package frama-c-wp.core
+  -o inih_prune.cmxs inih_prune.ml` inside the Frama-C image; load with `-load-module`.
+  It is ~50 lines of trusted code; list it in CLAIM.md.
+- String literals in a big loop: WP restates a literal's contents only on the loop-head
+  memory. A frame assert right before the call helps the trimmed goal:
+  `\forall char* p; base(p) not one of the local buffers ==> *p == \at(*p, Ltop)` with
+  a ghost label `Ltop` at the top of the loop body.
+- `void*` context pointers cast back to a struct need `-wp-model Typed+Cast`; plain Typed
+  fails every goal touching the struct. Record the cast assumption in CLAIM.md.
+- Several readers/modes: one annotated copy, a prelude with `#ifdef` modes that map the
+  function-pointer call to the concrete callee, and a `reader == &callee` precondition so
+  the call site has to prove the mode applies.
+
+## 2026-10-24 Helix text helpers: contracts for third-party code must be difftested before use
+- When a proof rests on a stated property (a contract structure) of a third-party crate, difftest that property against the
+  real crate right away. Helix's grapheme boundary proofs assumed unicode-segmentation's GraphemeCursor gives the same
+  answers on chunked text as on the whole string; a chunked-driver difftest showed 1.13.3 violates it (regional indicators
+  counted twice at a chunk cut), which made the proofs vacuous for the real crate. See helix-verify/text/useg/fix/.
+- Extracting the real third-party crate (here unicode-segmentation with Aeneas) beats a hand model: the extracted cursor
+  matched the crate on 18k whole-string queries with no model to write.
+
+## 2026-10-24 Creusot 0.14.0 + pinned Why3: install that works (percent-encoding Creusot thread)
+Needs a cloud environment with full network access (gitlab.inria.fr, git.frama-c.com, opam.ocaml.org). Steps (about 25 min, mostly OCaml builds):
+```
+apt-get install -y opam libgmp-dev pkg-config m4
+opam init -y --disable-sandboxing --bare
+git clone https://github.com/creusot-rs/creusot.git && cd creusot && git checkout v0.14.0   # 65349025c67e
+# skip why3-ide: it needs GTK dev packages and nothing here uses the IDE
+OPAMVAR_in_creusot_ci=true OPAMYES=1 ./INSTALL
+```
+`./INSTALL` builds the opam switch at ~/.local/share/creusot (OCaml 5.3.0, why3 git-05bf4ddf, why3find git-0f054b93), downloads the pinned solvers (Alt-Ergo 2.6.4, Z3 5.1.0, CVC4 1.8, CVC5 1.4.1) and installs `cargo creusot` for Rust nightly-2026-08-03. `cargo creusot version` prints "bad CVC5 version" because it misreads CVC5's multi-line banner; harmless. Project setup: add `creusot-std = "0.14.0"` to [dependencies], run `cargo creusot init` (writes why3find.json), then `cargo creusot` (translate + prove) or `cargo creusot <pattern>` to prove only matching files.
+Pitfalls on real (unmodified) crates:
+- `use creusot_std::prelude::*` makes derive(Clone)/derive(PartialEq) ambiguous. Import `{*, Clone}` explicitly (Creusot's Clone derive has the same field-wise body plus `ensures(result == *self)`) and `core::cmp::PartialEq` for std's derive; Creusot still wants a `DeepModel` impl for types with derived PartialEq.
+- creusot-std already has an empty extern spec for `Formatter::write_str`; a crate cannot add a second one ("duplicate extern specification"). To give it a contract, vendor creusot-std and delete that one entry (`[patch.crates-io] creusot-std = { path = "vendor/creusot-std" }`).
+- Public consts that build a struct with private fields fail with "Cannot make ... transparent"; `#[cfg_attr(creusot, trusted)]` on the const makes it opaque (adds no assumption).
+- Statics like a `&[u8; 768]` byte table are unsupported ("Unsupported constant value").
+- `&x as *const T` is translated as a fresh pointer with unknown address, so `ptr::eq` of two pointers made from references can never be proved.
+- Std functions with no contract (is_ascii, array `[..]` index, split_first, to_digit, from_utf8_unchecked on &[u8], from_utf8_lossy, Iter::any, slice to_owned...) give "impossible precondition" warnings; add `extern_spec!` contracts and difftest each one against real std.
+
+## uri.rs round 2 (patched Aeneas + shared HelixReal models), 2026-10-24
+- Patched Aeneas (b43126bd build 4) still hits `Unreachable` (Interp.ml:682) on `peekable.peek().copied()` when the copied value is kept across `next()`; repro in helix-verify/aeneas-repro/uri-peek/. Keep the `sorry` as printed and mark dependents blocked.
+- `#eval` refuses any expression that depends on `sorry`, transitively: gate-8 harnesses must skip (and count as blocked) every case reaching a sorry'd function, even branches that would not call it at runtime.
+- HelixReal.StdModelsBase defines `core.result.Result.ok`; inside `namespace core.result.Result` an unqualified `ok` then resolves to it. Write `Std.Result.ok` in local models there.
+- TestUtil helper named `bytesOf` clashes with `StdModel.bytesOf` (ambiguous under `open StdModel`); rename local helpers.
+- A planted bug in the shared `isCharBoundary` (accept 0xBF) passed a 240k-case std difftest: random strings rarely put a continuation byte at the probed index. Add a dedicated boundary difftest (strings built from 2/3/4-byte chars incl. U+00BF, check `get(..i)`/`get(i..)` for every i); 20k cases catch it.
+- Porting proofs to the shared Pattern models: one bridging lemma `core.str.Str.find pi s c = <old findBytes match>` (via `findPat_single`) let the round-1 proofs go through almost unchanged.
+- Audit Aeneas external model signatures before trusting real-code output: `Cell::set` is modelled as `Cell T → T → Result Unit`, which silently drops the write. Check FunsExternal_Template.lean for models that lose effects, and keep the template (it has axioms) out of the build.
+- "Translates" is not "usable": check for transitive sorry (a function that calls a sorry'd one).
+- Partial Aeneas output can still give real-code proofs: copy the needed declarations verbatim into a standalone file, give stand-ins only to external types the functions never inspect, and check the copy mechanically.
+- Cheap mutation testing: copy the project, symlink .lake/packages, copy .lake/build, apply one edit to Funs.lean per mutant (40-150 s each). Report survivors for unproved properties.
+- `lake build` has no -j; use LEAN_NUM_THREADS=2 to limit memory.
+- Aeneas "Can't end abstraction ... owns the static region" on real code comes from `log` macros ('static metadata). Stubbing the log crate's macros to `{}` fixes it; list it as a trusted-base change.
+- Make extracted externals `opaque` instead of `axiom` (give Result an Inhabited instance); real-code theorems then take external behaviour as explicit hypotheses and #print axioms stays clean.
+- Parameter/field names equal to a namespace (selection, transaction, syntax, regex) break elaboration of generated Lean; rename or `_root_`-qualify.
+- Aeneas IntoIter is a Vec with a real next, so loops over into_iter() are directly provable.
+
+## command_line.rs round 3 (patched Charon/Aeneas, real-code Lean proofs), 2026-10-24
+- `-filter-trait-methods` (patched Aeneas) was what unblocked functions using `take_while`/`count` and `impl Iterator for X` (`parse_percent_token`, `Tokenizer::next`).
+- Aeneas build 8 refuses some `&'a self` methods that build 2 accepted: "Unimplemented: reborrowing a shared value which contains borrows living in the region of its own loan" (e.g. `self.signature.flags.iter().any(..)` inside a `debug_assert!` of `get_flag(&'a self, ..)`). Diff your extraction after every toolchain bump; a proof on old output may lose its function.
+- Literals that come out of `split` on an extracted `match` look like `40#8#uscalar` and are not reducibly equal to `40#u8`. Bridge with `(rw [hle]; decide)` / `fun e => h (by rw [e]; decide)`, and reduce reference-model ifs with `simp (config := { decide := true }) only [...]`.
+- `refine WP.spec_bind (thm args ?_ ?_) ?_` unifies the callee with the goal first and leaves the preconditions for later; better than `step with` when preconditions mention literals.
+- `Result` is an irreducible ITree: `rfl` does not compute binds. Use `simp only [bind_ok, bind_tc_ok, uncurry]`; for `let (a, b) := (x, y); ok ..` use `apply (WP.spec_ok _).2`. Plain `dsimp only` there unfolds the WP into `∀ a ∈ Set.range ..`.
+- Contracts that return a struct/tuple state (e.g. `TakeWhile` as a triple) make simp produce type-incorrect terms. Wrap the constructor in a named def (`HV.tw it p f`) and simp with it.
+- Do not put a `match` on the postcondition inside a lemma statement: it becomes a different matcher from the one in the goal (mismatch or timeout). Generalize the post as `P` with `hP : ∀ y, Q y → P (.done y)`.
+- `cases h : t.validate` substitutes into struct literals and breaks unification with later call-site specs; use `by_cases` with `rw [if_pos h]`/`rw [if_neg h]`.
+- omega does not see through `{ t with pos := i }.pos`; restate the goal with `show i.val ≤ ...`.
+- Restate a callee's spec at the call site's shape (`pq_at`, `pb_at` via `WP.spec_mono`) once, and the many delimiter cases close with one `all_goals (...)` script.
+- Tokenizer theorems need `SliceValid` (every boundary-to-boundary slice is valid UTF-8, true for any `&str`) because `push_str` contracts fail on invalid UTF-8; and an `i32` nesting counter forces `len + 2 < i32::MAX`.
+- (command_line, build 13) Aeneas build 13 + Charon build 6 emit real bodies for library fn items used as closures (`.map(AsRef::as_ref)`); delete any hand-written stand-in for such `...Insts.CoreOpsFunctionFnOnce...` instances and rebuild. In command_line the proofs went through unchanged, and build 12 restored `get_flag` (`&'a self`), which build 8 had refused.
+
+## globset/regex compile-failure model (GlobSetBuilder::build Err), 2026-10-24
+- Read real limits with a binary search: rebuild the regex with `nest_limit(k)` / `nfa_size_limit(Some(k))` and search for the smallest k that succeeds. That gives the exact AST depth and NFA memory_usage for each case, so the difftest compares internal numbers and not only Ok/Err. It caught mutants that a pass/fail comparison missed.
+- Feature unification in the real dependency graph changes behaviour: Helix enables regex-automata's `hybrid`, so meta::Regex also builds a reverse NFA under the same size limit, and for some globs (`{é,ü}^n`) only the reverse NFA goes over. Pin the exact feature set of the real Cargo.lock in the difftest crate.
+- Lean models over large inputs (300 KB globs): `l ++ [x]` in loops, `chars.length` recomputed per sub-parse, and literal-merge appends made the checker quadratic (hours). Keep accumulators reversed and pass fuel down instead of recomputing lengths.
+- Mutation runner: strip `theorem` blocks from the scratch copy, otherwise mutants that only break a proof show up as "build failed" instead of being tested.
+- Look for equivalent mutants. A hash-map eviction mutant was equivalent until it was redesigned; one renumbering-only mutant (S10) is still uncaught because state IDs only show through FNV slot collisions. Report such survivors and do not count them as caught.
+- `GlobBuilder::build` recurses on brace nesting (to_regex and Token drop) and overflows the stack at around 13k nested `{` on a 2 MiB thread stack (release build). Any input-controlled glob needs a nesting guard before globset is called.
+
+## inih: build options and heap mode in WP (2026-10-24)
+- Annotations are preprocessed, but you can't add `#if` lines to the code without breaking the "stripped copy == upstream" check. Use variadic macros in the prelude instead: `#define INI_IF_ML(...) CAT(INI_IF_ML_, INI_ALLOW_MULTILINE)(__VA_ARGS__)` with `_1` = the args and `_0` = nothing. This works for terms, conjuncts and set members (a leading comma inside the args is fine).
+- Behavior-specific loop invariants (`for b: loop invariant`) are not enough for RTE goals, because RTE goals are proved for every behavior. Write general invariants guarded by `\at(cond, Pre) ==> ...` instead.
+- WP can't use Frama-C libc's malloc/realloc/free: `\fresh`/`\freeable` show up as "Degenerated" goals.
+- **Pitfall (made my heap proofs vacuous, caught 2026-10-24):** do NOT write freshness as a postcondition like `\forall p; \at(\valid_read(p), Pre) ==> \separated(\result.., p)`. WP's validity table is the same before and after a call, so the result block itself is "valid at Pre" and the clause yields a contradiction. Every goal after the call then proves trivially. Signs: suspiciously fast proofs, and an RTE goal you know is false proving. What works: an uninterpreted predicate marking allocated cells (put it in the assigns clauses), and an `admit` of separation from the specific local objects right after each successful allocation. Always run a vacuity check (-wp-smoke-tests or a planted bug) after adding any assumed contract.
+
+- Aeneas lean (build 13): `do` binds tuples via Std.uncurry, so simp needs uncurry_apply_pair. A Bind-typeclass congruence lemma unified against Std.bind ran out of memory; use Std.bind lemmas and rewrite one side with a helper lemma instead of rewriting under binders. (Helix editing helpers)
+- Mutation checks on Aeneas b13 output: Lake may not rebuild modules importing Funs*.lean when only a function body changes, so a mutant can look "missed" while old builds are reused. Delete dependent build outputs (.lake/build/lib/.../*.olean for importers) before each mutant. (Helix editing helpers)
+- Aeneas 14 rejects index_mut on a fixed-size array inside a loop. Keep Vec in the refactor and relate it to the upstream array with a toVec lemma. (Helix editing helpers)
+- Non-vacuity: for every R-cond/M theorem with hypotheses, build a concrete instance that satisfies all of them and derive one concrete consequence. doc_formatter found a hypothesis (g.char_idx < f g for all usize) that no instance could meet, which made a whole layer of theorems vacuous; mutation checks did not catch it. (Helix editing helpers)
+- Publish scripts must never rm -rf a shared folder before copying: if the local source was cleaned up, the shared copy is lost. Copy first, or skip when the source is missing. (Helix editing helpers)
+- (command_line non-vacuity) `SliceValid`-style "∀ a b, ... → (String.fromUTF8? ..).isSome" is not decidable as stated; prove it from a bounded Bool checker (`checkSV l = true → SliceValid l`) and close the checker with `decide +kernel` on the concrete bytes. Lean 4.35 reduces `String.fromUTF8?`, `toStr`, well-founded `stopFrom` and the extracted-free reference models under `decide +kernel` in seconds. For Hoare-triple theorems, the concrete consequence is `WP.spec_mono (thm ...)` to a postcondition with numbers, plus `WP.spec_exists` when an explicit witness value is wanted. `deriving instance DecidableEq for` the model/extracted enums in the witness file only.
+
+- (semver non-vacuity, 2026-10-26) Finding which theorems need instances: a Lean meta script that lists theorems
+  with explicit Prop binders that no other theorem's proof term uses (semver lean/tools/Conditional.lean). Skip
+  generated names (mvcgen_spec, congr_simp, eq_N, hcongr_N). Lemmas used inside other proofs have their hypotheses
+  met at the use site, so only the unused ones need a witness file. `decide` closes `¬ IsValidUTF8` on concrete
+  ByteArrays; well-founded parser mirrors need `rw [loopDef]` unfolding, not `decide`/`rfl`; reuse a round-trip
+  theorem (print_parse) to get a concrete parse result instead of evaluating the parser.
+- Never declare an external type as Unit (Aeneas TypesExternal placeholders) when hypotheses talk about its values: every value becomes equal, and hypotheses like "slice s has chars CH s" force empty text. Use opaque types. Also bound every index in hypotheses about functions that panic out of range; "for all i" makes them unsatisfiable by real data. (Helix editing helpers)
+
+## inih: non-vacuity witnesses for C contracts (2026-10-26)
+For the "concrete instance" rule with Frama-C/WP, two cheap checks per configuration:
+- `-wp-smoke-tests` on every proved function: WP tries to prove `false` at each precondition set and each block; any success means dead code or contradictory preconditions. Smoke goals reported "Valid" in `-report` mean the smoke test passed (code is live).
+- A witness file that `#include`s the annotated source and adds (a) bodies for every abstract function (reader, handler, allocator), proved against their contracts, so each contract can be met; (b) one concrete call per entry point on fixed inputs, with an `assert` of one consequence. WP proves the call's preconditions, which is the concrete instance. Fill test buffers cell by cell (the string-initializer bug).
+- Abstract predicates with no definition (like a heap marker) get a concrete definition under a witness-only `#ifdef`, which shows the axiom-free declaration is consistent.
+- Pitfall: `\valid(q)` inside an assigns set is evaluated in a separate allocation table that has no `linked` hypothesis, so it is unprovable there. Keep validity out of assigns sets.
+- E-ACSL 32.1 crashes on quantifiers inside predicate bodies and on `\at(e, Pre)` with quantified indices, and skips labels in loop invariants. It is not usable for runtime-checking annotations of this style without rewriting them.
+
+## 2026-10-26 inih: WP cache keeps timeouts
+- With `-wp-cache update`, a prover timeout is stored in the cache. A later run reports it as "(Cached)" Timeout and never retries. When a goal times out under machine load, rerun it with `-wp-cache none` (or a longer timeout) before treating it as unproved.
+
+## 2026-11-01 inih: Frama-C's fgets contract has no length bound
+- Frama-C 32.1's libc spec for `fgets(s, size, f)` says only that the result is NULL or `s`, and that `s` is then a valid string. It does not say the string is shorter than `size` (C11 7.21.7.2p2 guarantees that). With a heap buffer WP cannot find the bound, so goals such as `strlen(line) < max_line` time out.
+- Fix used for inih: an `admit ensures` on the fgets wrapper that states the C11 bound, listed as a trust assumption.

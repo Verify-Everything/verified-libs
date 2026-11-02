@@ -18,3 +18,13 @@ Next:
 - Frama-C proof of the encoder (its 64-bit fast path uses memcpy into uint64_t; expect memory-model work).
 - Functional correctness of the decoder in WP (right now only CBMC covers it, bounded).
 - Target 2 candidates, in order: UTF-8 helpers in `mbyte.c` (`utf_ptr2char`, `utf_ptr2len`, `utf_char2bytes`, `utf_char2len`), then `src/mpack/mpack_core.c` (msgpack parser for RPC, 579 lines, parses untrusted input). `math.c` is a quick extra (overflow-checked digit append, ctz/popcount).
+
+## 2026-10-24 13:00 UTC update
+- base64.c: all functions proved, zero admits (enc 259/259, dec 118/118 under 2 GiB, fixed dec 116/116 no limit), reproduced from clean with repo scripts.
+- Published: https://github.com/blooddimmedtide/neovim_verifier (main). Fix PR: https://github.com/blooddimmedtide/verified_neovim/pull/1
+- Status: candidate. Remaining gates: 35 reviewer mutants (base64/run_mutants.py, baseline-relative, resumable), ppc_32 run, fresh re-review, Yerin spec sign-off.
+- Frama-C 33 string-literal bug: verification-notes/toolchain-bugs/.
+
+## 2026-10-25 01:00 UTC
+- base64.c: all machine gates pass (WP 260/120/118 with asserts on, 35/35 mutants, two reviews REVIEW.md + REVIEW2.md, CI twice in pinned container: runs 40129216377, 40140031727). Waiting on Yerin's spec sign-off; then status -> verified/fixed.
+- CI lesson: Nix as root in a container needs /nix pre-created and /etc/nix/nix.conf with `build-users-group =` and `sandbox = false`; GitHub log blobs are blocked from the sandbox, so emit `::error::` annotations and read them via check-runs/<job>/annotations.

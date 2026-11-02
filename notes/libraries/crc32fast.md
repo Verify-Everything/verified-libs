@@ -5,7 +5,13 @@ Tools: Aeneas/Charon nightly-2026.10.23-fdebf20, Rust nightly-2026-09-17, Lean 4
 Pipeline: /mnt/project-files/pipeline/libraries/crc32fast/ (common/ + 5 variants + 2 patches).
 Old single-build layout backed up in crc32fast-work/pipeline-old/.
 
-## Status (2026-10-24): NOT finished (admission gates still open)
+## Status (2026-10-24 13:00): NOT finished; 6 of 10 gates pass
+Builds from the published fork github.com/Verify-Everything/crc32fast @ de4662a (= v1.5.3 +
+overflow fix + Aeneas-readable SIMD + VERIFIED.md). 1167/1167 theorems, 46/46 functions.
+Passing: real code (fork, 11 rewrites marked), every function, all inputs, full strength,
+trusted base (kernel replay, peak 5.1 GB), cross-check. Open: spec review and two reviews
+(Yerin), planted bugs (reviewer picks 10+ from mutants.suggested.toml), reproducible runs in a
+pinned container (pipeline infrastructure). Upstream issue draft: crc32fast-upstream/.
 
 Proved, standard axioms only, on the source with patches 0001 + 0002 applied:
 - riscv64-portable (no_std): table, slow and slice-by-16 loops, hash, Hasher, combine.

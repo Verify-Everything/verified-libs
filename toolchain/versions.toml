@@ -39,7 +39,7 @@ wp_timeout = 20
 # Admission gate 9: CI re-checks every entry from clean inside a container pinned by digest.
 # Set digest to the image's sha256 once the toolkit publishes one; CI exports VPIPE_CONTAINER_DIGEST.
 image = "ghcr.io/verify-everything/verified-libs-toolchain"
-digest = ""                  # "sha256:<64 hex>", exactly as CI exports VPIPE_CONTAINER_DIGEST
+digest = "sha256:f065d68e1d07c9d6f67976e71accdd0f1069d267fdd3401a4a7d99f75a6d4291"                  # "sha256:<64 hex>", exactly as CI exports VPIPE_CONTAINER_DIGEST
 
 [aeneas_patched]
 # Optional patched Charon + Aeneas (owner: "Extend Aeneas for real library code" thread). A library
@@ -48,13 +48,31 @@ digest = ""                  # "sha256:<64 hex>", exactly as CI exports VPIPE_CO
 # change); `vpipe selftest --full` runs the regression suite while any library uses it.
 base = "Aeneas fdebf20 + Charon de8736f7"
 dir = "/mnt/project-files/helix-verify/toolchain"
-aeneas_tarball = "aeneas-hv-bin-x86_64.tar.gz"
-aeneas_sha256 = "f5bd86786b112956ab072ce0485dc5d98b2c4023e46a679397ec77687fe494dd"   # build 2, 2026-10-24
-charon_tarball = "charon-helix-bin-x86_64.tar.gz"
-charon_sha256 = "03e0e5995ca15dfb86350ac28ced7f1ca812bc25924e67139b5bcb46ce2e9e06"
-patches = ["aeneas-fdebf20-real-code.patch", "charon-ml-de8736f-fndef-names.patch", "charon-de8736f-helix.patch"]
+aeneas_tarball = "aeneas-hv-bin-x86_64-build14.tar.gz"   # build 14 (missing type decl no longer crashes the crate)
+aeneas_sha256 = "3443a838b54e2f700e5f57d0bd623f0e5e1381e9c1e9334572e6d857b0f2a3d7"
+charon_tarball = "charon-helix-bin-x86_64-build6.tar.gz"   # build 6
+charon_sha256 = "2b5ac51bd74be2ff2e9183d059c0985ec65e671356c41b391ae2a01522bb5f13"
+patches = ["aeneas-fdebf20-real-code-build14.patch", "charon-ml-de8736f-fndef-names.patch", "charon-de8736f-helix-build6.patch"]
+# Pin build files by their versioned names, so replacing a plain-named file never breaks a pin.
+default_aeneas_args = ["-filter-trait-methods"]   # keep library trait impls to the fields the Lean model has
 regress = "aeneas-regress/run.sh"
 # Aeneas Lean library patch (Iterator.size_hint, «Ty».sub). A library opts in with
 # [extract] lean_lib_patch = true; it then builds against $VPIPE_HOME/lake/<key>-leanlib-<sha12>.
-lean_lib_patch = "aeneas-fdebf20-lean-lib.patch"
-lean_lib_patch_sha256 = "097fb47f571b3a0899065a132dce4fab9375b544e18a37b578167404da2675ef"
+lean_lib_patch = "aeneas-fdebf20-lean-lib-build17.patch"
+lean_lib_patch_sha256 = "af01d8991fc9663f8d72c620a0f5f4447782c8e98c8463bc96af30e7bfe859e7"
+
+[creusot]
+# Second evidence type for Rust functions Aeneas cannot read (verified_by = "creusot" in functions.toml).
+# Built from source with opam; needs opam.ocaml.org and gitlab.inria.fr, which this cloud setup blocks.
+# Install steps: verification-notes/general.md, "Creusot 0.14.0". `vpipe setup creusot` only checks and
+# records what is installed (or unpacks `prebuilt` when one is published with its sha256).
+tag = "v0.14.0"
+commit = "65349025c67e"
+why3 = "git-05bf4ddf"
+why3find = "git-0f054b93"
+rust = "nightly-2026-08-03"
+provers = { alt-ergo = "2.6.4", z3 = "5.1.0", cvc4 = "1.8", cvc5 = "1.4.1" }
+home = "~/.local/share/creusot"
+prebuilt = "cache/creusot-0.14.0-linux-x86_64.tar.gz"   # built by the Creusot thread; paths assume HOME=/root
+prebuilt_sha256 = "6b5d9befc7fddfa15e891ab3ab8affd197f2cc08f626432ccd97a829805d759e"
+rust_components = ["rustc-dev", "llvm-tools", "rustfmt"]

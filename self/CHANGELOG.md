@@ -190,3 +190,265 @@ Snapshots for rollback are in self/snapshots/.
   prove.replay.peak_gb, so the module that needs the most memory can be split.
 - why: toolkit thread measured a 12.7 GB peak for crc32fast on a 16 GB CI runner, which leaves little margin.
 - check: crc32fast single-target build: 14/14 pass, top module Crc32fast.Table 2.85 GB; quick gate passed.
+
+## 2026-10-24T09:25Z pin update: patched Aeneas build 3
+- aeneas-hv-bin-x86_64.tar.gz sha256 d9174f19… (enum with a reference field behind a shared borrow);
+  real-code patch now 9246e123… (recorded per run). Hashes checked on disk; aeneas-regress 8 cases ALL PASS.
+
+## 2026-10-24T09:50Z v0.2.12 patched Aeneas build 4 + Charon build 2; -filter-trait-methods
+- what: pin moved to the versioned files (aeneas-hv-bin-x86_64-build4.tar.gz f41f9e7c…,
+  charon-helix-bin-x86_64-build2.tar.gz 5e25172d…, patches *-build4 / *-build2), so replacing a
+  plain-named file can never break the pin. Libraries on the patched toolchain get Aeneas
+  -filter-trait-methods by default ([aeneas_patched].default_aeneas_args); the new-library template
+  sets it too. Existing stock-toolchain libraries are unchanged (it would change their extraction).
+- check: hashes checked on disk; aeneas-regress 10 cases ALL PASS; quick gate passed.
+
+## 2026-10-24T10:02Z v0.2.13 fetch follows a changed upstream URL
+- what: fetch() runs `git remote set-url origin <upstream>` on the cached clone before fetching.
+- why: crc32fast moved to its published fork; the cache still fetched from the old origin ("not our ref").
+- check: local two-repo test (origin moved, new commit fetched); quick gate passed.
+- backlog: for fork-based entries, record the original upstream and base commit ([fork] of/base) and
+  check that every function the fork changes is status = "fixed" with a proof (gate 1).
+
+## 2026-10-24T10:15Z v0.2.14 fork check for gate 1
+- what: [fork] of = <original upstream>, base = <commit>. Each run fetches the base, compares every
+  function's source with the fork's, and lists changed, added and removed functions (res.fork). Gate 1
+  passes only if each changed function is status = "fixed" or has functions.toml equivalence = [proved
+  theorems] showing the rewrite equals the base code, and nothing was removed. CLAIM.md shows the fork,
+  its base, the base archive hash and the changed functions.
+- why: crc32fast now builds from Verify-Everything/crc32fast; the standard admits a fork only when its
+  changes are proved fixes, and tool-readability rewrites need a proved equivalence.
+- check: crc32fast fork vs upstream d2363eab: 13 changed functions (2 fixes, 11 rewrites in the
+  aarch64 and pclmulqdq code), none removed; quick gate passed.
+
+## 2026-10-24T10:25Z v0.2.15 fork rewrites accepted for gate 1
+- Fork check accepts `rewrite = "<fork commit>"` in functions.toml as a third way to clear a changed
+  function, next to status "fixed" and proved `equivalence`. The marker must equal the commit being
+  proved, and the function must be full-correctness with every listed theorem proved. CLAIM.md lists
+  these as fork rewrites that users must adopt. Basis: Yerin chose "Fork, and report overflow upstream"
+  on the crc32fast decision card (09:49 UTC); the standard allows a published fork.
+
+
+## 2026-10-24T10:30Z pin update: patched Aeneas build 5 + Charon build 3
+- Aeneas build 5 handles for loops with early break (also fixes ropey search_by). Charon build 3
+  turns edition-2018 unreachable! into a panic. sha256 values checked against the files.
+- Evidence: full selftest passed, including the patched-toolchain regression suite.
+
+## 2026-10-24T10:30Z pin update: patched Aeneas build 6 (Charon build 3 unchanged)
+- Build 6 handles early returns in loops inside match arms, matches on mutably borrowed enum fields,
+  and vectors of (reference, index) pairs. sha256 checked. aeneas-regress: ALL PASS (13 cases).
+
+## 2026-10-24T10:40Z pin update: patched Aeneas build 7 (Charon build 3 unchanged)
+- Loop-exit check accepts ended loans (fixes ropey merge_distribute). sha256 checked.
+  aeneas-regress: ALL PASS (14 cases).
+
+## 2026-10-24T11:00Z container digest pinned
+- [container] digest set to the published toolchain image (toolkit thread, verified-libs PR #3).
+
+## 2026-10-24T11:05Z pin update: patched Charon build 4 (with Aeneas build 7)
+- Fixes erased lifetimes in associated types from trait impls (Helix ChangeIterator). sha256 checked.
+- aeneas-regress: every case passes except mut_closure, which another thread added and which needs an
+  Aeneas option build 7 lacks (it fails on build 7 with Charon 3 too). `selftest --full` reports
+  this until the case's owner ships that build or the case moves. Not a regression from this pin.
+
+## 2026-10-24T11:10Z v0.2.16 fork check reads functions.toml outside `run`
+- fork_diff now falls back to proof_dir(lib) when the manifest has no _proof_dir, so the rewrite and
+  equivalence markers are seen. Evidence: crc32fast fork diff went from 11 unfixed to 0 unfixed and
+  11 rewrites (reported by the crc32fast thread).
+
+## 2026-10-24T11:30Z v0.2.17 Aeneas build 8 + Charon build 5; Aeneas dropped-write soundness bug
+- Pinned patched Aeneas build 8 and Charon build 5 (sha256 checked; aeneas-regress ALL PASS, 17 cases).
+- soundness.toml: new [[bug]] for Aeneas fdebf20 (stock and patched builds 1-7): std calls through a
+  shared reference to Cell/RefCell/atomics/std::sync were modelled as changing nothing. lang = "rust"
+  pattern over-approximates (names Cell, RefCell, Atomic*, Mutex, RwLock, Rc, Arc...); runs on
+  patched build 8 (fixed_aeneas_sha256) are exempt.
+- New rust_soundness_scan: run in finish() and in `vpipe card`, comments skipped. Tested on a fake crate
+  (hit found, exempt on build 8).
+- Re-check of the pipeline's Lean entries: crc32fast, semver, percent-encoding have no hits in their
+  proved crates (percent-encoding's only hits are in the url crate, which is not proved). No status change.
+
+## 2026-10-24T11:55Z v0.2.18 Creusot as a second evidence type
+- New [creusot] step (run_creusot): copies the entry's Creusot bundle to a local folder, runs the
+  ghost-only check (annotated src minus ghost code = pinned upstream, byte for byte), the std-contract
+  tests (spectest), then one `cargo creusot <entry>` per scope entry so a failure lands on exactly one
+  entry. Success for an entry = exit 0, no failure mark, certificate folder present.
+- functions.toml: verified_by = "creusot", creusot = [<scope entries, including helpers it relies on>].
+  Verified only if the checks above pass and every listed entry proved in this run.
+- Gate 7: every trusted item in the Creusot sources (#[trusted], cfg_attr(creusot, trusted), each
+  extern_spec! function) must be listed in [creusot].trusted. CLAIM.md lists them.
+- `vpipe setup creusot` checks `cargo creusot version` against the pin, or unpacks a pinned prebuilt
+  tarball. Creusot cannot be built here (opam and gitlab.inria.fr blocked), so here those functions
+  stay open with "Creusot not installed".
+- percent-encoding: bundle copied to libraries/percent-encoding/creusot/, [creusot] added (19 trusted
+  items, found by the scan and matching the bundle README), and PercentEncode::next, Display::fmt,
+  PercentDecode::next, if_any switched to Creusot evidence (Creusot thread's request).
+  decode_utf8_lossy stays open.
+- Tested: trusted scan on the bundle (19 items); inventory with a simulated all-pass Creusot result
+  (4 verified) and with one helper failing (the 2 decode functions go open).
+
+## 2026-10-24T13:00Z v0.2.19 Creusot prebuilt pinned and checked in a fresh container
+- [creusot].prebuilt = cache/creusot-0.14.0-linux-x86_64.tar.gz (sha256 6b5d9bef..., Creusot thread).
+  setup_creusot refuses HOME other than /root (paths baked in) and installs rust nightly-2026-08-03.
+- Evidence: `vpipe setup creusot` in this container (no Creusot before): installed, version matches pin.
+  run_creusot on percent-encoding: ghost-only pass, spectest pass, 15/16 entries proved,
+  decode_utf8_lossy fails as expected, no unlisted trusted items, 288 s. Same as the Creusot thread's run.
+- run_creusot: entry folder check uses removesuffix("/*") (was rstrip of characters).
+
+## 2026-10-24T13:10Z v0.2.20 Aeneas build 9; size_hint soundness bug under -filter-trait-methods
+- Pinned patched Aeneas build 9 (sha256 checked; aeneas-regress ALL PASS, 18 cases). Charon build 5 unchanged.
+- soundness.toml: new [[bug]] with requires_aeneas_args = ["-filter-trait-methods"] (patched builds
+  1-8 lost size_hint overrides). Build 9 also exempt from the interior-mutability bug.
+- aeneas_args() refuses -filter-trait-methods without [extract] lean_lib_patch = true. The lean-aeneas
+  template now sets lean_lib_patch = true next to the flag. Extraction results record aeneas_args.
+- Impact today: none. crc32fast, semver and percent-encoding never used -filter-trait-methods.
+
+## 2026-10-24T13:35Z v0.2.21 Aeneas build 11 + Lean library patch build 10
+- Pinned patched Aeneas build 11 (= build 10 + ropey descent-loop fix) and aeneas-fdebf20-lean-lib-build10.patch
+  (Rust-default size_hint instead of an axiom). sha256 values checked.
+- New Lean-library store built: aeneas-fdebf20-lean-4.35.0-leanlib-98b727aae0f1 (170 s), tarball in cache/.
+  Removed the old local 097fb47 store (unpinned; its tarball stays in cache/ for old results).
+- soundness.toml: builds 10 and 11 added to both fixed_aeneas_sha256 lists.
+- aeneas-regress: ALL PASS (20 cases).
+
+## 2026-10-24T13:40Z v0.2.22 Aeneas build 12; soundness entries matched by build number
+- Pinned patched Aeneas build 12 (opaque-type region fix, not a soundness change). sha256 checked;
+  aeneas-regress ALL PASS (21 cases).
+- aeneas_build() reads the BUILD file in the tarball; translator_info records aeneas_build.
+  soundness.toml bugs take fixed_in_build = N (sha lists kept for builds 8-11, which have no BUILD).
+  Tested: build 12 exempt from both Aeneas bugs, build 7 hit by both.
+
+## 2026-10-24T14:00Z v0.2.23 Aeneas build 13 + Charon build 6; internal errors counted
+- Pinned patched Aeneas build 13 and Charon build 6 (sha256 checked; BUILD reads 13; aeneas-regress
+  ALL PASS, 23 cases). Lean library patch unchanged (build 10).
+- Extraction results list Aeneas "Internal error" lines as internal_errors (they can leave an axiom
+  without a "Could not translate" warning; gate 7 still catches any proof that uses one).
+
+## 2026-10-24T15:05Z v0.2.24 Lean library patch build 14; iterator size_hint soundness bug
+- Pinned aeneas-fdebf20-lean-lib-build14.patch (sha256 0a300ec5...): library iterators now give std's
+  size_hint instead of (0, None). New store aeneas-fdebf20-lean-4.35.0-leanlib-0a300ec58aaf built,
+  tarball in cache/; old local stores removed (disk).
+- soundness.toml: new [[bug]] keyed on lean_lib_patch_sha256 (the 097fb47 and 98b727 patch versions);
+  soundness_hits checks the run's recorded patches. Tested: old patch hit, new patch exempt.
+- aeneas-regress ALL PASS. Impact today: none (no pipeline entry sets lean_lib_patch = true).
+
+## 2026-10-24T20:30Z v0.2.25 Lean library patch build 15; Vec::insert-at-len soundness bug (stock too)
+- Pinned aeneas-fdebf20-lean-lib-build15.patch (sha256 1d9cf0a8...). New store built; old local store removed.
+- soundness.toml: new [[bug]] lang = "lean", pattern Vec.insert over the generated Lean of every build
+  of the library (not .lake). Exempt with lib patch build 15 (fixed_lean_lib_patch_sha256). The stock
+  library is affected, so stock runs that call Vec.insert become broken.
+- rust_soundness_scan also scans generated Lean for lang = "lean" bugs.
+- Tested: fake extraction with Vec.insert is hit, exempt with build 15. crc32fast, semver and
+  percent-encoding: 0 hits (no Vec.insert in their generated Lean). aeneas-regress ALL PASS.
+
+## 2026-10-24T22:05Z v0.2.26 Lean library patch build 16; RawPtr.cast_scalar soundness bug (stock too)
+- Pinned aeneas-fdebf20-lean-lib-build16.patch (sha256 733075b8...). New store built; old local store removed.
+- soundness.toml: new lang = "lean" [[bug]] for RawPtr.cast_scalar (always fails, so proofs through it are
+  vacuous), exempt with lib patch 16. Vec.insert bug also exempts lib patch 16.
+- crc32fast, semver, percent-encoding: 0 hits. aeneas-regress ALL PASS.
+
+## 2026-10-24T22:10Z v0.2.27 Lean library patch build number
+- lean_lib_patch() reads a first line "# aeneas-lean-lib build N" (lib builds 17 on; 16 is the last
+  without one) and translator_info records lean_lib_build. soundness.toml lib bugs take
+  fixed_in_lib_build = N (Vec.insert 15, cast_scalar 16); sha lists stay for 15 and 16.
+- Tested: lib build 17 exempt from both, no build and unknown sha hit by both, pinned 16 exempt.
+
+## 2026-10-24T23:35Z pin update: patched Aeneas build 14
+- A struct update of an untranslated type is now an error for that function, not a crash of the
+  whole crate. Not a soundness change. sha256 checked; BUILD reads 14; aeneas-regress ALL PASS (27 cases).
+
+## 2026-10-25T03:05Z v0.2.28 stock formatter models cap labels at no-ub
+- The Aeneas Lean library's formatter models (write_str, write_fmt, debug_struct_field*_finish,
+  debug_tuple_field1_finish, Debug/Display of integers and bool, ...) return Ok with the formatter
+  unchanged: they ignore what is written, so output facts proved through them are vacuous.
+- stock_fmt_models() finds them in the library the entry builds against (36 in fdebf20); stock_fmt_reach()
+  follows the generated Lean call graph. A name the entry defines in its own externals is its own model
+  and does not count. evaluate() marks each function that reaches one (not Creusot evidence), and
+  function_label caps its label at no-ub. CLAIM.md says why per function. Runs in `vpipe card` too.
+- Re-scored: semver 19 functions capped (Formatter Sink impl put_str/put_u64_debug, every Display and
+  Debug impl on Formatter, expecting_version/comparator); generic printing over Sink is unaffected.
+  percent-encoding: Display for PercentEncode::fmt reaches write_str on the Lean side (it is now Creusot
+  evidence, which is exempt). crc32fast: none.
+
+## 2026-10-26T09:40Z v0.2.29 Lean library patch build 17 (formatter output modelled); print! bug
+- Pinned aeneas-fdebf20-lean-lib-build17.patch (sha256 af01d899..., header "build 17"). New store built,
+  old local store removed. aeneas-regress ALL PASS (28 cases).
+- stock_fmt_models: a model counts as ignoring output only if its whole body is "Ok, formatter
+  unchanged" (optionally under fun ... =>), so base cases of real models no longer match.
+  Stock library: 36 such models; lib build 17: 0. So entries on lib 17 are not capped.
+- soundness.toml: new lang = "lean" [[bug]] for std.io.stdio._print (model returns ok, Rust panics on
+  stdout failure), fixed_in_lib_build = 17.
+- Re-scored: semver now defines its own write_str and DebugU64 models (its thread), so 0 capped and all
+  149 proved functions are full-correctness. percent-encoding and crc32fast: no change. No _print hits.
+
+## 2026-10-26T12:55Z v0.2.30 fork check: replaced_by for functions the fork removed
+- functions.toml [[function]] id = "<upstream id>", replaced_by = "<fork id>" or [...]: a removed
+  upstream function is accepted when every named replacement is verified/fixed, full-correctness, with
+  all its theorems proved in this run. CLAIM.md lists "upstream function -> replacement". Unmarked or
+  unproved removals still fail gate 1. (semver thread: display.rs moved into printing.rs.)
+- Tested on a fake removal: proved replacement accepted, nonexistent one still fails.
+
+## 2026-10-26T13:05Z v0.2.31 replaced_by accepts generated Lean defs (derived impls)
+- A replaced_by item may be {lean = "<generated def>", theorems = [...]}: accepted only if the def is in
+  the entry's generated Lean and every theorem is proved in this run. For fork code with no source id
+  (#[derive] impls). CLAIM.md names the Lean def and theorems.
+- Tested: real def + proved theorem accepted; missing def, or unproved theorem, still fails.
+- Not done: accepting removed private helpers with no replacement. My safety check blocked it (it
+  loosens gate 1); left for Yerin to decide.
+
+## 2026-10-29T13:00Z v0.2.32 Frama-C build matrix, per-entry image, pinned WP plugins (inih)
+- [framac.matrix]: one WP run per build configuration (file of preprocessor-flag lines and/or configs
+  list), each with its own WP session. Rules add wp_args or set the -wp-fct list for matching lines.
+  wp_timeouts retries a configuration with open goals at the next timeout. Resumable: each finished
+  configuration is stored with a key over the annotated sources, flags, functions, WP args, Frama-C
+  version/image, plugins and provers; a re-run reuses it while the key matches; --clean and planted-bug
+  runs start fresh. smoke_tests = true adds -wp-smoke-tests; a failed smoke test keeps that function open.
+- [framac] image: frama-c runs inside that docker image (work folder mounted at the same path). The
+  image id and its `frama-c -version` are recorded as the run's toolchain (so soundness.toml checks the
+  version that actually ran) and folded into the toolchain digest. [framac] provers overrides the pin.
+- [[framac.plugin]] path + sha256: loaded with -load-module, refused on a sha mismatch, listed in
+  CLAIM.md's trusted base.
+- Tested on a 2-config demo with host Frama-C 33: per-config runs, rule, smoke-test failure attributed to
+  the right function, resume (0 s second run). The docker path is not exercised here (image pull ran out
+  of disk); command shape checked.
+
+## 2026-10-29T13:30Z v0.2.33 Frama-C matrix fixes from the inih thread's review
+- docker frama-c starts in the same folder as sh() (the annotated tree), so relative cpp args work.
+- run() skips the nix Frama-C setup when [framac] image is set (no 33.0 install next to an 8.6 GB image);
+  installed.json may be missing.
+- All -cpp-extra-args (from cpp_args and the matrix line) are joined into one, since Frama-C keeps one.
+- [[framac.plugin]] source + sha256 (pin on the source), optional build (run in the image) and output;
+  the built file's sha256 is recorded, folded into the matrix key, and shown in CLAIM.md.
+- Matrix rules take expect_dead = [{file, line, reason}]: a failed smoke test at exactly that place in
+  a matching configuration is listed in CLAIM.md with its reason; any other dead code keeps the function open.
+- Tested on the demo: relative -include works; plugin build records the output; expected dead code at
+  the listed line passes only in the configuration whose rule lists it.
+
+## 2026-10-29T13:45Z template fix
+- templates/framac/manifest.toml: the expect_dead example used literal braces, which broke
+  `vpipe new` (str.format). Doubled them; checked that the template formats. (inih thread)
+
+## 2026-10-30T23:15Z v0.2.34 matrix: smoke tests only in the first pass
+- A configuration retried at a longer wp_timeout no longer re-runs -wp-smoke-tests; the dead-code result
+  and smoke goals come from the first pass (inih: smoke goals cost each prover's full timeout, 5+ h per
+  retried config). The record notes smoke_timeout; CLAIM.md states it. Key unchanged, so finished
+  configurations are reused. Trade-off: smoke tests on retried configs now use the first timeout, the
+  same as on configs that pass first time.
+- Tested: retried config keeps first-pass dead code; selftest passes.
+
+## 2026-10-31T01:15Z v0.2.35 matrix rules can match one exact line
+- [[framac.matrix.rule]] line = "<exact cfgs.txt line>" as an alternative to match (substring), for all
+  rule fields. Needed for expect_dead: "-DINI_MAX_LINE=2" is inside "-DINI_MAX_LINE=20", and a realloc
+  prefix line is inside the INI_INITIAL_ALLOC=64 lines (inih). Keys unchanged; existing match rules
+  behave as before.
+
+## 2026-11-02T00:30Z v0.2.36 planted bugs on a chosen subset of matrix configs; entry layout on every card
+- mutants.toml: a mutant may name configs = ["<cfgs.txt line>", ...] (default [framac.matrix].mutant_configs).
+  It is then proved only in those configurations, in its own store and sessions (tag "mutant", never
+  matrix-annotated). Each named configuration must be fully proved, with no dead code, in the last real
+  run (else the mutant is invalid); caught = any goal there fails or the run is not ok. A name not in the
+  matrix makes the mutant invalid. Matrix keys unchanged. Without configs: the old whole-matrix behaviour.
+- evaluate() (run and `vpipe card`) writes spec/README.md (if missing) and pipeline/run.sh for every entry
+  under candidates/ or libs/, so hand-written entries get the verified-libs layout too (toolkit thread:
+  check_structure.py). Wrote them for candidates/inih/r62-3-g2bbdec4 now.
+- Tested: base 2 configs proved; mutant in one config caught (12/13) using only that config; unknown
+  config rejected; separate stores and sessions.

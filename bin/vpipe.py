@@ -21,7 +21,7 @@ Commands
   upgrade-tools                 try newer Aeneas release; keep only if selftest passes
   rollback [SNAPSHOT]           restore the pipeline code from a snapshot
 """
-import argparse, datetime as dt, hashlib, json, os, re, shutil, subprocess, sys, tarfile, tomllib
+import argparse, datetime as dt, hashlib, json, os, re, shlex, shutil, subprocess, sys, tarfile, time, tomllib
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -188,8 +188,37 @@ def _setup(which):
         r = sh(["bash", ROOT / "toolchain/setup-framac.sh", " ".join(v["framac"]["nix_packages"]),
                 v["framac"].get("nixpkgs", "nixpkgs"), v["framac"].get("nixpkgs_fallback", "")], capture=True)
         info.update(json.loads(r.stdout.strip().splitlines()[-1]))
+    if which == "creusot":
+        info["creusot"] = setup_creusot()
     (VH / "installed.json").write_text(json.dumps(info, indent=2))
     return info
+
+
+def creusot_env():
+    home = Path(os.path.expanduser(versions().get("creusot", {}).get("home", "~/.local/share/creusot")))
+    return {"PATH_PREPEND": f"{home}/bin", "WHY3CONFIG": str(home / "creusot_why3.conf")}
+
+
+def setup_creusot():
+    """Creusot cannot be built here (opam is blocked). Unpack a published prebuilt tarball when the
+    pin has one, then record what `cargo creusot version` reports. Nothing is trusted unpinned."""
+    c = versions().get("creusot") or {}
+    home = Path(os.path.expanduser(c.get("home", "~/.local/share/creusot")))
+    if c.get("prebuilt") and not home.exists():
+        tb = ROOT / c["prebuilt"]
+        if not tb.exists() or _sha256_file(tb) != c.get("prebuilt_sha256"):
+            raise SystemExit(f"Creusot prebuilt {tb} missing or sha256 mismatch")
+        if str(Path.home()) != "/root":
+            raise SystemExit("the Creusot prebuilt has /root paths baked in; HOME must be /root")
+        sh(["tar", "-xzf", str(tb), "-C", str(Path.home())])
+    if c.get("rust"):  # creusot-rustc links against this exact nightly
+        sh(["rustup", "toolchain", "install", c["rust"], "--profile", "minimal",
+            "-c", ",".join(c.get("rust_components", ["rustc-dev", "llvm-tools"]))], check=False, timeout=1800)
+    r = sh(["cargo", "creusot", "version"], env=creusot_env(), check=False, capture=True, timeout=300)
+    out = (r.stdout + r.stderr).strip()
+    if r.returncode != 0 or c.get("commit", "?") not in out and c.get("tag", "?").lstrip("v") not in out:
+        return {"installed": False, "why": out[-400:] or "cargo creusot not found"}
+    return {"installed": True, "version": out[-400:], "pin": c.get("tag"), "commit": c.get("commit")}
 
 
 def mathlib_cache_key():
@@ -271,7 +300,10 @@ def lean_lib_patch(m):
     sha = _sha256_file(p)
     if sha != pv.get("lean_lib_patch_sha256"):
         raise SystemExit(f"{p}: sha256 {sha} does not match the pin {pv.get('lean_lib_patch_sha256')}")
-    return {"file": pv["lean_lib_patch"], "path": p, "sha256": sha, "key": f"{mathlib_cache_key()}-leanlib-{sha[:12]}"}
+    first = p.read_text(errors="replace").split("\n", 1)[0]
+    mm = re.match(r"#\s*aeneas-lean-lib build (\d+)", first)  # header from lib build 17 on
+    return {"file": pv["lean_lib_patch"], "path": p, "sha256": sha, "build": int(mm.group(1)) if mm else None,
+            "key": f"{mathlib_cache_key()}-leanlib-{sha[:12]}"}
 
 
 def lake_key(m):
@@ -380,6 +412,8 @@ def fetch(m):
     if not (src / ".git").exists():
         src.parent.mkdir(parents=True, exist_ok=True)
         sh(["git", "clone", "-q", m["upstream"], src])
+    # The manifest may move to a new origin (e.g. a published fork); the cached clone must follow it.
+    sh(["git", "remote", "set-url", "origin", m["upstream"]], cwd=src)
     sh(["git", "fetch", "-q", "origin", m["commit"]], cwd=src, check=False)
     sh(["git", "checkout", "-q", "--detach", m["commit"]], cwd=src)
     return src
@@ -413,7 +447,7 @@ def extract_rust(m, src, proj):
     render_lakefile(proj)
     # Output lands in <proj>/<Module>/Extracted/{Types,Funs}.lean, imported as <Module>.Extracted.*
     r = sh(["aeneas", "-backend", "lean", str(llbc), "-dest", str(proj), "-subdir", sub,
-            "-split-files", *x.get("aeneas_args", [])], check=False, capture=True, env=tenv)
+            "-split-files", *aeneas_args(m)], check=False, capture=True, env=tenv)
     text = ANSI_RE.sub("", r.stdout + r.stderr)
     # Aeneas exits non-zero when it skips unsupported items but still writes the rest. Treat the run
     # as usable if Funs.lean exists and list what was skipped: that list decides the scope.
@@ -431,10 +465,13 @@ def extract_rust(m, src, proj):
                   not any(re.search(a, u["error"]) for a in x["allowed_errors"])]
     strict = x.get("strict_externals", False) and bool(template_changes)
     ok = (ext / "Funs.lean").exists() and not unexpected and not strict and all(q["ok"] for q in post)
-    return {"ok": ok, "stage": "aeneas", "aeneas_rc": r.returncode, "postprocess": post,
+    return {"ok": ok, "stage": "aeneas", "aeneas_rc": r.returncode, "postprocess": post, "aeneas_args": aeneas_args(m),
             "translator": translator_info(m),
             "unexpected_errors": unexpected[:50],
             "unsupported": unsupported[:100], "assumed_axioms": assumed,
+            # Aeneas can hit an internal error and still leave an axiom with no "Could not translate"
+            # warning; such axioms reach gate 7 only if a proof uses them, so count them here too.
+            "internal_errors": [u for u in unsupported if "internal error" in u["error"].lower()][:50],
             "external_template_changes": list(template_changes),
             "warnings": [w.strip() for w in re.findall(r"\[Warn\s*\]\s*([^\n]+)", text)][:50],
             "log": re.sub(r"[^\n]*(Translated|Post-processed|Applied prepasses)[^\n]*\n?", "", text)[-6000:]}
@@ -481,6 +518,33 @@ def patched_tools():
     return d
 
 
+def aeneas_build():
+    """Build number from the BUILD file in the pinned patched Aeneas tarball (build 12 on), else None."""
+    pv = versions().get("aeneas_patched") or {}
+    try:
+        with tarfile.open(Path(pv["dir"]) / pv["aeneas_tarball"]) as t:
+            mem = next((x for x in t.getmembers() if x.name.rstrip("/").split("/")[-1] == "BUILD"), None)
+            first = t.extractfile(mem).read().decode().splitlines()[0] if mem else ""
+        mm = re.search(r"build (\d+)", first)
+        return int(mm.group(1)) if mm else None
+    except (KeyError, OSError, tarfile.TarError):
+        return None
+
+
+def aeneas_args(m):
+    """[extract].aeneas_args, plus the patched toolchain's defaults (-filter-trait-methods: without it,
+    crates using Iterator::filter, collect, ... fail in Lean with "is not a field of structure")."""
+    x = m.get("extract", {})
+    args = list(x.get("aeneas_args", []))
+    if x.get("toolchain") == "patched":
+        args += [a for a in (versions().get("aeneas_patched") or {}).get("default_aeneas_args", []) if a not in args]
+    if "-filter-trait-methods" in args and not x.get("lean_lib_patch"):
+        # The filtered impls rely on the patched Lean library's extra trait fields (size_hint ...).
+        # With the stock library an overriding impl fails, or (builds before 9) silently used the default.
+        raise SystemExit("-filter-trait-methods needs [extract] lean_lib_patch = true (Aeneas build 9 soundness note)")
+    return args
+
+
 def translator_env(m):
     return {"PATH_PREPEND": str(patched_tools())} if m.get("extract", {}).get("toolchain") == "patched" else None
 
@@ -492,10 +556,12 @@ def translator_info(m):
     pv = versions()["aeneas_patched"]
     if m.get("extract", {}).get("toolchain") != "patched":
         return {"patched": True, "base": "stock Charon/Aeneas binaries", "aeneas_sha256": "", "charon_sha256": "",
-                "patches": {lp["file"]: lp["sha256"]}}
+                "patches": {lp["file"]: lp["sha256"]}, "lean_lib_build": lp["build"]}
     return {"patched": True, "base": pv.get("base"), "aeneas_sha256": pv["aeneas_sha256"], "charon_sha256": pv["charon_sha256"],
+            "aeneas_build": aeneas_build(),
             "patches": {**{p_: (_sha256_file(Path(pv["dir"]) / p_) if (Path(pv["dir"]) / p_).exists() else "missing")
-                           for p_ in pv.get("patches", [])}, **({lp["file"]: lp["sha256"]} if lp else {})}}
+                           for p_ in pv.get("patches", [])}, **({lp["file"]: lp["sha256"]} if lp else {})},
+            "lean_lib_build": lp["build"] if lp else None}
 
 
 def aeneas_regress():
@@ -779,7 +845,7 @@ def annotation_only(src, overlay):
     return bad
 
 
-def prove_framac(m, src, proj, mutant=None, tag="annotated", clean=False, only=None):
+def prove_framac(m, src, proj, mutant=None, tag="annotated", clean=False, only=None, configs=None):
     """Frama-C WP on the pinned C files with ACSL from the entry.
     Annotations come from proofs/<lib>/src/ (copies of upstream files) and/or [framac] annotate, a
     script run as `python3 -I <script> <pristine dir> <out dir>` that writes annotations into the copy
@@ -827,22 +893,30 @@ def prove_framac(m, src, proj, mutant=None, tag="annotated", clean=False, only=N
         shutil.rmtree(session, ignore_errors=True)
     files = [str(tree / x) for x in f.get("files", [])]
 
-    def wp(fns, extra_cpp=(), extra_wp=(), name="all"):
+    plugins = framac_plugins(m, proj)
+    load = [a for p_ in plugins for a in ("-load-module", p_["path"])]
+    provers = f.get("provers") or v["provers"]
+
+    def wp(fns, extra_cpp=(), extra_wp=(), name="all", sess=None, timeout=None):
         rep_ = WORK / m["name"] / f"wp-{tag}-{name}.json"
         rep_.unlink(missing_ok=True)
         # Defaults from the inih and Neovim threads: -wp-literals (string literal contents, needed
         # for strchr(";#", c)); a WP session cache so re-runs only re-prove changed goals.
-        cmd = ["frama-c", *f.get("cpp_args", []), *extra_cpp, *files, "-wp", *wp_args, *extra_wp,
-               "-wp-prover", ",".join(v["provers"]), "-wp-timeout", str(f.get("wp_timeout", v["wp_timeout"])),
-               "-wp-session", str(session), "-wp-cache", "update", "-wp-report-json", str(rep_)]
+        cmd = [*load, *f.get("cpp_args", []), *extra_cpp, *files, "-wp", *wp_args, *extra_wp,
+               "-wp-prover", ",".join(provers), "-wp-timeout", str(timeout or f.get("wp_timeout", v["wp_timeout"])),
+               "-wp-session", str(sess or session), "-wp-cache", "update", "-wp-report-json", str(rep_)]
         if fns:
             cmd += ["-wp-fct", ",".join(fns)]
-        r = sh(cmd, cwd=tree, check=False, capture=True, timeout=6 * 3600)
+        r = sh(framac_cmd(m, merge_cpp_extra(cmd), cwd=tree), cwd=tree, check=False, capture=True, timeout=24 * 3600)
         return r, (json.loads(rep_.read_text()) if rep_.exists() else [])
 
     fns = list(only or f.get("functions", []))
     runs = []
-    if f.get("per_function"):
+    want_configs, configs = configs, []
+    if f.get("matrix") and not only:
+        runs, configs = framac_matrix(m, proj, tree, files, fns, wp_args, plugins, provers, wp, clean or bool(mutant), tag,
+                                      only_configs=want_configs)
+    elif f.get("per_function"):
         names = fns or [x["name"] for x in scan_c_functions(tree, f.get("files", []))]
         for n in names:
             o = f.get("function", {}).get(n, {})
@@ -851,7 +925,7 @@ def prove_framac(m, src, proj, mutant=None, tag="annotated", clean=False, only=N
     else:
         r, goals_ = wp(fns)
         runs.append(("all", r, goals_))
-    goals = [g for _, _, gs in runs for g in gs]
+    goals = [g for _, _, gs in runs for g in gs if "_wp_smoke" not in str(g.get("goal", ""))]
     failed = [{"goal": g["goal"], "function": g.get("function"), "line": g.get("line"),
                "verdict": g.get("verdict")} for g in goals if not g.get("passed")]
     per_fn = {}
@@ -859,16 +933,181 @@ def prove_framac(m, src, proj, mutant=None, tag="annotated", clean=False, only=N
         e = per_fn.setdefault(g.get("function") or "(global)", {"proved": 0, "total": 0})
         e["total"] += 1
         e["proved"] += 1 if g.get("passed") else 0
+    # Smoke tests (matrix smoke_tests = true): dead code or contradictory assumptions make a
+    # function's proof vacuous, so a failed smoke test keeps that function open.
+    dead_all = [d for c in configs for d in c.get("dead", [])]
+    if dead_all:
+        spans = sorted((x["file"], x["line"], x["name"]) for x in scan_c_functions(tree, f.get("files", [])))
+        for d in dead_all:
+            owner = max((s_ for s_ in spans if s_[0].endswith(d["file"]) and s_[1] <= d["line"]), key=lambda s_: s_[1], default=None)
+            e = per_fn.setdefault(owner[2] if owner else "(global)", {"proved": 0, "total": 0})
+            e.setdefault("dead", []).append(f"{d['file']}:{d['line']} [{d['config']}]")
     rc_bad = [n for n, r, _ in runs if r.returncode != 0]
     sb = soundness_pattern_scan(tree, f.get("files", []), wp_args)
-    return {"ok": not rc_bad and not failed and bool(goals) and not honesty and all(t["ok"] for t in tps) and not sb,
-            "soundness_pattern_hits": sb,
+    return {"ok": not rc_bad and not failed and bool(goals) and not honesty and all(t["ok"] for t in tps) and not sb
+            and not dead_all,
+            "soundness_pattern_hits": sb, "configs": configs, "dead_code": dead_all[:200],
+            "frama_c_version": framac_version(m), "image": framac_image_id(m),
+            "plugins": [{"path": p_["rel"], "sha256": p_["sha256"], "built": p_.get("built"), "built_sha256": p_.get("built_sha256"),
+                         "build": p_.get("build"), "note": p_.get("note")} for p_ in plugins], "provers": provers,
             "annotation_diffs": honesty, "wp_args": wp_args, "tool_patches": tps, "runs": len(runs), "failed_runs": rc_bad[:50],
             "per_function": dict(sorted(per_fn.items())),
             "seconds": (dt.datetime.now() - t0).seconds, "proved": len(goals) - len(failed),
             "total": len(goals), "failed": failed[:200],
             "functions": sorted({g.get("function") for g in goals if g.get("function")}),
             "log": "\n".join(((r.stdout or "") + (r.stderr or ""))[-8000 // max(1, len(runs)):] for _, r, _ in runs[-5:])}
+
+
+def framac_cmd(m, args, cwd=None):
+    """frama-c on the host, or inside the entry's pinned image ([framac] image): the work folder is
+    mounted at the same path and the container starts in `cwd` (the same folder sh() runs in), so
+    absolute and relative paths in args work unchanged."""
+    img = m.get("framac", {}).get("image")
+    if not img:
+        return ["frama-c", *args]
+    w = str(WORK / m["name"])
+    return ["docker", "run", "--rm", "-u", "root", "-e", "HOME=/home/opam", "-e", f"FRAMAC_WP_CACHEDIR={w}/.wpcache",
+            "-v", f"{w}:{w}", "-w", str(cwd or w), img, "frama-c", *args]
+
+
+def merge_cpp_extra(args):
+    """Frama-C keeps only the last -cpp-extra-args, so join every occurrence into one (in order)."""
+    vals = [a.split("=", 1)[1] for a in args if a.startswith("-cpp-extra-args=")]
+    rest = [a for a in args if not a.startswith("-cpp-extra-args=")]
+    return ([f"-cpp-extra-args={' '.join(vals)}"] if vals else []) + rest
+
+
+def framac_image_id(m):
+    img = m.get("framac", {}).get("image")
+    if not img:
+        return None
+    r = sh(["docker", "image", "inspect", "--format", "{{.Id}}", img], check=False, capture=True, timeout=120)
+    return r.stdout.strip() or f"missing ({r.stderr.strip()[:120]})"
+
+
+def framac_version(m):
+    r = sh(framac_cmd(m, ["-version"]), check=False, capture=True, timeout=600)
+    return (r.stdout or "").strip().splitlines()[0] if r.returncode == 0 and r.stdout.strip() else None
+
+
+def framac_plugins(m, proj):
+    """[[framac.plugin]] path (in the entry) + sha256: loaded with -load-module. A WP strategy plugin
+    is a trusted-base change, so it is pinned and listed in CLAIM.md. Copied into the work folder."""
+    out = []
+    for p_ in m.get("framac", {}).get("plugin", []):
+        rel = p_.get("source") or p_["path"]
+        src = Path(proj) / rel
+        sha = _sha256_file(src) if src.exists() else "missing"
+        if sha != p_.get("sha256"):
+            raise SystemExit(f"Frama-C plugin {src}: sha256 {sha} does not match the pin {p_.get('sha256')}")
+        d = WORK / m["name"] / "plugins"
+        d.mkdir(parents=True, exist_ok=True)
+        dst = d / Path(rel).name
+        shutil.copy2(src, dst)
+        rec = {"path": str(dst), "rel": rel, "sha256": sha, "note": p_.get("note", "")}
+        if p_.get("build"):
+            # Built from the pinned source inside the same image (or host) that runs WP, in the plugins
+            # folder; `output` is the file it makes (e.g. inih_prune.cmxs). The built file's sha is recorded.
+            img = m.get("framac", {}).get("image")
+            w = str(WORK / m["name"])
+            cmd = (["docker", "run", "--rm", "-u", "root", "-e", "HOME=/home/opam", "-v", f"{w}:{w}", "-w", str(d),
+                    img, "sh", "-c", p_["build"]] if img else ["sh", "-c", p_["build"]])
+            r = sh(cmd, cwd=d, check=False, capture=True, timeout=1800)
+            built = d / p_["output"]
+            if r.returncode != 0 or not built.exists():
+                raise SystemExit(f"Frama-C plugin build failed: {p_['build']}\n{(r.stdout + r.stderr)[-1500:]}")
+            rec.update(path=str(built), built=p_["output"], built_sha256=_sha256_file(built), build=p_["build"])
+        out.append(rec)
+    return out
+
+
+def rule_hits(rule, line):
+    """A matrix rule applies to a configuration line when `line` equals it exactly, or `match` is a
+    substring of it. Use `line` for expect_dead: "-DINI_MAX_LINE=2" is also inside "-DINI_MAX_LINE=20"."""
+    if "line" in rule:
+        return rule["line"] == line
+    return rule.get("match", "\0") in line
+
+
+SMOKE_RE = re.compile(r"([\w./-]+\.c):(\d+): Warning:\s*Failed smoke")
+
+
+def framac_matrix(m, proj, tree, files, fns, wp_args, plugins, provers, wp, fresh, tag, only_configs=None):
+    """[framac.matrix]: one WP run per build configuration (inih: 45 -D sets). Resumable: each finished
+    configuration is stored with a key over everything that decides it (annotated sources, flags,
+    tool, plugins), and skipped on a re-run while the key matches. A clean run ignores the store.
+    wp_timeouts = [60, 300]: a configuration with open goals is retried at the next timeout."""
+    mx = m["framac"]["matrix"]
+    lines = [l.strip() for l in (Path(proj) / mx["file"]).read_text().splitlines()] if mx.get("file") else []
+    cfgs = [l for l in lines if l and not l.startswith("#")] + list(mx.get("configs", []))
+    if only_configs:  # planted-bug runs: only the configurations the mutant names
+        missing = [c for c in only_configs if c not in cfgs]
+        if missing:
+            raise ValueError(f"mutant configs not in the matrix: {missing}")
+        cfgs = [c for c in cfgs if c in only_configs]
+    store = WORK / m["name"] / f"matrix-{tag}"
+    if fresh:
+        shutil.rmtree(store, ignore_errors=True)
+    store.mkdir(parents=True, exist_ok=True)
+    src_hash = hashlib.sha256(b"".join(Path(x).read_bytes() for x in files)).hexdigest()
+    tool = json.dumps([framac_version(m), framac_image_id(m), [(p_["sha256"], p_.get("built_sha256")) for p_ in plugins], provers])
+    runs, out = [], []
+    for line in cfgs:
+        # A configuration line is preprocessor flags (-D..., -U..., -I...), handed to Frama-C's cpp.
+        cpp = [] if line == "default" else [f"-cpp-extra-args={' '.join(shlex.split(line))}"]
+        extra, cfns = list(mx.get("wp_args", [])), list(fns)
+        for rule in mx.get("rule", []):
+            if rule_hits(rule, line):
+                extra += rule.get("wp_args", [])
+                if "functions" in rule:
+                    cfns = list(rule["functions"])
+        if mx.get("smoke_tests"):
+            extra.append("-wp-smoke-tests")
+        h = hashlib.sha256(line.encode()).hexdigest()[:10]
+        key = hashlib.sha256(json.dumps([src_hash, line, cpp, extra, cfns, wp_args, tool]).encode()).hexdigest()
+        rec_f = store / f"{h}.json"
+        rec = load_json(rec_f)
+        if rec and rec.get("key") == key:
+            log(f"matrix: [{line}] done earlier, reused")
+        else:
+            t0 = time.time()
+            dead, smoke_t, smoke_goals = [], None, []
+            for i, t in enumerate(mx.get("wp_timeouts", [None])):
+                # Smoke tests run in the first pass only (inih: a passing smoke test is a goal the
+                # provers fail on, so a retry spent each one's full timeout on every prover). The key is
+                # unchanged, so configurations finished before this change are still reused.
+                ex = extra if i == 0 else [a for a in extra if a != "-wp-smoke-tests"]
+                r, goals = wp(cfns, cpp, ex, f"cfg-{h}", WORK / m["name"] / f"wp-session-{tag}-{h}", t)
+                if i == 0:
+                    t0text = (r.stdout or "") + (r.stderr or "")
+                    dead = [{"file": a, "line": int(b), "config": line} for a, b in SMOKE_RE.findall(t0text)]
+                    smoke_t = t if "-wp-smoke-tests" in extra else None
+                    smoke_goals = [g for g in goals if "_wp_smoke" in str(g.get("goal", ""))]
+                real = [g for g in goals if "_wp_smoke" not in str(g.get("goal", ""))]
+                if r.returncode == 0 and real and all(g.get("passed") for g in real):
+                    break
+            if i > 0:
+                goals = goals + smoke_goals
+            text = (r.stdout or "") + (r.stderr or "")
+            rec = {"key": key, "config": line, "cpp": cpp, "wp_extra": extra, "functions": cfns, "timeout": t,
+                   "smoke_timeout": smoke_t,
+                   "rc": r.returncode, "goals": goals, "dead": dead, "seconds": round(time.time() - t0),
+                   "log": text[-3000:]}
+            rec_f.write_text(json.dumps(rec))  # written per configuration, so a restart resumes here
+        # Code that really is unreachable in this configuration (inih: INI_MAX_LINE=2 cannot hold "[a]")
+        # may be declared by a matching rule: expect_dead = [{file, line, reason}]. Each is matched by
+        # file and line, listed in CLAIM.md with its reason; any other dead code still keeps the function open.
+        exp = [e for rule in mx.get("rule", []) if rule_hits(rule, line) for e in rule.get("expect_dead", [])]
+        ok_dead = lambda d: next((e for e in exp if d["file"].endswith(e["file"]) and int(e["line"]) == d["line"]), None)
+        expected = [dict(d, reason=ok_dead(d)["reason"]) for d in rec["dead"] if ok_dead(d)]
+        rec_dead = [d for d in rec["dead"] if not ok_dead(d)]
+        rr = subprocess.CompletedProcess([], rec["rc"], rec.get("log", ""), "")
+        runs.append((f"cfg:{line}", rr, rec["goals"]))
+        real = [g for g in rec["goals"] if "_wp_smoke" not in str(g.get("goal", ""))]
+        out.append({"config": line, "timeout": rec["timeout"], "rc": rec["rc"], "proved": sum(bool(g.get("passed")) for g in real),
+                    "total": len(real), "dead": rec_dead, "expected_dead": expected, "seconds": rec["seconds"],
+                    "smoke_timeout": rec.get("smoke_timeout")})
+    return runs, out
 
 
 def annotation_only_files(src, tree, files):
@@ -1127,7 +1366,26 @@ def function_inventory(m, tree, proj, res, patched=None):
             evidence = evidence or []
             proved = [e for e in evidence if thm_status.get(e) == "proved"]
             fn["theorems"] = evidence
-            if not fn["lean"]:
+            cr = res.get("creusot") or {}
+            if ov.get("verified_by") == "creusot" and ov.get("status") != "open":
+                # Creusot evidence: ghost-only check and std-contract tests pass, and every scope
+                # entry named for this function proved in this run.
+                ents = ov.get("creusot", [])
+                bad = [e for e in ents if not cr.get("entries", {}).get(e)]
+                fn["evidence"], fn["creusot"] = "creusot", ents
+                if not cr:
+                    fn["status"], fn["why"] = "open", "verified_by = creusot but the run has no [creusot] result"
+                elif not ents:
+                    fn["status"], fn["why"] = "open", "verified_by = creusot needs creusot = [<scope entries>]"
+                elif cr.get("why"):
+                    fn["status"], fn["why"] = "open", cr["why"][:200]
+                elif not (cr.get("ghost_only", {}).get("ok") and cr.get("spectest", {}).get("ok")):
+                    fn["status"], fn["why"] = "open", "Creusot ghost-only check or std-contract tests failed"
+                elif bad:
+                    fn["status"], fn["why"] = "open", f"Creusot entries not proved: {bad}"
+                else:
+                    fn["status"] = "fixed" if ov.get("status") == "fixed" and ov.get("fix") else "verified"
+            elif not fn["lean"]:
                 fn["status"], fn["why"] = "open", "not extracted (unsupported by Aeneas or excluded by cfg)"
             elif ov.get("status") == "open":  # a human says the evidence does not cover the real code yet
                 fn["status"], fn["why"] = "open", ov.get("why", "marked open in functions.toml")
@@ -1161,6 +1419,8 @@ def function_inventory(m, tree, proj, res, patched=None):
                     fn["bounds"] = ov.get("bounds", "not recorded")
                 else:
                     fn["status"], fn["why"] = "open", f"CBMC harness: {fn['cbmc']['why']}"
+            elif g.get("dead"):
+                fn["status"], fn["why"] = "open", f"failed smoke test (dead code or contradictory assumptions): {g['dead'][:3]}"
             elif g["total"] and g["proved"] == g["total"] and has_contract:
                 fn["status"] = "fixed" if ov.get("status") == "fixed" and ov.get("fix") else "verified"
             else:
@@ -1433,14 +1693,15 @@ def run(lib, use_agent=False, rounds=3, budget=60, extract_only=False, clean=Fal
     if not extract_only and not m.get("scope", {}).get("properties"):
         raise SystemExit(f"{lib}: write [scope].properties (the success criteria) in vpipe.toml before proving; "
                          "`--extract-only` still works")
-    setup("lean" if tool == "lean-aeneas" else "framac")
+    if not (tool == "framac" and m.get("framac", {}).get("image")):  # an entry image brings its own Frama-C
+        setup("lean" if tool == "lean-aeneas" else "framac")
     src = fetch(m)
     proj = proof_dir(lib, m)
     if not proj.exists():
         raise SystemExit(f"{proj} missing; run `vpipe new {lib}` first")
     res = {"library": lib, "entry": entry_key(lib), "commit": m["commit"], "version": m.get("version"), "tool": tool,
            "started": now(), "pipeline_version": (ROOT / "VERSION").read_text().strip(),
-           "toolchain": json.loads((VH / "installed.json").read_text()), "clean": clean,
+           "toolchain": load_json(VH / "installed.json", {}), "clean": clean,
            "toolchain_digest": toolchain_digest(tool), "container_digest": os.environ.get("VPIPE_CONTAINER_DIGEST"),
            "ci_run": os.environ.get("VPIPE_CI_RUN"), "agent_cli": agent_cli() if use_agent else None}
     pristine = src
@@ -1485,6 +1746,16 @@ def run(lib, use_agent=False, rounds=3, budget=60, extract_only=False, clean=Fal
             sync_back(local, proj, m)
         else:
             res["prove"] = prove_framac(m, src, proj, clean=clean, only=functions)
+            pv_ = res["prove"]
+            if pv_.get("image") or pv_.get("plugins") or m.get("framac", {}).get("provers"):
+                # The entry's own Frama-C image / plugins / provers are what ran: record them where the
+                # soundness check and the reproducibility gate look.
+                if pv_.get("frama_c_version"):
+                    res["toolchain"]["frama_c"] = pv_["frama_c_version"]
+                res["toolchain"]["framac_image"] = pv_.get("image")
+                res["toolchain_digest"] = "sha256:" + hashlib.sha256(json.dumps(
+                    [res["toolchain_digest"], pv_.get("image"), pv_.get("plugins"), pv_.get("provers"),
+                     pv_.get("frama_c_version")]).encode()).hexdigest()
             if functions:
                 res["partial"] = functions  # a quick check of some functions: never the entry's result
         p = res["prove"]
@@ -1493,10 +1764,157 @@ def run(lib, use_agent=False, rounds=3, budget=60, extract_only=False, clean=Fal
             break
         log(f"round {i + 1}: {p['proved']}/{p['total']} proved; handing to agent")
         agent(m, proj, res, budget)
+    if m.get("creusot") and not functions:
+        res["creusot"] = run_creusot(lib, m, pristine)
     if res.get("prove") or res.get("extract", {}).get("ok"):
         res["functions"] = function_inventory(m, pristine, proj if tool != "lean-aeneas" else WORK / lib / "proj", res,
                                               src if tool == "lean-aeneas" else None)
     return finish(lib, m, res, proj, src, {"main": WORK / lib / "proj"} if tool == "lean-aeneas" else {})
+
+
+TRUSTED_RE = re.compile(r"#\[(?:cfg_attr\(\s*creusot\s*,\s*)?trusted\)?\]")
+ITEM_RE = re.compile(r"\b(?:fn|const|static|struct|enum|trait|impl(?:<[^>]*>)?)\s+([\w:<>, &']+?)\s*[({<:=;]")
+
+
+def creusot_trusted(src: Path):
+    """Every trusted item in the annotated sources: #[trusted] / cfg_attr(creusot, trusted) items and
+    each function inside an extern_spec! block. Returned as "file:name" (gate 7 needs each listed)."""
+    out = []
+    for p in sorted(src.rglob("*.rs")):
+        text = RUST_COMMENT_RE.sub(lambda x: re.sub(r"[^\n]", " ", x.group()), p.read_text(errors="replace"))
+        rel = str(p.relative_to(src))
+        for mm in TRUSTED_RE.finditer(text):
+            it = ITEM_RE.search(text, mm.end())
+            out.append(f"{rel}:{it.group(1).strip() if it else '?'}")
+        for mm in re.finditer(r"extern_spec!\s*\{", text):
+            depth, i = 1, mm.end()
+            while depth and i < len(text):
+                depth += {"{": 1, "}": -1}.get(text[i], 0)
+                i += 1
+            out += [f"{rel}:extern_spec {n}" for n in re.findall(r"\bfn\s+(\w+)", text[mm.end():i])]
+    return sorted(set(out))
+
+
+def run_creusot(lib, m, pristine):
+    """[creusot] evidence: the annotated copy must be the upstream code plus ghost code only, the
+    trusted std contracts must pass their tests on real std, and each scope entry is proved by its
+    own `cargo creusot <entry>` call (so a failure is attributed to exactly one entry)."""
+    c = m["creusot"]
+    t0 = time.time()
+    info = setup_creusot()
+    if not info.get("installed"):
+        return {"ok": False, "why": "Creusot not installed: " + info.get("why", ""), "entries": {}}
+    bundle = entry_dir(lib, m) / c.get("bundle", "creusot")
+    w = WORK / m["name"] / "creusot"
+    shutil.rmtree(w, ignore_errors=True)
+    shutil.copytree(bundle, w, ignore=shutil.ignore_patterns(".upstream", "target"))
+    env = creusot_env()
+    up = Path(pristine) / c["upstream_src"]
+    g = sh(["python3", "-I", "scripts/strip_ghost.py", "src", str(up)], cwd=w, check=False, capture=True, timeout=600)
+    st = sh(["cargo", "+stable", "run", "--release", "--quiet", "--", str(c.get("spectest_cases", 200000))],
+            cwd=w / "spectest", check=False, capture=True, timeout=3 * 3600)
+    root = c.get("verif_root") or next((str(d.relative_to(w)) for d in sorted((w / "verif").glob("*_rlib"))), "verif")
+    scope = [l.strip() for l in (w / c.get("scope", "scripts/scope.txt")).read_text().splitlines()
+             if l.strip() and not l.startswith("#")]
+    entries, logs = {}, []
+    for e in scope:
+        pat = f"{root}/{e[:-2]}/*" if e.endswith("/*") else f"{root}/{e}.coma"
+        r = sh(["cargo", "creusot", pat], cwd=w, env=env, check=False, capture=True, timeout=3 * 3600)
+        out = r.stdout + r.stderr
+        ok = r.returncode == 0 and "\u2718" not in out and (w / root / e.removesuffix("/*")).exists()
+        entries[e] = ok
+        if not ok:
+            logs.append({"entry": e, "rc": r.returncode, "tail": out[-1500:]})
+    trusted = creusot_trusted(w / "src")
+    return {"ok": g.returncode == 0 and st.returncode == 0 and all(entries.values()),
+            "ghost_only": {"ok": g.returncode == 0, "tail": (g.stdout + g.stderr)[-800:]},
+            "spectest": {"ok": st.returncode == 0, "tail": (st.stdout + st.stderr)[-800:]},
+            "entries": entries, "failed": logs, "trusted": trusted,
+            "trusted_unlisted": sorted(set(trusted) - set(c.get("trusted", []))),
+            "version": info.get("version"), "seconds": round(time.time() - t0)}
+
+
+def fn_bodies(tree, fns):
+    """{function id: source text from its line to the next function in the same file}."""
+    out, by_file = {}, {}
+    for f in fns:
+        by_file.setdefault(f["file"], []).append(f)
+    for rel, fs in by_file.items():
+        p = Path(tree) / rel
+        if not p.exists():
+            continue
+        lines = p.read_text(errors="replace").splitlines()
+        fs = sorted(fs, key=lambda f: f["line"])
+        for i, f in enumerate(fs):
+            end = fs[i + 1]["line"] - 1 if i + 1 < len(fs) else len(lines)
+            out[f["id"]] = "\n".join(l.rstrip() for l in lines[f["line"] - 1:end]).strip()
+    return out
+
+
+def fork_diff(m, res):
+    """[fork] of/base: the entry builds from a published fork. Gate 1 accepts it only if every
+    function the fork changes (or adds) has a proved fix (status "fixed" in functions.toml)."""
+    fk = m.get("fork") or {}
+    if not fk.get("of") or not fk.get("base"):
+        return None
+    base = fetch({"name": m["name"] + "-fork-base", "upstream": fk["of"], "commit": fk["base"]})
+    fork_src = WORK / m["name"] / "src"
+    crate = (m.get("functions", {}).get("crate_dir") or m.get("extract", {}).get("crate_dir", "."))
+    if m["tool"] == "lean-aeneas":
+        a = _unique_ids(scan_rust_functions(base / crate)) if (base / crate / "src").exists() else _unique_ids(scan_rust_functions(base))
+        b = _unique_ids(scan_rust_functions(fork_src / crate)) if (fork_src / crate / "src").exists() else _unique_ids(scan_rust_functions(fork_src))
+        ra = base / crate if (base / crate / "src").exists() else base
+        rb = fork_src / crate if (fork_src / crate / "src").exists() else fork_src
+    else:
+        files = m.get("framac", {}).get("files", [])
+        a, b, ra, rb = scan_c_functions(base, files), scan_c_functions(fork_src, files), base, fork_src
+    ba, bb = fn_bodies(ra, a), fn_bodies(rb, b)
+    changed = sorted(i for i in bb if ba.get(i) != bb[i])
+    removed = sorted(set(ba) - set(bb))
+    st = {f["id"]: f["status"] for f in (res.get("functions") or {}).get("functions", [])}
+    # A fork change is accepted if it is a proved fix (status "fixed"), or a rewrite whose
+    # equivalence to the base code is proved: functions.toml equivalence = ["<proved theorem>", ...].
+    ov = load_overrides(Path(m["_proof_dir"]) if m.get("_proof_dir") else proof_dir(res.get("library") or m["name"], m))
+    proved = {t["name"] for t in (res.get("prove") or {}).get("theorems", []) if t.get("status") == "proved"}
+    eqv = lambda i: bool(ov.get(i, {}).get("equivalence")) and set(ov[i]["equivalence"]) <= proved
+    # Or a fork rewrite (Yerin's "verified fork" choice, crc32fast card 2026-10-24): functions.toml
+    # rewrite = "<fork commit>". The marker must name the commit being proved, and the rewritten
+    # function itself must be full-correctness with every theorem proved. Users must adopt the fork.
+    fns = {f["id"]: f for f in (res.get("functions") or {}).get("functions", [])}
+    def rw(i):
+        f = fns.get(i) or {}
+        return (ov.get(i, {}).get("rewrite") == m.get("commit") and f.get("status") in ("verified", "fixed")
+                and f.get("label") == "full-correctness" and bool(f.get("theorems"))
+                and set(f["theorems"]) <= proved)
+    def proved_fn(x):
+        f = fns.get(x) or {}
+        return (f.get("status") in ("verified", "fixed") and f.get("label") == "full-correctness"
+                and bool(f.get("theorems")) and set(f["theorems"]) <= proved)
+    # An upstream function the fork removed is accepted when functions.toml names its replacement(s)
+    # in the fork: [[function]] id = "<upstream id>", replaced_by = "<fork id>" or [...], each proved
+    # at full-correctness in this run.
+    pdir = Path(m["_proof_dir"]) if m.get("_proof_dir") else proof_dir(res.get("library") or m["name"], m)
+    gen = "\n".join(p.read_text(errors="replace") for p in pdir.rglob("Funs*.lean") if ".lake" not in p.parts)
+
+    def proved_item(x):
+        # A fork function id, or {lean = "<generated def>", theorems = [...]} for fork code with no
+        # source id (derived impls): the def must be in the generated Lean and every theorem proved.
+        if isinstance(x, str):
+            return proved_fn(x)
+        ths = list(x.get("theorems") or [])
+        return (bool(x.get("lean")) and re.search(r"\bdef\s+" + re.escape(x["lean"]) + r"\b", gen) is not None
+                and bool(ths) and set(ths) <= proved)
+
+    def repl(i):
+        r = ov.get(i, {}).get("replaced_by")
+        rs = [r] if isinstance(r, (str, dict)) else list(r or [])
+        return bool(rs) and all(proved_item(x) for x in rs)
+    replaced = {i: ov[i]["replaced_by"] for i in removed if repl(i)}
+    removed = [i for i in removed if i not in replaced]
+    rewrites = [i for i in changed if st.get(i) != "fixed" and not eqv(i) and rw(i)]
+    unfixed = [i for i in changed if st.get(i) != "fixed" and not eqv(i) and not rw(i)]
+    return {"of": fk["of"], "base": fk["base"], "base_archive_sha256": standards.archive_sha256(base, fk["base"]),
+            "changed": changed, "removed": removed, "unfixed": unfixed, "rewrites": rewrites, "replaced": replaced}
 
 
 def finish(lib, m, res, proj, tree, locals_):
@@ -1510,6 +1928,9 @@ def finish(lib, m, res, proj, tree, locals_):
             res["crosscheck"].append({"cmd": cmd, "ok": r.returncode == 0, "tail": (r.stdout + r.stderr)[-1500:]})
         res["forbidden"] = forbidden_scan(m, res, locals_)
     res["model_crate"] = model_crate(m, tree)
+    rust_soundness_scan(m, res)
+    if m.get("fork"):
+        res["fork"] = fork_diff(m, res)
     res["finished"] = now()
     evaluate(lib, m, res, proj, write_card=True)
     write_result(lib, res)
@@ -1627,8 +2048,58 @@ def soundness_hits(res):
             continue
         if b.get("pattern") and b.get("note") not in pattern_hits:
             continue
+        ap = tc.get("aeneas_patched") or {}
+        if ap.get("aeneas_sha256") in b.get("fixed_aeneas_sha256", []):
+            continue
+        if b.get("fixed_in_build") and (ap.get("aeneas_build") or 0) >= b["fixed_in_build"]:
+            continue
+        if set(b.get("fixed_lean_lib_patch_sha256", [])) & set((ap.get("patches") or {}).values()):
+            continue
+        if b.get("fixed_in_lib_build") and (ap.get("lean_lib_build") or 0) >= b["fixed_in_lib_build"]:
+            continue
+        # Bugs in a Lean library patch: only runs whose patches include an affected version.
+        if b.get("lean_lib_patch_sha256") and not set(b["lean_lib_patch_sha256"]) & set((ap.get("patches") or {}).values()):
+            continue
+        # Bugs that need a translator option: results before 0.2.20 do not record the options; no
+        # entry used those options then (checked 2026-10-24), so a missing list counts as none.
+        if not set(b.get("requires_aeneas_args", [])) <= set((res.get("extract") or {}).get("aeneas_args", [])):
+            continue
         out.append(b)
     return out
+
+
+RUST_COMMENT_RE = re.compile(r"//[^\n]*|/\*.*?\*/", re.S)
+
+
+def rust_soundness_scan(m, res):
+    """Rust constructs that trigger a known translator soundness bug (soundness.toml lang = "rust"),
+    in the crate sources that were proved. Stored with the C hits so soundness_hits sees both."""
+    if m.get("tool") != "lean-aeneas" or not res.get("prove"):
+        return
+    tree = WORK / m["name"] / "src"
+    crate = m.get("functions", {}).get("crate_dir") or m.get("extract", {}).get("crate_dir", ".")
+    root = tree / crate / "src" if (tree / crate / "src").is_dir() else tree / crate
+    hits = [h for h in res["prove"].get("soundness_pattern_hits", []) if not h.get("rust")]
+    for b in soundness_bugs():
+        if b.get("lang") != "rust" or not b.get("pattern"):
+            continue
+        for p in sorted(root.rglob("*.rs")):
+            text = RUST_COMMENT_RE.sub(lambda x: re.sub(r"[^\n]", " ", x.group()), p.read_text(errors="replace"))
+            for mm in re.finditer(b["pattern"], text):
+                hits.append({"file": str(p.relative_to(tree)), "line": text[:mm.start()].count("\n") + 1,
+                             "note": b["note"], "rust": True})
+    # lang = "lean": constructs in the generated Lean (all builds of this library, not .lake).
+    for b in soundness_bugs():
+        if b.get("lang") != "lean" or not b.get("pattern"):
+            continue
+        for p in sorted((WORK / m["name"]).rglob("*.lean")):
+            if ".lake" in p.parts or "aeneas-regress" in p.parts:
+                continue
+            text = p.read_text(errors="replace")
+            for mm in re.finditer(b["pattern"], text):
+                hits.append({"file": str(p.relative_to(WORK / m["name"])), "line": text[:mm.start()].count("\n") + 1,
+                             "note": b["note"], "rust": True})
+    res["prove"]["soundness_pattern_hits"] = hits
 
 
 def soundness_pattern_scan(tree, files, wp_args):
@@ -1647,11 +2118,72 @@ def soundness_pattern_scan(tree, files, wp_args):
     return hits
 
 
+LEAN_DEF_RE = re.compile(r"^(?:@\[[^\n]*\]\s*)?(?:private\s+)?(?:noncomputable\s+)?(?:partial\s+)?(?:def|opaque|axiom|theorem|instance)\s+([^\s:({\[]+)", re.M)
+_STOCK_FMT = {}
+
+
+def stock_fmt_models(m):
+    """Formatter models in the Aeneas Lean library (the one this entry builds against) whose body
+    returns Ok with the formatter unchanged: they ignore what is written, so output facts proved
+    through them are vacuous (Helix editing helpers thread, 2026-10-25)."""
+    key = lake_key(m) if m.get("tool") == "lean-aeneas" else None
+    if key in _STOCK_FMT:
+        return _STOCK_FMT[key]
+    lib = VH / "lake" / key / ".lake/packages/aeneas/backends/lean/Aeneas"
+    out = set()
+    for f in sorted(lib.rglob("*.lean")) if lib.exists() else []:
+        t = f.read_text(errors="replace")
+        for mm in re.finditer(r"\ndef (core\.fmt\.[\w.]+)(.*?)(?=\n@\[|\ndef |\ntheorem |\nend |\Z)", t, re.S):
+            body = re.sub(r"--[^\n]*|/-.*?-/", "", mm.group(2), flags=re.S)
+            # The whole body is "Ok, formatter unchanged" (not a base case of a real model).
+            if re.search(r":=\s*(?:fun\s[^=]*=>\s*)?(?:Result)?\.ok \(\.Ok \(\), fmt\)\s*$", body):
+                out.add(mm.group(1))
+    _STOCK_FMT[key] = out
+    return out
+
+
+def stock_fmt_reach(m, proj):
+    """Generated Lean def -> stock formatter models it reaches (directly or through other generated
+    defs). A name the entry defines itself (its externals) is its own model, not the stock one."""
+    stock = stock_fmt_models(m)
+    if not stock:
+        return {}
+    files = [p for p in Path(proj).rglob("*.lean") if ".lake" not in p.parts]
+    local, bodies = set(), {}
+    for p in files:
+        t = p.read_text(errors="replace")
+        pos = [(mm.start(), mm.group(1)) for mm in LEAN_DEF_RE.finditer(t)]
+        for i, (a, name) in enumerate(pos):
+            local.add(name)
+            if p.name.startswith("Funs"):
+                bodies[name] = bodies.get(name, "") + t[a:pos[i + 1][0] if i + 1 < len(pos) else len(t)]
+    bad = stock - local
+    if not bad:
+        return {}
+    tok = re.compile(r"[A-Za-z_][\w.']*")
+    calls = {n: set(tok.findall(b)) for n, b in bodies.items()}
+    direct = {n: c & bad for n, c in calls.items()}
+    reach = {n: set(v) for n, v in direct.items()}
+    changed = True
+    while changed:
+        changed = False
+        for n, c in calls.items():
+            add = set().union(*(reach.get(x, set()) for x in c if x in reach and x != n)) - reach[n]
+            if add:
+                reach[n] |= add
+                changed = True
+    return {n: sorted(v) for n, v in reach.items() if v}
+
+
 def evaluate(lib, m, res, proj, write_card=False):
     """Labels, the ten gates, entry status and CLAIM.md, from a finished result."""
     overrides = load_overrides(proj)
+    reach = stock_fmt_reach(m, proj) if m.get("tool") == "lean-aeneas" else {}
     for f in (res.get("functions") or {}).get("functions", []):
         ov = overrides.get(f["id"]) or overrides.get(f["id"].split("@L")[0], {})
+        f.pop("stock_fmt", None)
+        if f.get("lean") in reach and f.get("evidence") != "creusot":
+            f["stock_fmt"] = reach[f["lean"]]
         f["label"] = standards.function_label(f, m["tool"], ov)
         if ov.get("label"):
             f["declared_label"] = ov["label"]
@@ -1669,7 +2201,10 @@ def evaluate(lib, m, res, proj, write_card=False):
         if hits:
             card = card.replace("\n## Code", "\n**Known soundness bug in a tool used:** "
                                 + "; ".join(b.get("note", b.get("tool", "")) for b in hits) + "\n\n## Code", 1)
-        (entry_dir(lib, m) / "CLAIM.md").write_text(card)
+        ed = entry_dir(lib, m)
+        (ed / "CLAIM.md").write_text(card)
+        if ed.resolve().relative_to(ROOT.resolve()).parts[0] in ENTRY_ROOTS:
+            write_entry_extras(ed, m)  # verified-libs layout: spec/ and pipeline/run.sh beside CLAIM.md
     return res["admission"]
 
 
@@ -1856,6 +2391,9 @@ def card(lib):
     res = load_json(f)
     if not res:
         raise SystemExit(f"no result for {lib}; run `vpipe run {lib}` first")
+    if m.get("fork"):
+        res["fork"] = fork_diff(m, res)  # functions.toml markers may have changed since the run
+    rust_soundness_scan(m, res)  # soundness.toml may have gained a bug since the run
     a = evaluate(lib, m, res, proof_dir(lib, m), write_card=True)
     f.write_text(json.dumps(res, indent=1))
     report()
@@ -2052,6 +2590,21 @@ def mutate(lib, suggest=0, only=None):
                     lost = sorted(proved0 - still)
                     rec.update(outcome="caught" if lost or not pr["ok"] else "survived", broken_theorems=lost[:20],
                                extract_ok=ex["ok"])
+            elif m.get("framac", {}).get("matrix") and (mu.get("configs") or m["framac"]["matrix"].get("mutant_configs")):
+                # Matrix entries (inih): the mutant is checked only in the configurations it names
+                # (or [framac.matrix].mutant_configs), in its own store and sessions (tag "mutant").
+                # Those configurations must be fully proved in the last real run, so any failed goal
+                # is the mutant's doing; caught = some goal there fails (or dead code appears).
+                sel = list(mu.get("configs") or m["framac"]["matrix"]["mutant_configs"])
+                base_cfgs = {c["config"]: c for c in ((base or {}).get("prove") or {}).get("configs", [])}
+                unproved = [c for c in sel if not (base_cfgs.get(c) and base_cfgs[c]["total"]
+                                                   and base_cfgs[c]["proved"] == base_cfgs[c]["total"] and not base_cfgs[c].get("dead"))]
+                if unproved:
+                    rec.update(outcome="invalid", why=f"configs not fully proved in the last run: {unproved}")
+                else:
+                    pr = prove_framac(m, tree, proj, mutant=mu, tag="mutant", configs=sel)
+                    rec.update(outcome="caught" if pr["failed"] or not pr["ok"] else "survived",
+                               proved=f"{pr['proved']}/{pr['total']}", configs=sel)
             else:
                 pr = prove_framac(m, tree, proj, mutant=mu, tag="mutant")
                 rec.update(outcome="caught" if pr["proved"] < goals0 or not pr["ok"] else "survived",
@@ -2412,7 +2965,7 @@ def main():
     ap = argparse.ArgumentParser(prog="vpipe", description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     s = ap.add_subparsers(dest="cmd", required=True)
-    s.add_parser("setup").add_argument("which", nargs="?", default="all", choices=["lean", "framac", "all"])
+    s.add_parser("setup").add_argument("which", nargs="?", default="all", choices=["lean", "framac", "creusot", "all"])
     n = s.add_parser("new")
     n.add_argument("lib"); n.add_argument("--lang", required=True, choices=["rust", "c"])
     n.add_argument("--upstream", required=True); n.add_argument("--commit", required=True)

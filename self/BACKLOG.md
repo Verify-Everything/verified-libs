@@ -27,3 +27,15 @@ CHANGELOG entry. Humans and threads may add items. Newest evidence wins.
 - [x] Frama-C -wp-literals default, WP session cache, annotation-only honesty check (v0.1.4).
 
 - Codex/Gemini agent runs (v0.2.2): command lines accepted by codex-cli 0.164.0 and gemini 0.65.0, but no end-to-end run yet (no API keys in any container so far). Risk: `gemini --sandbox` may mount only the cwd, so --include-directories paths outside it (WORK/<lib>, NOTES) may be missing inside the sandbox. Check on the first real run; if so, pass those paths through gemini's sandbox mount setting (check its docs for the exact form) instead of guessing.
+- Fork entries (crc32fast now builds from Verify-Everything/crc32fast @ de4662a): add [fork] of = <original upstream>, base = <upstream commit>; gate 1 diffs fork vs base and requires every changed function to be status = "fixed" with proved theorems; CLAIM.md shows both.
+
+- Public home for the patched Aeneas/Charon tarballs (e.g. org release assets, same sha256) before the
+  first entry with toolchain = "patched" goes to verified-libs. The image must then fetch them by URL
+  and hash (new digest). Tell the toolkit thread when that entry is headed for the repo. (10:57 UTC)
+
+- DONE 0.2.22 (BUILD file, fixed_in_build). soundness.toml fixed_aeneas_sha256 must be extended by hand on every new patched build. Better: the
+  Aeneas thread stamps a build number into the tarball (or versions.toml records it) and bugs say
+  fixed_in_build = N. (13:35 UTC)
+
+- DONE 0.2.27. Lean library patch versions are exempted by sha256 lists in soundness.toml, extended by hand. Ask the
+  Aeneas thread for a build number in the patch (e.g. a header line) and use fixed_in_lib_build. (22:05 UTC)

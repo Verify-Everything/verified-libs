@@ -29,3 +29,11 @@ Disk: the session allowance is ~39 GB; Verus (unpacked ~1.5 GB + its Rust toolch
 - Got working without them: solvers at Creusot's pinned versions (Alt-Ergo 2.6.4 and CVC5 1.4.1 from GitHub releases, sha256 checked; Z3 5.1.0 from nixpkgs; CVC4 1.8 via installer), why3find 1.3.0 built from the github.com/creusot-rs/why3find mirror (tag 1.3.0).
 - Creusot on the unmodified crate needs ghost-only additions: `extern crate creusot_std` under cfg(creusot), DeepModel for the PartialEq types, IteratorSpec for both Iterator impls, and visibility fixes for the consts. Plan: annotated copy whose non-ghost tokens equal upstream (pipeline check strips #[cfg(creusot)] items and creusot attributes, then diffs).
 - Disk: `nix-collect-garbage` freed 15 GB (old Nix detour). Don't write through a symlink when wrapping a tool (I overwrote the why3find binary once).
+
+## 2026-10-24 11:30 UTC: Creusot proofs on the unmodified code ("Finish percent-encoding with Creusot" thread)
+Bundle: verification-notes/percent-encoding-creusot/bundle/ (README.md has the full table, trusted base and run steps; `./run.sh`).
+- Proved with Creusot v0.14.0 on byte-identical upstream code (ghost-only check passes), against specs that mirror Proofs/Spec.lean: PercentEncode::next, Display::fmt (exact sink output), PercentDecode::next (closure capturing &mut), PercentDecode::if_any, derived Debug for PercentDecode (no panic), plus after_percent_sign, contains, should_percent_encode.
+- decode_utf8_lossy (private): functional spec proved, but the `debug_assert!(core::ptr::eq(raw_utf8, &*bytes))` goal is NOT proved. Creusot models `&x as *const T` as a fresh pointer, so no contract can prove ptr::eq of two reference-derived pointers. Still open: blocks completion.
+- Trusted std contracts are difftested by bundle/spectest (1.58M checks). percent_encode_byte is trusted in Creusot with Lean's proved contract.
+- functions.toml not changed yet: vpipe only knows Lean theorems; the pipeline thread was asked to add a Creusot evidence type before the 4 entries drop `status = "open"`.
+Open now: decode_utf8_lossy's debug_assert; gates 5, 6, 9, 10 (people/infra).

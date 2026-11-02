@@ -17,7 +17,8 @@ charon_args = ["--preset=aeneas"]
 # sysroot_default = true     # required with a cross target
 cargo_args = []
 # cargo_lock = "Cargo.lock"   # reviewed lockfile in libraries/<lib>/; if present, cargo runs --locked
-aeneas_args = []
+aeneas_args = ["-filter-trait-methods"]   # keeps std trait impls to what the Lean model has (Helix lesson)
+lean_lib_patch = true      # required with -filter-trait-methods (else size_hint overrides are lost; Aeneas build 9 note)
 
 # ---- Admission standard (verified-libs). `vpipe card` shows which of the ten gates pass. ----
 

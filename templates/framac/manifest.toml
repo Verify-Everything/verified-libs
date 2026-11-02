@@ -45,3 +45,24 @@ commands = []                # differential tests of the translation vs the comp
 author = ""                  # proof author (cannot review)
 maintainer = ""              # name, date
 adversarial = ""             # review session/report link, date
+
+# ---- Optional: build-option matrix, own Frama-C image, WP plugins (inih thread, vpipe 0.2.32) ----
+# [framac]
+# image = "fv-framac:32.1"           # run frama-c inside this docker image; its version is recorded
+# provers = ["alt-ergo", "z3", "cvc5"]
+# [[framac.plugin]]                  # -load-module; a trusted-base change, pinned by sha256 of the source
+# source = "prune/inih_prune.ml"
+# sha256 = "<sha256 of the source>"
+# build = "ocamlfind ... -o inih_prune.cmxs inih_prune.ml"   # optional: run in the image, in the plugins folder
+# output = "inih_prune.cmxs"         # the file build makes; its sha256 is recorded
+# note = "WP strategy: drops hypotheses only (sound by construction)"
+# [framac.matrix]
+# file = "cfgs.txt"                  # one configuration per line: preprocessor flags, or "default"
+# wp_timeouts = [60, 300]            # retry a configuration with open goals at the next timeout
+# smoke_tests = true                 # a failed smoke test (dead code) keeps the function open
+# wp_args = ["-wp-auto", "inih:prune"]
+# [[framac.matrix.rule]]             # configurations whose line contains `match`
+# match = "INIH_PROOF_STRING"        # substring of the line; or line = "<exact cfgs.txt line>" (use line for expect_dead)
+# wp_args = ["-wp-model", "Typed+Cast"]
+# functions = ["ini_rstrip", "ini_parse_string"]   # -wp-fct list for these configurations
+# expect_dead = [{{ file = "ini.c", line = 123, reason = "INI_MAX_LINE=2 cannot hold \"[a]\"" }}]   # listed in CLAIM.md

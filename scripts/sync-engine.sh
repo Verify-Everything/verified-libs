@@ -3,13 +3,18 @@
 # The repo root IS the engine root (bin/vpipe.py, toolchain/, libraries/<lib>/, results/ ...).
 # Toolkit-owned files (README.md, bin/vkit*, skills/, docs/, install.sh, .github/ ...) are kept.
 # Once verified-libs is the source of truth this script is no longer needed.
-#   bash scripts/sync-engine.sh [/path/to/pipeline] [/path/to/verification-notes]
+#   bash scripts/sync-engine.sh [--engine-only] [/path/to/pipeline] [/path/to/verification-notes]
+# --engine-only leaves libraries/, candidates/ and results/ alone: a PR touches the engine or one
+# library folder, not both (AGENTS.md rule 8), so library changes go in their own PRs.
 set -euo pipefail
+engine_only=false
+[ "${1:-}" = --engine-only ] && { engine_only=true; shift; }
 HERE=$(cd "$(dirname "$0")/.." && pwd)
 SRC=${1:-/mnt/project-files/pipeline}
 NOTES=${2:-/mnt/project-files/verification-notes}
 [ -f "$SRC/bin/vpipe.py" ] || { echo "no vpipe at $SRC" >&2; exit 1; }
 ENGINE=(VERSION bootstrap.sh bin/vpipe bin/vpipe.py bin/standards.py toolchain templates checklists self selftest libraries candidates results)
+$engine_only && ENGINE=(VERSION bootstrap.sh bin/vpipe bin/vpipe.py bin/standards.py toolchain templates checklists self selftest)
 # Toolkit-owned files inside engine folders survive the copy.
 KEEP=(templates/CLAIM.md)
 keep=$(mktemp -d); for k in "${KEEP[@]}"; do [ -e "$HERE/$k" ] && mkdir -p "$keep/$(dirname "$k")" && cp "$HERE/$k" "$keep/$k"; done

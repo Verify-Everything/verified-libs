@@ -73,6 +73,11 @@ def weakest(labels):
     return min(known, key=LABELS.index)
 
 
+def _items(v):
+    v = [v] if isinstance(v, (str, dict)) else list(v or [])
+    return ", ".join(x if isinstance(x, str) else f"Lean {x.get('lean')} ({', '.join(x.get('theorems', []))})" for x in v)
+
+
 def function_label(fn, tool, override):
     """The label a function earns. A declared label is a claim the reviewer checks; evidence caps it."""
     declared = override.get("label")
@@ -84,6 +89,10 @@ def function_label(fn, tool, override):
         return "no-ub"
     if declared not in LABELS:
         return "unlabelled"
+    if fn.get("stock_fmt") and LABELS.index(declared) > LABELS.index("no-ub"):
+        # Reaches an Aeneas formatter model that ignores what is written (stock write_str,
+        # debug_struct_field*_finish, Display/Debug of integers ...): output facts are vacuous.
+        return "no-ub"
     return declared
 
 
@@ -122,6 +131,11 @@ def gates(m, res, overrides, history, mutants, container=None):
                           if not sha_pin else f"upstream archive SHA-256 changed: pinned {sha_pin}, got {sha_now}"}
     elif model and not (trust.get("model_equivalence") and set(trust["model_equivalence"]) <= proved):
         g["real_code"] = {"pass": False, "detail": "proofs are about a model crate with no proved model-to-code equivalence"}
+    elif m.get("fork") and not res.get("fork"):
+        g["real_code"] = {"pass": False, "detail": "[fork] needs of = <original upstream> and base = <commit>"}
+    elif res.get("fork") and (res["fork"]["unfixed"] or res["fork"]["removed"]):
+        g["real_code"] = {"pass": False, "detail": f"fork changes without a proved fix: {res['fork']['unfixed'][:10]}"
+                          + (f"; removed functions: {res['fork']['removed'][:10]}" if res["fork"]["removed"] else "")}
     elif [t for t in (res.get("prove") or {}).get("tool_patches", []) if not t.get("ok")]:
         g["real_code"] = {"pass": False, "detail": "tool patches without a passing equivalence harness: "
                           + str([t["id"] for t in res["prove"]["tool_patches"] if not t.get("ok")])}
@@ -162,10 +176,12 @@ def gates(m, res, overrides, history, mutants, container=None):
     forb = res.get("forbidden", [])
     replay = (res.get("prove") or {}).get("replay")
     replay_ok = m.get("tool") != "lean-aeneas" or bool(replay and replay.get("ok"))
-    ok7 = not forb and not extra_axioms and not unlisted_models and replay_ok
+    cr_unlisted = (res.get("creusot") or {}).get("trusted_unlisted", [])
+    ok7 = not forb and not extra_axioms and not unlisted_models and replay_ok and not cr_unlisted
     g["trusted_base"] = {"pass": ok7, "detail": "clean; kernel replay passed" if ok7 and m.get("tool") == "lean-aeneas" else "clean" if ok7 else
                          f"forbidden: {len(forb)}; axioms not listed in [trust]: {extra_axioms[:10]}; std models not listed: {unlisted_models[:10]}"
-                         + ("" if replay_ok else "; leanchecker replay " + ("failed" if replay else "not run"))}
+                         + ("" if replay_ok else "; leanchecker replay " + ("failed" if replay else "not run"))
+                         + (f"; Creusot trusted items not listed in [creusot].trusted: {cr_unlisted[:10]}" if cr_unlisted else "")}
     # 8 independent cross-check
     cc = res.get("crosscheck") or []
     g["cross_check"] = {"pass": bool(cc) and all(t["ok"] for t in cc),
@@ -247,7 +263,14 @@ def claim_card(m, res, g, entry_label, status, archive_sha, upstream):
         "- Library-specific properties:"] + [f"  - {x}" for x in scope.get("properties", [])] + [
         "", "## Code",
         f"- Upstream: {m['upstream']} @ {m['commit']}, archive SHA-256 {archive_sha}",
-        f"- Fork (if any): {m.get('fork', 'none')}",
+        (f"- Fork: {m['upstream']} @ {m['commit']}, from {res['fork']['of']} @ {res['fork']['base']} (archive SHA-256 "
+         f"{res['fork']['base_archive_sha256']}); functions changed: {', '.join(res['fork']['changed']) or 'none'}"
+         if res.get("fork") else "- Fork (if any): none"),
+        *([f"- Fork rewrites (proved on the fork only; users must adopt the fork): {', '.join(res['fork']['rewrites'])}"]
+          if (res.get("fork") or {}).get("rewrites") else []),
+        *([f"- Upstream functions the fork replaced (replacement proved at full-correctness): "
+           + "; ".join(f"{k} -> {_items(v)}" for k, v in res['fork']['replaced'].items())]
+          if (res.get("fork") or {}).get("replaced") else []),
         f"- Features and targets covered: {', '.join(m.get('coverage', {}).get('targets', [])) or 'NOT DECLARED'}"
         + (f"; variants: {', '.join(v['name'] for v in m.get('variant', []))}" if m.get("variant") else ""),
         (f"- Newer upstream release {upstream.get('latest')} exists; it is NOT verified (stale) until re-proved" if upstream and upstream.get("newer")
@@ -269,6 +292,25 @@ def claim_card(m, res, g, entry_label, status, archive_sha, upstream):
         f"- Std or library models: {', '.join(trust.get('models', [])) or 'none listed'}"
         + (f" (unlisted models assumed by the extraction: {len(set((res.get('extract') or {}).get('assumed_axioms', [])) - set(trust.get('models', [])))})"
            if (res.get("extract") or {}).get("assumed_axioms") else ""),
+        *([f"- Creusot (second evidence type, {(res['creusot'].get('version') or '?').splitlines()[0][:80]}): ghost-only check "
+           f"{'passed' if res['creusot'].get('ghost_only', {}).get('ok') else 'FAILED'}, std-contract tests "
+           f"{'passed' if res['creusot'].get('spectest', {}).get('ok') else 'FAILED'}; trusted items ({len(res['creusot'].get('trusted', []))}): "
+           + (', '.join(res['creusot'].get('trusted', [])) or 'none')] if res.get("creusot") else []),
+        *([f"- Frama-C: {(res.get('prove') or {}).get('frama_c_version')}"
+           + (f" from image {res['prove']['image']}" if (res.get('prove') or {}).get('image') else "")
+           + f"; provers {', '.join((res.get('prove') or {}).get('provers') or [])}"] if m.get("tool") == "framac" and res.get("prove") else []),
+        *([f"- WP strategy plugins (trusted-base change, pinned): "
+           + "; ".join(f"{p['path']} (sha256 {p['sha256'][:16]})" + (f", built with `{p['build']}` to {p['built']} (sha256 {(p.get('built_sha256') or '')[:16]})" if p.get('build') else "")
+                       + (f": {p['note']}" if p.get('note') else "") for p in res['prove']['plugins'])]
+          if (res.get('prove') or {}).get('plugins') else []),
+        *([f"- Build configurations proved: {sum(1 for c in res['prove']['configs'] if c['total'] and c['proved'] == c['total'] and not c['dead'])}"
+           f" of {len(res['prove']['configs'])} (each a separate WP run; list in the result file)"
+           + (f"; smoke tests at {sorted({c.get('smoke_timeout') for c in res['prove']['configs'] if c.get('smoke_timeout')})} s per prover call"
+              if any(c.get('smoke_timeout') for c in res['prove']['configs']) else "")]
+          if (res.get('prove') or {}).get('configs') else []),
+        *([f"- Code declared unreachable in a configuration (failed smoke test, each checked by hand): "
+           + "; ".join(f"{d['file']}:{d['line']} [{c['config']}] {d['reason']}" for c in res['prove']['configs'] for d in c.get('expected_dead', []))]
+          if any(c.get('expected_dead') for c in (res.get('prove') or {}).get('configs', [])) else []),
         f"- Tool assumptions: {trust.get('tool_assumptions', 'translator (Aeneas/Charon) faithful; Lean kernel sound' if m['tool'] == 'lean-aeneas' else 'Frama-C WP memory model and provers sound')}",
         (f"- Patched translator (trusted-base change): {tc['aeneas_patched'].get('base')}; aeneas sha256 {tc['aeneas_patched']['aeneas_sha256']}, "
          f"charon sha256 {tc['aeneas_patched']['charon_sha256']}; patches: "
@@ -292,7 +334,8 @@ def claim_card(m, res, g, entry_label, status, archive_sha, upstream):
     lines += ["", "## Per-function results", "", "| Function | Status | Label | Evidence |", "|---|---|---|---|"]
     for f in fns:
         ev = ", ".join(f.get("theorems", [])[:4]) or (f"{f['goals']['proved']}/{f['goals']['total']} WP goals" if f.get("goals") else "")
-        lines.append(f"| `{f['id']}` | {f['status']} | {f.get('label', '')} | {ev} |")
+        cap = f" (capped: uses the stock formatter model {', '.join(f['stock_fmt'][:3])}, which ignores the output)" if f.get("stock_fmt") else ""
+        lines.append(f"| `{f['id']}` | {f['status']} | {f.get('label', '')}{cap} | {ev} |")
     lines += ["", "## Credits"] + [f"- {c}" for c in m.get("credits", [])] if m.get("credits") else ["", "## Credits", "- not recorded"]
     lines += ["", "## Review",
               f"- Maintainer sign-off: {review.get('maintainer', 'NOT YET')}",

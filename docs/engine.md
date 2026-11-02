@@ -35,6 +35,13 @@ Per-function labels (full-correctness, safety-contracts, no-ub, bounded, tested)
 Lean entries are also replayed through the kernel with `leanchecker`. Known tool soundness bugs go
 in toolchain/soundness.toml (protected); affected entries become broken.
 
+Forks: an entry that builds from a published fork sets `[fork] of = <original upstream>` and
+`base = <commit>`. Gate 1 then diffs every function against the base. Each changed function needs
+one of: status "fixed" (a proved bug fix), `equivalence = ["<proved theorem>", ...]` (proved equal
+to the base code), or `rewrite = "<fork commit>"` (a proved full-correctness rewrite that exists
+only on the fork; CLAIM.md tells users to adopt the fork). A function the fork removed needs `replaced_by = "<fork id>"` (or a list) on an entry with the upstream id;
+each replacement must be proved at full-correctness. Otherwise removed functions fail.
+
 ## Self-update
     vpipe improve                    # agent reads notes + results + backlog, changes the pipeline,
                                      # protected gate decides keep or roll back, logged in self/CHANGELOG.md

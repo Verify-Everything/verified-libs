@@ -149,11 +149,18 @@ Standard: https://claude.ai/artifact/1tqQsrMgXckaNZQJVXPWvp. Code: `pipeline/bin
 - **Not yet possible here:** a container digest (gate 9) needs a published image; until the toolkit
   makes one, `[container].digest` in toolchain/versions.toml stays empty and no entry can pass gate 9.
   The toolchain digest (sha256 over the pinned versions and the tool binaries) is recorded meanwhile.
-- **Today:** crc32fast passes 1/10 gates (all-inputs). The rest need the threads and Yerin: pin the
+- **Check-in 09:12 UTC (pipeline 0.2.11):** crc32fast 46/46 functions at full-correctness over 5
+  variants (1151/1151 theorems), 4/10 gates; still failing real code (archive pin / patch
+  equivalence), spec first, planted bugs, trusted base (replay merge fixed in 0.2.10, needs a new run),
+  reproducible (container digest) and two reviews. percent-encoding 28/33 functions, 2/10 gates.
+  semver 4/92 (not re-run since 06:03). Neovim, inih and Helix are not run through vpipe yet. No
+  library is finished.
+- **Earlier (07:20):** crc32fast passed 1/10 gates (all-inputs). The rest need the threads and Yerin: pin the
   archive hash, labels in functions.toml, [coverage], [trust] models, test vectors, mutants.toml
   from a reviewer, a cross-check command, the container, and the two sign-offs.
 
 ## Changelog
+- v2.1 (09:15): pipeline 0.2.1-0.2.11 (tool patches, Codex/Gemini, pinned nixpkgs, patched Aeneas, variants); check-in 4 status.
 - v2 (07:20): admission standard built into the engine (pipeline 0.2.0); candidates/libs layout; Neovim swarm features.
 - v1.5 (06:00): every-function completion rule enforced; repo layout for verified-libs; contributor install needs; one folder per library; shared mathlib.
 - v1.4 (05:35): inih and Neovim Frama-C lessons folded in (v0.1.4); Helix thread noted, using the same model-crate method as semver.

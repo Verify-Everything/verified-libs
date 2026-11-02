@@ -15,3 +15,54 @@ versions = ["33.0"]          # prefix of installed.json "frama_c" ("33.0 (Arseni
 pattern = '(?:const\s+(?:(?:un)?signed\s+)?char|char\s+const)\s+\*?\s*\w+\s*\[[^\]]*\]\s*=\s*"'
 unless_wp_args = ["-wp-no-init-const"]
 note = "Frama-C 33 WP with default -wp-init-const assumes a const char array initialised from a string literal is all zeros, so it can prove false facts. Rewrite it as a brace list via a declared tool patch. verification-notes/toolchain-bugs/framac33-wp-string-init.md (Neovim thread, 2026-10-24)"
+
+[[bug]]
+tool = "aeneas"
+versions = ["nightly-2026.10.23-fdebf20"]   # stock, and patched builds 1-7 (same version string)
+lang = "rust"
+# Only entries whose proved Rust sources name an interior-mutability or shared-ownership type are
+# affected. Over-approximates on purpose: a hit means "re-check on a fixed build", not "wrong".
+pattern = '\b(?:Cell|RefCell|UnsafeCell|OnceCell|LazyCell|OnceLock|LazyLock|Atomic[A-Za-z0-9]*|Mutex|RwLock|Rc|Arc)\b'
+fixed_aeneas_sha256 = ["b5bc4d949f3404a0a04ccb1c5dd8a2efb925c5c2c6202a8cd7d42a2c14930fbc", "a37ca639b6e0c8c2afc0be92cdd4728d740e3a0dd5af48289ba1325586f81b0b", "44ed15644bf8226a4d372bf82e03522a5acbda0b094925016779f47487c36bbe", "92b7ffe6ed1914a82bc46b0cea3559d8b0b3e155b37b2ed1cad37ebd5a77ceca"]   # patched builds 8-11 (no BUILD file)
+fixed_in_build = 8   # builds with a BUILD file (12 on) are matched by number
+note = "Aeneas modelled std calls by signature, so writes through a shared reference (Cell::set, atomics, RefCell, std::sync) were dropped and false facts could be proved. Patched build 8 refuses such calls (sorry). helix-verify/toolchain/README.md item 13 (Extend Aeneas thread, 2026-10-24)"
+
+[[bug]]
+tool = "aeneas"
+versions = ["nightly-2026.10.23-fdebf20"]   # patched builds 1-8 (the option is patched-only)
+requires_aeneas_args = ["-filter-trait-methods"]
+fixed_aeneas_sha256 = ["a37ca639b6e0c8c2afc0be92cdd4728d740e3a0dd5af48289ba1325586f81b0b", "44ed15644bf8226a4d372bf82e03522a5acbda0b094925016779f47487c36bbe", "92b7ffe6ed1914a82bc46b0cea3559d8b0b3e155b37b2ed1cad37ebd5a77ceca"]   # patched builds 9-11 (no BUILD file)
+fixed_in_build = 9
+note = "With -filter-trait-methods, impls lost their size_hint override and Lean used the default (0, none), so size_hint facts could be about the wrong function. Fixed in patched build 9, which also needs the patched Lean library (lean_lib_patch = true). helix-verify/toolchain/README.md (Extend Aeneas thread, 2026-10-24 13:00)"
+
+[[bug]]
+tool = "aeneas"
+versions = ["nightly-2026.10.23-fdebf20"]
+lean_lib_patch_sha256 = ["097fb47f571b3a0899065a132dce4fab9375b544e18a37b578167404da2675ef", "98b727aae0f1f37c4a803614deee2e4afa03b2fbfc288c805f2fca1f9a6b294a"]
+note = "The Lean library patch (before lean-lib-build14) gave library iterators (slice::Iter, vec::IntoIter, Enumerate ...) size_hint = (0, None) instead of std's value, so size_hint facts could disagree with real std. Fixed by aeneas-fdebf20-lean-lib-build14.patch (Extend Aeneas thread, 2026-10-24 14:57)"
+
+[[bug]]
+tool = "aeneas"
+versions = ["nightly-2026.10.23-fdebf20"]   # stock Lean library and lib patches before build 15
+lang = "lean"
+pattern = 'Vec\.insert\b'
+fixed_lean_lib_patch_sha256 = ["1d9cf0a8b9e682cb1f53a1f60b7e1a77c35059521baa288f4a85b32e4e350793", "733075b8b188ecfd0adc444af81cab8a61e86a158cc09586d9038f1a319a7a30"]   # lean-lib-build15, 16
+fixed_in_lib_build = 15   # lib patches with a build header (17 on) are matched by number
+note = "Aeneas's Lean model of Vec::insert fails when the index equals len, but Rust appends there, so a proof can rely on a failure real code never has. Affects every run whose generated Lean calls Vec.insert, unless built with aeneas-fdebf20-lean-lib-build15.patch or later. README item 23 (Extend Aeneas thread, 2026-10-24 20:18)"
+
+[[bug]]
+tool = "aeneas"
+versions = ["nightly-2026.10.23-fdebf20"]   # stock Lean library and lib patches before build 16
+lang = "lean"
+pattern = 'RawPtr\.cast_scalar\b'
+fixed_lean_lib_patch_sha256 = ["733075b8b188ecfd0adc444af81cab8a61e86a158cc09586d9038f1a319a7a30"]   # lean-lib-build16
+fixed_in_lib_build = 16   # lib patches with a build header (17 on) are matched by number
+note = "Aeneas's Lean RawPtr.cast_scalar always fails (.fail .undef), so any proof through a scalar pointer cast is vacuous. Fixed by aeneas-fdebf20-lean-lib-build16.patch (opaque pointer). README item 24 (Extend Aeneas thread, 2026-10-24 21:58)"
+
+[[bug]]
+tool = "aeneas"
+versions = ["nightly-2026.10.23-fdebf20"]   # stock Lean library and lib patches before build 17
+lang = "lean"
+pattern = 'std\.io\.stdio\._print\b'
+fixed_in_lib_build = 17
+note = "Aeneas's Lean model of print! (std.io.stdio._print) returns ok (), but Rust panics when writing to stdout fails, so no-panic facts through it are wrong. Fixed by lean-lib build 17 (README item 26). Formatter models that ignore output are handled separately: functions reaching them are capped at no-ub."

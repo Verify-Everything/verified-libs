@@ -845,7 +845,7 @@ def annotation_only(src, overlay):
     return bad
 
 
-def prove_framac(m, src, proj, mutant=None, tag="annotated", clean=False, only=None):
+def prove_framac(m, src, proj, mutant=None, tag="annotated", clean=False, only=None, configs=None):
     """Frama-C WP on the pinned C files with ACSL from the entry.
     Annotations come from proofs/<lib>/src/ (copies of upstream files) and/or [framac] annotate, a
     script run as `python3 -I <script> <pristine dir> <out dir>` that writes annotations into the copy
@@ -912,9 +912,10 @@ def prove_framac(m, src, proj, mutant=None, tag="annotated", clean=False, only=N
 
     fns = list(only or f.get("functions", []))
     runs = []
-    configs = []
+    want_configs, configs = configs, []
     if f.get("matrix") and not only:
-        runs, configs = framac_matrix(m, proj, tree, files, fns, wp_args, plugins, provers, wp, clean or bool(mutant), tag)
+        runs, configs = framac_matrix(m, proj, tree, files, fns, wp_args, plugins, provers, wp, clean or bool(mutant), tag,
+                                      only_configs=want_configs)
     elif f.get("per_function"):
         names = fns or [x["name"] for x in scan_c_functions(tree, f.get("files", []))]
         for n in names:
@@ -1031,7 +1032,7 @@ def rule_hits(rule, line):
 SMOKE_RE = re.compile(r"([\w./-]+\.c):(\d+): Warning:\s*Failed smoke")
 
 
-def framac_matrix(m, proj, tree, files, fns, wp_args, plugins, provers, wp, fresh, tag):
+def framac_matrix(m, proj, tree, files, fns, wp_args, plugins, provers, wp, fresh, tag, only_configs=None):
     """[framac.matrix]: one WP run per build configuration (inih: 45 -D sets). Resumable: each finished
     configuration is stored with a key over everything that decides it (annotated sources, flags,
     tool, plugins), and skipped on a re-run while the key matches. A clean run ignores the store.
@@ -1039,6 +1040,11 @@ def framac_matrix(m, proj, tree, files, fns, wp_args, plugins, provers, wp, fres
     mx = m["framac"]["matrix"]
     lines = [l.strip() for l in (Path(proj) / mx["file"]).read_text().splitlines()] if mx.get("file") else []
     cfgs = [l for l in lines if l and not l.startswith("#")] + list(mx.get("configs", []))
+    if only_configs:  # planted-bug runs: only the configurations the mutant names
+        missing = [c for c in only_configs if c not in cfgs]
+        if missing:
+            raise ValueError(f"mutant configs not in the matrix: {missing}")
+        cfgs = [c for c in cfgs if c in only_configs]
     store = WORK / m["name"] / f"matrix-{tag}"
     if fresh:
         shutil.rmtree(store, ignore_errors=True)
@@ -2195,7 +2201,10 @@ def evaluate(lib, m, res, proj, write_card=False):
         if hits:
             card = card.replace("\n## Code", "\n**Known soundness bug in a tool used:** "
                                 + "; ".join(b.get("note", b.get("tool", "")) for b in hits) + "\n\n## Code", 1)
-        (entry_dir(lib, m) / "CLAIM.md").write_text(card)
+        ed = entry_dir(lib, m)
+        (ed / "CLAIM.md").write_text(card)
+        if ed.resolve().relative_to(ROOT.resolve()).parts[0] in ENTRY_ROOTS:
+            write_entry_extras(ed, m)  # verified-libs layout: spec/ and pipeline/run.sh beside CLAIM.md
     return res["admission"]
 
 
@@ -2581,6 +2590,21 @@ def mutate(lib, suggest=0, only=None):
                     lost = sorted(proved0 - still)
                     rec.update(outcome="caught" if lost or not pr["ok"] else "survived", broken_theorems=lost[:20],
                                extract_ok=ex["ok"])
+            elif m.get("framac", {}).get("matrix") and (mu.get("configs") or m["framac"]["matrix"].get("mutant_configs")):
+                # Matrix entries (inih): the mutant is checked only in the configurations it names
+                # (or [framac.matrix].mutant_configs), in its own store and sessions (tag "mutant").
+                # Those configurations must be fully proved in the last real run, so any failed goal
+                # is the mutant's doing; caught = some goal there fails (or dead code appears).
+                sel = list(mu.get("configs") or m["framac"]["matrix"]["mutant_configs"])
+                base_cfgs = {c["config"]: c for c in ((base or {}).get("prove") or {}).get("configs", [])}
+                unproved = [c for c in sel if not (base_cfgs.get(c) and base_cfgs[c]["total"]
+                                                   and base_cfgs[c]["proved"] == base_cfgs[c]["total"] and not base_cfgs[c].get("dead"))]
+                if unproved:
+                    rec.update(outcome="invalid", why=f"configs not fully proved in the last run: {unproved}")
+                else:
+                    pr = prove_framac(m, tree, proj, mutant=mu, tag="mutant", configs=sel)
+                    rec.update(outcome="caught" if pr["failed"] or not pr["ok"] else "survived",
+                               proved=f"{pr['proved']}/{pr['total']}", configs=sel)
             else:
                 pr = prove_framac(m, tree, proj, mutant=mu, tag="mutant")
                 rec.update(outcome="caught" if pr["proved"] < goals0 or not pr["ok"] else "survived",

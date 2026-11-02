@@ -440,3 +440,15 @@ Snapshots for rollback are in self/snapshots/.
   rule fields. Needed for expect_dead: "-DINI_MAX_LINE=2" is inside "-DINI_MAX_LINE=20", and a realloc
   prefix line is inside the INI_INITIAL_ALLOC=64 lines (inih). Keys unchanged; existing match rules
   behave as before.
+
+## 2026-11-02T00:30Z v0.2.36 planted bugs on a chosen subset of matrix configs; entry layout on every card
+- mutants.toml: a mutant may name configs = ["<cfgs.txt line>", ...] (default [framac.matrix].mutant_configs).
+  It is then proved only in those configurations, in its own store and sessions (tag "mutant", never
+  matrix-annotated). Each named configuration must be fully proved, with no dead code, in the last real
+  run (else the mutant is invalid); caught = any goal there fails or the run is not ok. A name not in the
+  matrix makes the mutant invalid. Matrix keys unchanged. Without configs: the old whole-matrix behaviour.
+- evaluate() (run and `vpipe card`) writes spec/README.md (if missing) and pipeline/run.sh for every entry
+  under candidates/ or libs/, so hand-written entries get the verified-libs layout too (toolkit thread:
+  check_structure.py). Wrote them for candidates/inih/r62-3-g2bbdec4 now.
+- Tested: base 2 configs proved; mutant in one config caught (12/13) using only that config; unknown
+  config rejected; separate stores and sessions.

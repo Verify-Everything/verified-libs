@@ -190,6 +190,8 @@ def _setup(which):
         info.update(json.loads(r.stdout.strip().splitlines()[-1]))
     if which == "creusot":
         info["creusot"] = setup_creusot()
+    if which == "kani":
+        info["kani"] = setup_kani()
     (VH / "installed.json").write_text(json.dumps(info, indent=2))
     return info
 
@@ -219,6 +221,22 @@ def setup_creusot():
     if r.returncode != 0 or c.get("commit", "?") not in out and c.get("tag", "?").lstrip("v") not in out:
         return {"installed": False, "why": out[-400:] or "cargo creusot not found"}
     return {"installed": True, "version": out[-400:], "pin": c.get("tag"), "commit": c.get("commit")}
+
+
+def setup_kani():
+    """Kani at the pinned version ([kani] in versions.toml): `cargo install --locked kani-verifier@V`
+    then `cargo kani setup` (downloads its nightly and CBMC). Records `cargo kani --version`."""
+    k = versions().get("kani") or {}
+    want = k.get("version", "?")
+    r = sh(["cargo", "kani", "--version"], check=False, capture=True, timeout=300)
+    if r.returncode != 0 or want not in r.stdout + r.stderr:
+        sh(["cargo", "install", "--locked", f"kani-verifier@{want}"], check=False, timeout=3600)
+        sh(["cargo", "kani", "setup"], check=False, timeout=3600)
+        r = sh(["cargo", "kani", "--version"], check=False, capture=True, timeout=300)
+    out = (r.stdout + r.stderr).strip()
+    if r.returncode != 0 or want not in out:
+        return {"installed": False, "why": out[-400:] or "cargo kani not found"}
+    return {"installed": True, "version": out[-200:], "pin": want}
 
 
 def mathlib_cache_key():
@@ -466,9 +484,9 @@ def extract_rust(m, src, proj):
     strict = x.get("strict_externals", False) and bool(template_changes)
     ok = (ext / "Funs.lean").exists() and not unexpected and not strict and all(q["ok"] for q in post)
     return {"ok": ok, "stage": "aeneas", "aeneas_rc": r.returncode, "postprocess": post, "aeneas_args": aeneas_args(m),
-            "translator": translator_info(m),
+            "charon_args": cmd[2:cmd.index("--dest-file")], "translator": translator_info(m),
             "unexpected_errors": unexpected[:50],
-            "unsupported": unsupported[:100], "assumed_axioms": assumed,
+            "unsupported": unsupported[:100], "assumed_axioms": assumed, "std_model_defs": std_model_defs(ext),
             # Aeneas can hit an internal error and still leave an axiom with no "Could not translate"
             # warning; such axioms reach gate 7 only if a proof uses them, so count them here too.
             "internal_errors": [u for u in unsupported if "internal error" in u["error"].lower()][:50],
@@ -518,11 +536,12 @@ def patched_tools():
     return d
 
 
-def aeneas_build():
-    """Build number from the BUILD file in the pinned patched Aeneas tarball (build 12 on), else None."""
+def aeneas_build(key="aeneas_tarball"):
+    """Build number from the BUILD file in the pinned patched Aeneas tarball (build 12 on), else None.
+    key="charon_tarball" reads the Charon tarball's BUILD file (build 7 on)."""
     pv = versions().get("aeneas_patched") or {}
     try:
-        with tarfile.open(Path(pv["dir"]) / pv["aeneas_tarball"]) as t:
+        with tarfile.open(Path(pv["dir"]) / pv[key]) as t:
             mem = next((x for x in t.getmembers() if x.name.rstrip("/").split("/")[-1] == "BUILD"), None)
             first = t.extractfile(mem).read().decode().splitlines()[0] if mem else ""
         mm = re.search(r"build (\d+)", first)
@@ -558,7 +577,7 @@ def translator_info(m):
         return {"patched": True, "base": "stock Charon/Aeneas binaries", "aeneas_sha256": "", "charon_sha256": "",
                 "patches": {lp["file"]: lp["sha256"]}, "lean_lib_build": lp["build"]}
     return {"patched": True, "base": pv.get("base"), "aeneas_sha256": pv["aeneas_sha256"], "charon_sha256": pv["charon_sha256"],
-            "aeneas_build": aeneas_build(),
+            "aeneas_build": aeneas_build(), "charon_build": aeneas_build("charon_tarball"),
             "patches": {**{p_: (_sha256_file(Path(pv["dir"]) / p_) if (Path(pv["dir"]) / p_).exists() else "missing")
                            for p_ in pv.get("patches", [])}, **({lp["file"]: lp["sha256"]} if lp else {})},
             "lean_lib_build": lp["build"] if lp else None}
@@ -627,6 +646,21 @@ def install_externals(keep, ext):
         t.unlink()  # the template would clash with the real file under `lake build`
         assumed += re.findall(r"^axiom\s+(\S+)", mine.read_text(), re.M)
     return assumed
+
+
+MODEL_DEF_RE = re.compile(r'@\[[^\]]*?rust_fun\s+"([^"]+)"[^\]]*\]\s*(?:noncomputable\s+)?def\s+([^\s:({\[]+)', re.S)
+
+
+def std_model_defs(ext: Path):
+    """Std models written as plain defs in *External.lean (no axiom, so the axiom audit cannot see
+    them). Each is a trusted assumption: [{"rust": <Rust path>, "lean": <def>, "file": ...}]."""
+    out = []
+    for f in sorted(ext.rglob("*External.lean")):
+        if ".lake" in f.parts:
+            continue
+        for rust, lean in MODEL_DEF_RE.findall(f.read_text(errors="replace")):
+            out.append({"rust": rust, "lean": lean, "file": f.name})
+    return out
 
 
 def extracted_rel(m):
@@ -1385,6 +1419,28 @@ def function_inventory(m, tree, proj, res, patched=None):
                     fn["status"], fn["why"] = "open", f"Creusot entries not proved: {bad}"
                 else:
                     fn["status"] = "fixed" if ov.get("status") == "fixed" and ov.get("fix") else "verified"
+            elif ov.get("verified_by") == "lean+kani" and ov.get("status") != "open":
+                # Lean proves the body without a debug assertion; Kani shows the assertion never fires
+                # (under a precondition); Creusot entries prove every caller meets that precondition.
+                kr = res.get("kani") or {}
+                hs, ents = ov.get("kani", []), ov.get("creusot", [])
+                fn["evidence"], fn["kani"], fn["creusot"] = "lean+kani", hs, ents
+                bad_h = [h for h in hs if not (kr.get("harnesses", {}).get(h) or {}).get("ok")]
+                bad_c = [e for e in ents if not cr.get("entries", {}).get(e)]
+                if not kr or kr.get("why"):
+                    fn["status"], fn["why"] = "open", (kr.get("why") or "verified_by = lean+kani but the run has no [kani] result")[:200]
+                elif not hs:
+                    fn["status"], fn["why"] = "open", "verified_by = lean+kani needs kani = [<harnesses>]"
+                elif not (kr.get("tree", {}).get("ok") and kr.get("std_copy", {}).get("ok")):
+                    fn["status"], fn["why"] = "open", "Kani crate is not upstream + cfg(kani) lines, or the std copy does not match std"
+                elif bad_h:
+                    fn["status"], fn["why"] = "open", f"Kani harnesses not as expected: {bad_h}"
+                elif bad_c:
+                    fn["status"], fn["why"] = "open", f"Creusot entries not proved: {bad_c}"
+                elif not evidence or len(proved) != len(evidence):
+                    fn["status"], fn["why"] = "open", f"theorems not proved: {sorted(set(evidence) - set(proved))}"
+                else:
+                    fn["status"] = "fixed" if ov.get("status") == "fixed" and ov.get("fix") else "verified"
             elif not fn["lean"]:
                 fn["status"], fn["why"] = "open", "not extracted (unsupported by Aeneas or excluded by cfg)"
             elif ov.get("status") == "open":  # a human says the evidence does not cover the real code yet
@@ -1396,6 +1452,8 @@ def function_inventory(m, tree, proj, res, patched=None):
                 fn["why"] = "no theorem about it" if not evidence else f"theorems not proved: {sorted(set(evidence) - set(proved))}"
             if ov.get("note"):
                 fn["note"] = ov["note"]
+            if ov.get("evidence_label"):  # wording the maintainer approved for this evidence (shown on CLAIM.md)
+                fn["evidence_label"] = ov["evidence_label"]
     else:
         files = m.get("framac", {}).get("files", [])
         fns = _unique_ids(scan_c_functions(tree, files))
@@ -1430,6 +1488,8 @@ def function_inventory(m, tree, proj, res, patched=None):
                              f"{g['total'] - g['proved']} of {g['total']} WP goals open" if g["total"] else "no WP goals")
             if ov.get("note"):
                 fn["note"] = ov["note"]
+            if ov.get("evidence_label"):  # wording the maintainer approved for this evidence (shown on CLAIM.md)
+                fn["evidence_label"] = ov["evidence_label"]
     for fn in fns:  # work queue: who is on it (`vpipe take`); never changes the status
         ov = overrides.get(fn["id"], {})
         if ov.get("claimed_by") and fn["status"] == "open":
@@ -1510,9 +1570,23 @@ def next_functions(lib, n=20):
             continue
         callees = graph.get(f["id"], [])
         waiting = [c for c in callees if status.get(c) == "open"]
-        out.append({"id": f["id"], "why": f.get("why", ""), "callees": len(callees), "waiting_on": waiting[:10]})
+        e = {"id": f["id"], "why": f.get("why", ""), "callees": len(callees), "waiting_on": waiting[:10]}
+        if f.get("lean") and m.get("tool") == "lean-aeneas":
+            e["lean"], e["signature"] = f["lean"], lean_signature(WORK / m["name"] / "proj" / extracted_rel(m), f["lean"])
+        out.append(e)
     out.sort(key=lambda x: (len(x["waiting_on"]), x["callees"], x["id"]))
     return out[:n]
+
+
+def lean_signature(ext: Path, name: str):
+    """The generated `def <name> ... :=` header (binders and result type), so a worker sees the
+    obligation's shape without opening Funs.lean. None if not found."""
+    for f in sorted(ext.glob("Funs*.lean")):
+        text = f.read_text(errors="replace")
+        mm = re.search(r"(?m)^(?:noncomputable\s+)?def\s+" + re.escape(name) + r"\b(.*?):=", text, re.S)
+        if mm:
+            return re.sub(r"\s+", " ", f"def {name}{mm.group(1)}").strip()[:600]
+    return None
 
 
 def take(lib, fn_id, by):
@@ -1618,6 +1692,7 @@ def merge_variants(per):
     ex = {"ok": bool(exs) and all(e["ok"] for e in exs), "stage": "variants",
           "unsupported": [u for e in exs for u in e.get("unsupported", [])],
           "assumed_axioms": sorted({a for e in exs for a in e.get("assumed_axioms", [])}),
+          "std_model_defs": sorted({(d["rust"], d["lean"], d["file"]) for e in exs for d in e.get("std_model_defs", [])}),
           "external_template_changes": [c for e in exs for c in e.get("external_template_changes", [])]}
     pr = None
     if prs:
@@ -1766,6 +1841,8 @@ def run(lib, use_agent=False, rounds=3, budget=60, extract_only=False, clean=Fal
         agent(m, proj, res, budget)
     if m.get("creusot") and not functions:
         res["creusot"] = run_creusot(lib, m, pristine)
+    if m.get("kani") and not functions:
+        res["kani"] = run_kani(lib, m, pristine)
     if res.get("prove") or res.get("extract", {}).get("ok"):
         res["functions"] = function_inventory(m, pristine, proj if tool != "lean-aeneas" else WORK / lib / "proj", res,
                                               src if tool == "lean-aeneas" else None)
@@ -1834,6 +1911,100 @@ def run_creusot(lib, m, pristine):
             "version": info.get("version"), "seconds": round(time.time() - t0)}
 
 
+KANI_ADDED_RE = re.compile(r"^\s*(?:#!?\[cfg(?:_attr)?\(kani\b.*|mod\s+\w+;)?\s*$")
+
+
+def kani_tree_check(up: Path, crate: Path, added):
+    """The Kani crate must be the pinned upstream crate plus cfg(kani)-only lines (`#[cfg(kani)]`,
+    `#![cfg_attr(kani, ..)]`, the `mod x;` right after a cfg(kani) line, blank lines) and the files
+    listed in [kani].added. Nothing upstream may be removed or changed."""
+    import difflib
+    probs = []
+    for p in sorted(crate.joinpath("src").rglob("*.rs")):
+        rel = str(p.relative_to(crate))
+        if rel in added:
+            continue
+        u = up / rel
+        if not u.exists():
+            probs.append(f"{rel}: not in upstream and not in [kani].added")
+            continue
+        a, b = u.read_text().splitlines(), p.read_text().splitlines()
+        prev_cfg = False
+        for op, i1, i2, j1, j2 in difflib.SequenceMatcher(None, a, b, autojunk=False).get_opcodes():
+            if op == "equal":
+                prev_cfg = False
+                continue
+            if op != "insert":
+                probs.append(f"{rel}:{i1 + 1}: upstream lines changed or removed")
+                continue
+            for line in b[j1:j2]:
+                is_mod = re.match(r"^\s*mod\s+\w+;\s*$", line)
+                if not KANI_ADDED_RE.match(line) or (is_mod and not prev_cfg):
+                    probs.append(f"{rel}: added line is not cfg(kani)-only: {line.strip()[:80]}")
+                prev_cfg = "kani" in line or (prev_cfg and not line.strip())
+    for rel in added:
+        if not (crate / rel).exists():
+            probs.append(f"{rel}: listed in [kani].added but missing")
+    return {"ok": not probs, "problems": probs[:20]}
+
+
+def run_kani(lib, m, pristine):
+    """[kani] evidence (bounded model checking with Kani): the crate is upstream plus cfg(kani)-only
+    lines; a std copy, if used, is regenerated from rust-lang/rust sources fetched at the pinned tag
+    and must equal the committed copy; then each harness runs alone (one CBMC at a time: memory) and
+    must give its expected verdict. A harness expected to fail must fail on its named check."""
+    k = m["kani"]
+    t0 = time.time()
+    info = setup_kani()
+    if not info.get("installed"):
+        return {"ok": False, "why": "Kani not installed: " + info.get("why", ""), "harnesses": {}}
+    bundle = entry_dir(lib, m) / k.get("bundle", "kani")
+    w = WORK / m["name"] / "kani"
+    shutil.rmtree(w, ignore_errors=True)
+    shutil.copytree(bundle, w, ignore=shutil.ignore_patterns("target", "log-*.txt", "bounded"))
+    crate = w / k.get("crate", "pe")
+    tree = kani_tree_check(Path(pristine) / k["upstream_crate"], crate, k.get("added", []))
+    stdc = {"ok": True, "skipped": True}
+    sc = k.get("std_copy")
+    if sc:
+        # Fetch the std sources at the pinned tag (never the bundle's copies), regenerate, compare.
+        sd = w / ".std-fetched"
+        stdc = {"ok": True, "tag": sc["tag"], "files": {}}
+        for f in sc["files"]:
+            dst = sd / f
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            url = f"https://raw.githubusercontent.com/rust-lang/rust/{sc['tag']}/library/{f}"
+            r = sh(["curl", "-sSfL", "-o", str(dst), url], check=False, capture=True, timeout=300)
+            stdc["files"][f] = _sha256_file(dst) if r.returncode == 0 and dst.exists() else "fetch failed"
+            if r.returncode != 0:
+                stdc["ok"] = False
+        gen = w / ".std_copy.generated.rs"
+        if stdc["ok"]:
+            g = sh(["python3", "-I", str(w / sc["script"]), str(sd), str(gen)], check=False, capture=True, timeout=300)
+            committed = crate / sc["out"]
+            stdc["ok"] = g.returncode == 0 and gen.exists() and committed.exists() and gen.read_bytes() == committed.read_bytes()
+            stdc["tail"] = (g.stdout + g.stderr)[-400:]
+    flags = list(k.get("flags", []))
+    harnesses = {}
+    for h in k.get("harness", []):
+        r = sh(["cargo", "kani", "--harness", h["name"], *flags], cwd=crate, check=False, capture=True,
+               timeout=int(h.get("timeout_min", 120)) * 60)
+        out = r.stdout + r.stderr
+        (w / f"log-{h['name']}.txt").write_text(out)
+        verdict = "success" if "VERIFICATION:- SUCCESSFUL" in out else "fail" if "VERIFICATION:- FAILED" in out else "none"
+        ok = verdict == h.get("expect", "success")
+        if ok and verdict == "fail" and h.get("fail_check"):
+            ok = h["fail_check"] in out.split("SUMMARY:")[-1]
+        if ok and h.get("cover"):
+            mm = re.search(r"(\d+) of (\d+) cover properties satisfied", out)
+            ok = bool(mm) and mm.group(1) == mm.group(2)
+        harnesses[h["name"]] = {"ok": ok, "verdict": verdict, "expect": h.get("expect", "success"),
+                                "tail": "" if ok else out[-1500:]}
+    return {"ok": tree["ok"] and stdc["ok"] and bool(harnesses) and all(v["ok"] for v in harnesses.values()),
+            "tree": tree, "std_copy": stdc, "harnesses": harnesses, "flags": flags,
+            "version": info.get("version"), "seconds": round(time.time() - t0)}
+
+
 def fn_bodies(tree, fns):
     """{function id: source text from its line to the next function in the same file}."""
     out, by_file = {}, {}
@@ -1881,14 +2052,16 @@ def fork_diff(m, res):
     # rewrite = "<fork commit>". The marker must name the commit being proved, and the rewritten
     # function itself must be full-correctness with every theorem proved. Users must adopt the fork.
     fns = {f["id"]: f for f in (res.get("functions") or {}).get("functions", [])}
+    # In `vpipe run`, fork_diff runs before evaluate() sets labels, so compute the label the same way here.
+    _label = lambda f: f.get("label") or standards.function_label(f, m["tool"], ov.get(f["id"]) or ov.get(f["id"].split("@L")[0], {}))
     def rw(i):
         f = fns.get(i) or {}
         return (ov.get(i, {}).get("rewrite") == m.get("commit") and f.get("status") in ("verified", "fixed")
-                and f.get("label") == "full-correctness" and bool(f.get("theorems"))
+                and _label(f) == "full-correctness" and bool(f.get("theorems"))
                 and set(f["theorems"]) <= proved)
     def proved_fn(x):
         f = fns.get(x) or {}
-        return (f.get("status") in ("verified", "fixed") and f.get("label") == "full-correctness"
+        return (f.get("status") in ("verified", "fixed") and _label(f) == "full-correctness"
                 and bool(f.get("theorems")) and set(f["theorems"]) <= proved)
     # An upstream function the fork removed is accepted when functions.toml names its replacement(s)
     # in the fork: [[function]] id = "<upstream id>", replaced_by = "<fork id>" or [...], each proved
@@ -2003,10 +2176,25 @@ def forbidden_scan(m, res, locals_):
                 mm = re.search(r"opaque\s+([^\s:({\[]+)", line)
                 if in_models and mm and (mm.group(1) in listed or mm.group(1).split(".")[-1] in listed):
                     continue
+            if h["construct"] == "sorry":
+                h["def"] = enclosing_def(local / h["file"], h["line"])
             if h["construct"] == "sorry" and Path(h["file"]).parts[:2] == tuple(Path(extracted_rel(m)).parts[:2]):
                 h["construct"] = "sorry (generated: item Aeneas could not translate)"
             hits.append(dict(h, variant=name) if len(locals_) > 1 else h)
     return hits[:500]
+
+
+def enclosing_def(path: Path, line: int):
+    """Name of the Lean def/theorem a line sits in (nearest declaration above it), or None."""
+    try:
+        lines = path.read_text(errors="replace").splitlines()[:line]
+    except OSError:
+        return None
+    for l in reversed(lines):
+        mm = re.match(r"\s*(?:@\[[^\]]*\]\s*)?(?:noncomputable\s+|private\s+|protected\s+|partial\s+)*(?:def|theorem|lemma|abbrev|instance)\s+([^\s:({\[]+)", l)
+        if mm:
+            return mm.group(1)
+    return None
 
 
 def load_overrides(proj):
@@ -2051,7 +2239,18 @@ def soundness_hits(res):
         ap = tc.get("aeneas_patched") or {}
         if ap.get("aeneas_sha256") in b.get("fixed_aeneas_sha256", []):
             continue
-        if b.get("fixed_in_build") and (ap.get("aeneas_build") or 0) >= b["fixed_in_build"]:
+        # Bugs that only exist in the patched translator (stock runs record no aeneas_patched).
+        if b.get("patched_only") and not ap.get("patched"):
+            continue
+        # Build-number fixes: every one named must hold (a fix may need both Aeneas and Charon builds).
+        builds = [("fixed_in_build", "aeneas_build"), ("fixed_in_charon_build", "charon_build")]
+        named = [(k, f) for k, f in builds if b.get(k)]
+        if named and all((ap.get(f) or 0) >= b[k] for k, f in named):
+            continue
+        # Bugs avoided by a Charon option (e.g. --mir elaborated). Runs that did not record their
+        # Charon options (before 0.2.39) used the default --preset=aeneas.
+        ca = " ".join((res.get("extract") or {}).get("charon_args") or ["--preset=aeneas"])
+        if b.get("unless_charon_args_re") and re.search(b["unless_charon_args_re"], ca):
             continue
         if set(b.get("fixed_lean_lib_patch_sha256", [])) & set((ap.get("patches") or {}).values()):
             continue
@@ -2187,6 +2386,16 @@ def evaluate(lib, m, res, proj, write_card=False):
         f["label"] = standards.function_label(f, m["tool"], ov)
         if ov.get("label"):
             f["declared_label"] = ov["label"]
+    ex = res.get("extract") or {}
+    if m.get("tool") == "lean-aeneas" and ex and "std_model_defs" not in ex and (WORK / m["name"] / "proj").exists():
+        ex["std_model_defs"] = std_model_defs(WORK / m["name"] / "proj" / extracted_rel(m))  # results before 0.2.47
+    for h in res.get("forbidden", []):  # results before 0.2.46 did not record the enclosing def
+        if h.get("construct", "").startswith("sorry") and "def" not in h and m.get("tool") == "lean-aeneas":
+            h["def"] = enclosing_def(WORK / m["name"] / "proj" / h["file"], h["line"])
+    for f in (res.get("functions") or {}).get("functions", []):
+        ov = overrides.get(f["id"]) or overrides.get(f["id"].split("@L")[0], {})
+        if ov.get("evidence_label"):  # wording only: `vpipe card` picks up an edited label without a rerun
+            f["evidence_label"] = ov["evidence_label"]
     d = results_dir(lib)
     hist = [h for h in history(lib) if h.get("finished") != res.get("finished")]
     mutants = load_json(d / "mutants.json")
@@ -2311,8 +2520,9 @@ def new(lib, lang, upstream, commit, version, module=None):
     log(f"created {entry}; write [scope] in vpipe.toml and get it reviewed, then `vpipe run {lib}/{version}`")
 
 
-def write_entry_extras(entry, m):
-    """spec/README.md (the plain-words spec, from [scope]) and pipeline/run.sh (how to re-check)."""
+def write_entry_extras(entry, m, root=None):
+    """spec/README.md (the plain-words spec, from [scope]) and pipeline/run.sh (how to re-check).
+    root: the repo the entry sits in (ROOT here, the --dest repo on export); run.sh cds there."""
     (entry / "spec").mkdir(exist_ok=True)
     sc = m.get("scope", {})
     spec = entry / "spec/README.md"
@@ -2323,7 +2533,11 @@ def write_entry_extras(entry, m):
                         + "".join(f"- {x}\n" for x in sc.get("properties", []))
                         + "\n## Formal spec files (in proof/)\n\n" + "".join(f"- {x}\n" for x in sc.get("spec_files", [])))
     (entry / "pipeline").mkdir(exist_ok=True)
-    depth = len(entry.relative_to(ROOT).parts) + 1
+    root = Path(root or ROOT).resolve()
+    try:
+        depth = len(entry.resolve().relative_to(root).parts) + 1
+    except ValueError:
+        depth = 4  # <area>/<name>/<version>/pipeline
     (entry / "pipeline/run.sh").write_text(
         "#!/usr/bin/env bash\n# Re-check this entry from clean with the pinned toolchain (generated by vpipe).\n"
         "set -euo pipefail\n"
@@ -2353,7 +2567,7 @@ def export_entry(lib, dest=None):
                 shutil.copy(d / f, out / f)
         if (d / "spec").is_dir():
             shutil.copytree(d / "spec", out / "spec")
-        write_entry_extras(out, m)
+        write_entry_extras(out, m, root=Path(dest))
         if not (out / "CLAIM.md").exists():
             log("no CLAIM.md yet: run the entry (or `vpipe card`) first")
         log(f"exported {lib} -> {out}")
@@ -2965,7 +3179,7 @@ def main():
     ap = argparse.ArgumentParser(prog="vpipe", description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     s = ap.add_subparsers(dest="cmd", required=True)
-    s.add_parser("setup").add_argument("which", nargs="?", default="all", choices=["lean", "framac", "creusot", "all"])
+    s.add_parser("setup").add_argument("which", nargs="?", default="all", choices=["lean", "framac", "creusot", "kani", "all"])
     n = s.add_parser("new")
     n.add_argument("lib"); n.add_argument("--lang", required=True, choices=["rust", "c"])
     n.add_argument("--upstream", required=True); n.add_argument("--commit", required=True)

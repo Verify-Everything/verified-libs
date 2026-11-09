@@ -28,3 +28,16 @@ Next:
 ## 2026-10-25 01:00 UTC
 - base64.c: all machine gates pass (WP 260/120/118 with asserts on, 35/35 mutants, two reviews REVIEW.md + REVIEW2.md, CI twice in pinned container: runs 40129216377, 40140031727). Waiting on Yerin's spec sign-off; then status -> verified/fixed.
 - CI lesson: Nix as root in a container needs /nix pre-created and /etc/nix/nix.conf with `build-users-group =` and `sandbox = false`; GitHub log blobs are blocked from the sandbox, so emit `::error::` annotations and read them via check-runs/<job>/annotations.
+
+## 2026-11-02 ("fire on all cylinders")
+- Choices made without waiting: target stays full functional correctness for every function (approved standard); base64.c stays candidate until Yerin signs off the spec.
+- mbyte.c: 8 UTF-8 byte functions proved for every input with CBMC (libraries/neovim/mbyte/). CBMC takes ~2 s per function here, vs hours of WP work; use it for byte-level code with bounded loops.
+- Finding #2: utf_cp_bounds_len, (int)(p - base) → UB / out-of-bounds read at >= 2 GiB (findings/cp-bounds-over-2gib.md). Fix: verified_neovim#2, branch fix-cp-bounds-over-2gib; all fixes together on branch `verified` (053a6f2), which CI now uses.
+- Swarm prompt for other agents: neovim_verifier/docs/AGENT_PROMPT.md.
+- Neovim full build is impossible in this sandbox (GitHub archive downloads return 403).
+
+## 2026-11-02 03:30 UTC
+- Candidates now 57 functions: base64 4, mbyte 8, mpack_core 23, math 7, memory.c string helpers 15.
+- Reviews done: cp_bounds (accept with changes: harness now --object-bits 3, distances < 2^60), mpack (2 missing post-call checks added, all 20 runs re-proved, ShaDa makes the 4 GiB hang reachable in LuaJIT builds), math (wording only; MSVC _BitScanForward64 path of xctz and NetBSD popcount64 are open items). memory.c review running.
+- memory.c: 15 functions proved with WP (333 goals). Tricks: pointer-quantified str_len, cvc5 --full-saturate-quant wrapper (tools/bin/cvc5-fsq), ghost length params, ghost lemma functions for count. See AGENTS.md lessons.
+- Plugin track: telescope-fzf-native has two OOB reads (trailing_whitespaces, fzf_suffix_match; pattern ending in `$`). Findings + fix in neovim_verifier/plugins/telescope-fzf-native/. Upstream issue not filed yet. Proof of the fixed fzf.c next.

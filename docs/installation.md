@@ -56,6 +56,7 @@ done yet, so report problems in a Toolchain problem issue.
 | `vkit setup mathlib` | prebuilt mathlib for the pinned Lean (one shared copy, linked into every project) | `~/.vpipe/lake/<key>/` |
 | `vkit setup framac` | Frama-C, Why3, Z3, CVC5 via Nix (or opam) | Nix store, linked into `~/.vpipe/bin` |
 | `vkit setup cbmc` | CBMC (GitHub .deb, Homebrew, or Nix) | system / Nix |
+| `vkit setup kani` | Kani at the `[kani]` pin (`cargo install`, then `cargo kani setup`: its own nightly and CBMC, several GB). Harnesses need about 15 GB RAM and 25-40 min each; Kani entries fetch std sources from raw.githubusercontent.com | `~/.cargo`, `~/.kani` |
 
 All versions come from `toolchain/versions.toml`. Override locations with `VPIPE_HOME`,
 `VPIPE_WORK`, `VPIPE_NOTES` and `VPIPE_CACHE_DIRS`. `vkit doctor` compares what is

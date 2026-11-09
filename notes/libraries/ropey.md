@@ -105,3 +105,14 @@ assert_node_size rule); insert/remove must show they keep it.
   index" hypotheses.
 - Creusot: planted-false smoke test on all 31 functions passes (creusot/vacuity/). Two defensive
   `return None` lines in Chunks next_impl/prev_impl are unreachable by the invariant (dead code).
+
+### 2026-11-02: strict chunk-at-byte spec
+- Added `node_get_chunk_at_byte_spec_strict` (Builder2.lean): the returned chunk ends strictly after the byte index unless it is the last chunk. Requested by the Helix editing-helpers thread for RopeSlice::line. Axioms: the 3 allowed.
+
+### 2026-11-02: audit for the Charon build 6 match-guard bug and third-party interior mutability
+- Re-extracted ropey 1.6.1 with `--mir elaborated` (same flags as r19, Charon build 6, Aeneas build 13): ~/ropey/work/r20.llbc, o20/.
+- Both extractions have 40 `fail panic` sites, in the same functions with the same counts per function. No panic arm appears or disappears, so no suspect arm. (All 40 are unreachable!() arms on Leaf/Internal and explicit panics.)
+- Other differences are loop renaming and 7 more untranslated bodies in the elaborated version (27 vs 20 sorry). The proofs keep using the default-MIR extraction.
+- No lock_api, parking_lot, once_cell, arc_swap or cell types in the extraction (Arc only).
+- smartstring and smallvec do not use Charon/Aeneas (Kani, Creusot and hand-written Lean models), so neither issue applies.
+- 2026-11-02 (from the toolchain thread): Aeneas build 17 with Charon build 7 also translates RopeSlice::new_with_byte_range and Rope::from_reader (toolchain README item 30). Not yet re-extracted here. The Helix editing-helpers thread is working on byte_slice, Chars, Chunks and Lines.

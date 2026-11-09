@@ -1,7 +1,9 @@
 # Pinned toolchain image for admission gate 9 (STANDARDS.md): CI re-checks every entry from clean
 # inside this image, pinned by digest in toolchain/versions.toml [container].
 # It holds the tools only (Aeneas, Charon, Rust nightly, Lean, mathlib, Frama-C, Why3, Z3, CVC5,
-# CBMC, plus qemu and an aarch64 cross gcc for crosscheck models); the repo is mounted at /work at run time. About 19 GB unpacked. Build from the repo root:
+# CBMC, Kani with its own nightly and CBMC, plus qemu and an aarch64 cross gcc for crosscheck models);
+# the repo is mounted at /work at run time. About 19 GB unpacked before Kani. Kani entries fetch std
+# sources from raw.githubusercontent.com at run time, so that host must be reachable. Build from the repo root:
 #   docker build -f container/Dockerfile -t verified-libs-toolchain .
 # Behind a TLS-intercepting proxy, pass its CA as a build secret (not baked into the image):
 #   docker build --secret id=ca,src=/path/to/ca.pem --build-arg HTTPS_PROXY ...
@@ -33,7 +35,7 @@ RUN --mount=type=secret,id=ca,required=false,uid=1001 with-ca bash -c '\
 # The engine is needed only to install and self-test the tools; it is removed afterwards.
 COPY --chown=vpipe . /home/vpipe/src
 RUN --mount=type=secret,id=ca,required=false,uid=1001 with-ca bash -c '\
-    cd ~/src && bash install.sh --yes --agents none --tools lean,framac,cbmc --no-path \
+    cd ~/src && bash install.sh --yes --agents none --tools lean,framac,cbmc,kani --no-path \
  && { python3 bin/vkit.py doctor --json > ~/toolchain.json || true; } \
  && python3 self/gate.py --full \
  && cd ~ && rm -rf ~/src ~/vpipe-work ~/.cargo/registry ~/.vpipe/bin/vkit ~/.vpipe/bin/vpipe ~/.cache \

@@ -66,3 +66,34 @@ lang = "lean"
 pattern = 'std\.io\.stdio\._print\b'
 fixed_in_lib_build = 17
 note = "Aeneas's Lean model of print! (std.io.stdio._print) returns ok (), but Rust panics when writing to stdout fails, so no-panic facts through it are wrong. Fixed by lean-lib build 17 (README item 26). Formatter models that ignore output are handled separately: functions reaching them are capped at no-ub."
+
+[[bug]]
+tool = "aeneas"
+versions = ["nightly-2026.10.23-fdebf20"]   # stock, and patched Charon builds 1-6
+lang = "rust"
+# A match arm with a guard ("pat if cond =>"). Over-approximates on purpose.
+pattern = '\bif\b[^\n;{}]*=>'
+unless_charon_args_re = '--mir[= ]elaborated'
+patched_only = true   # the `fail panic` comes from patched item 3 (variant guard); stock has no such guard
+fixed_in_charon_build = 7
+note = "At the default MIR level Charon translated rustc's fake shallow borrows in match guards as real reads, so a guard over enum fields could become `fail panic` in Lean where Rust does not panic (no-panic facts wrong, proofs about those paths vacuous). Fixed in Charon build 7; --mir elaborated avoids it. Re-extract. helix-verify/toolchain/README.md item 28 (2026-11-02)"
+
+[[bug]]
+tool = "aeneas"
+versions = ["nightly-2026.10.23-fdebf20"]   # stock, and patched Aeneas builds before 17 / Charon before 7
+lang = "rust"
+# Interior-mutability or lock types, std or third-party. Over-approximates on purpose.
+pattern = '\b(?:parking_lot|lock_api|spin|crossbeam\w*|once_cell|arc_swap|atomic_refcell|Cell|RefCell|UnsafeCell|OnceCell|OnceLock|Atomic[A-Za-z0-9]*|Mutex|RwLock|ReentrantMutex|Condvar|RawMutex|RawRwLock)\b'
+fixed_in_build = 17
+fixed_in_charon_build = 7
+note = "Aeneas accepted interior mutability it could not see: (a) third-party opaque types such as parking_lot::Mutex passed by & to a function with no body (fixed in Charon 7 + Aeneas 15), (b) a generic function instantiated with such a type (fixed in Aeneas 17). Writes through them were lost, so false facts could be proved. Needs Aeneas build 17 with Charon build 7. helix-verify/toolchain/README.md items 29, 31 (2026-11-02)"
+
+[[bug]]
+tool = "aeneas"
+versions = ["nightly-2026.10.23-fdebf20"]   # stock, and patched Aeneas builds before 19 / Charon before 9
+lang = "rust"
+# Lock guards and RefMut, or calls that make them. Over-approximates on purpose.
+pattern = '\b(?:\w*Guard|RefMut|RefCell|Mutex|RwLock|lock_api|parking_lot)\b|\.(?:lock|try_lock|borrow_mut|try_borrow_mut)\s*\('
+fixed_in_build = 19
+fixed_in_charon_build = 9
+note = "Aeneas modelled deref_mut(&mut guard) on a lock guard (parking_lot MappedMutexGuard, std MutexGuard, RefMut) as returning the data plus a new guard, so writes through the guard were lost when it was dropped and false facts could be proved. Fixed in Charon build 9 + Aeneas build 19 (refused). Known limit: a trait object behind &mut still counts as owned. helix-verify/toolchain/README.md item 34 (2026-11-02)"

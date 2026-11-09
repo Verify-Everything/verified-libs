@@ -78,6 +78,11 @@ def _items(v):
     return ", ".join(x if isinstance(x, str) else f"Lean {x.get('lean')} ({', '.join(x.get('theorems', []))})" for x in v)
 
 
+def _mdefs(res):
+    """std_model_defs as (rust, lean, file) tuples (variant results store tuples, single runs dicts)."""
+    return [tuple(d.values()) if isinstance(d, dict) else tuple(d) for d in (res.get("extract") or {}).get("std_model_defs", [])]
+
+
 def function_label(fn, tool, override):
     """The label a function earns. A declared label is a claim the reviewer checks; evidence caps it."""
     declared = override.get("label")
@@ -174,6 +179,17 @@ def gates(m, res, overrides, history, mutants, container=None):
     assumed = set((res.get("extract") or {}).get("assumed_axioms", []))
     unlisted_models = sorted(assumed - listed)
     forb = res.get("forbidden", [])
+    # A sorry in generated code (Aeneas could not translate the item) does not count when (a) the
+    # item is listed in [creusot].covers_generated with the Creusot entry that proves it on the
+    # unmodified code, (b) that entry proved in this run, and (c) the axiom audit shows no proved
+    # theorem depends on sorry (none has status sorry, none unaudited). Yerin, 2026-11-02 06:24 UTC.
+    pr = res.get("prove") or {}
+    audit_clean = bool(pr.get("theorems")) and not pr.get("unaudited") and not any(t.get("status") == "sorry" for t in pr["theorems"])
+    cov = {c["lean"]: c["entry"] for c in (m.get("creusot") or {}).get("covers_generated", [])}
+    cr_ok = (res.get("creusot") or {}).get("entries", {})
+    excused = [h for h in forb if h.get("construct", "").startswith("sorry") and audit_clean
+               and h.get("def") in cov and cr_ok.get(cov[h["def"]])]
+    forb = [h for h in forb if h not in excused]
     replay = (res.get("prove") or {}).get("replay")
     replay_ok = m.get("tool") != "lean-aeneas" or bool(replay and replay.get("ok"))
     cr_unlisted = (res.get("creusot") or {}).get("trusted_unlisted", [])
@@ -181,7 +197,10 @@ def gates(m, res, overrides, history, mutants, container=None):
     g["trusted_base"] = {"pass": ok7, "detail": "clean; kernel replay passed" if ok7 and m.get("tool") == "lean-aeneas" else "clean" if ok7 else
                          f"forbidden: {len(forb)}; axioms not listed in [trust]: {extra_axioms[:10]}; std models not listed: {unlisted_models[:10]}"
                          + ("" if replay_ok else "; leanchecker replay " + ("failed" if replay else "not run"))
-                         + (f"; Creusot trusted items not listed in [creusot].trusted: {cr_unlisted[:10]}" if cr_unlisted else "")}
+                         + (f"; Creusot trusted items not listed in [creusot].trusted: {cr_unlisted[:10]}" if cr_unlisted else "")
+}
+    if excused:
+        g["trusted_base"]["detail"] += f"; generated sorry not counted (proved by Creusot, unused by any proved theorem): {[h['def'] for h in excused]}"
     # 8 independent cross-check
     cc = res.get("crosscheck") or []
     g["cross_check"] = {"pass": bool(cc) and all(t["ok"] for t in cc),
@@ -292,10 +311,16 @@ def claim_card(m, res, g, entry_label, status, archive_sha, upstream):
         f"- Std or library models: {', '.join(trust.get('models', [])) or 'none listed'}"
         + (f" (unlisted models assumed by the extraction: {len(set((res.get('extract') or {}).get('assumed_axioms', [])) - set(trust.get('models', [])))})"
            if (res.get("extract") or {}).get("assumed_axioms") else ""),
+        *([f"- Std models written as definitions (trusted; not axioms, so the axiom audit does not see them; {len(_mdefs(res))}): "
+           + ", ".join(f"`{r}`" for r in sorted({d[0] for d in _mdefs(res)}))] if _mdefs(res) else []),
         *([f"- Creusot (second evidence type, {(res['creusot'].get('version') or '?').splitlines()[0][:80]}): ghost-only check "
            f"{'passed' if res['creusot'].get('ghost_only', {}).get('ok') else 'FAILED'}, std-contract tests "
            f"{'passed' if res['creusot'].get('spectest', {}).get('ok') else 'FAILED'}; trusted items ({len(res['creusot'].get('trusted', []))}): "
            + (', '.join(res['creusot'].get('trusted', [])) or 'none')] if res.get("creusot") else []),
+        *([f"- Kani ({(res['kani'].get('version') or '?').splitlines()[0][:60]}, flags {' '.join(res['kani'].get('flags', []))}): crate is upstream + cfg(kani) lines "
+           f"{'yes' if res['kani'].get('tree', {}).get('ok') else 'NO'}; std copy regenerated from rust-lang/rust "
+           f"{res['kani'].get('std_copy', {}).get('tag', '-')} and identical {'yes' if res['kani'].get('std_copy', {}).get('ok') else 'NO'}; harnesses: "
+           + ', '.join(f"{n} {v['verdict']} (expected {v['expect']})" for n, v in res['kani'].get('harnesses', {}).items())] if res.get("kani") else []),
         *([f"- Frama-C: {(res.get('prove') or {}).get('frama_c_version')}"
            + (f" from image {res['prove']['image']}" if (res.get('prove') or {}).get('image') else "")
            + f"; provers {', '.join((res.get('prove') or {}).get('provers') or [])}"] if m.get("tool") == "framac" and res.get("prove") else []),
@@ -325,6 +350,9 @@ def claim_card(m, res, g, entry_label, status, archive_sha, upstream):
     bounded = [f for f in fns if f.get("label") == "bounded"]
     if bounded:
         lines += ["", "## Bounds (only for `bounded`)"] + [f"- `{f['id']}`: {f.get('bounds', 'bounds not recorded')}" for f in bounded]
+    labelled = [f for f in fns if f.get("evidence_label")]
+    if labelled:
+        lines += ["", "## Evidence labels (wording approved by the maintainer)"] + [f"- `{f['id']}`: {f['evidence_label']}" for f in labelled]
     lines += ["", "## How to re-check", "", "```bash", "./pipeline/run.sh", "```"]
     lines += ["", "## Bugs found and fixes"]
     fixes = [f for f in fns if f["status"] == "fixed"]
@@ -335,6 +363,10 @@ def claim_card(m, res, g, entry_label, status, archive_sha, upstream):
     for f in fns:
         ev = ", ".join(f.get("theorems", [])[:4]) or (f"{f['goals']['proved']}/{f['goals']['total']} WP goals" if f.get("goals") else "")
         cap = f" (capped: uses the stock formatter model {', '.join(f['stock_fmt'][:3])}, which ignores the output)" if f.get("stock_fmt") else ""
+        if f.get("evidence") in ("creusot", "lean+kani"):
+            ev = f"{f['evidence']}: " + ev
+        if f.get("evidence_label"):
+            ev += f" ({f['evidence_label']})"
         lines.append(f"| `{f['id']}` | {f['status']} | {f.get('label', '')}{cap} | {ev} |")
     lines += ["", "## Credits"] + [f"- {c}" for c in m.get("credits", [])] if m.get("credits") else ["", "## Credits", "- not recorded"]
     lines += ["", "## Review",

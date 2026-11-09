@@ -14,6 +14,8 @@ hosts and problems. Fix only what the current task needs: a C task doesn't need 
 - `vkit setup mathlib` prebuilt mathlib, one shared copy in `~/.vpipe/lake/<key>/` linked into every project
 - `vkit setup framac`  Frama-C + Why3 + Z3 + CVC5 via Nix (preferred) or opam
 - `vkit setup cbmc`    GitHub .deb on Ubuntu/Debian x86_64, Homebrew on macOS, else Nix
+- `vkit setup kani`    cargo install of the [kani] pin + `cargo kani setup`; needs rustup, ~15 GB RAM,
+                       and raw.githubusercontent.com reachable at run time (std sources)
 Each prints a plan and asks. Pass `--yes` only when the user approved installs.
 macOS/Windows: Aeneas ships Linux binaries only; use the dev container (`.devcontainer/`).
 

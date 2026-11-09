@@ -40,3 +40,9 @@ Status: in progress. Entry folder: /mnt/project-files/smallvec-verify/ (SCOPE.md
 - IntoIter's Drop is not yet proved (it is a loop).
 - dedup_by with a loop contract: CBMC stops with status 6 in both back ends (SAT: "array too large for flattening" on the heap buffer havoc; z3: crash). Inline case fails because the havoc of the inline array also havocs the SmallVec fields.
 - Conclusion: Kani on this machine cannot do loops that write heap elements with symbolic length. dedup_by, retain_mut, extend, clone and IntoIter drop need another tool.
+
+### 2026-11-02: loops done with Kani steps + Lean
+- Decision (Yerin said full speed; card closed as "prove them in another tool"): loops are proved in two pieces. Kani proves one iteration on the real code (loop body moved unchanged into a function in the proof copy). Lean proves the loop of those steps meets the spec. Bounded Kani checks compare the moved bodies with upstream.
+- Proved: dedup_by (inline + any heap buffer, all branches), retain/retain_mut (inline + heap, all branches), extend fill step + SetLenOnDrop + reserve (+ overflow panic) + triple_mut, IntoIter drop, PartialEq, Drop. Lean: Dedup.lean, Retain.lean, Extend.lean, IntoIterDrop.lean (propext + Quot.sound only, each with a concrete instance).
+- Kani trick: a heap step that runs out of memory on a SmallVec-wrapped buffer proved in 8 min on a raw Vec buffer (dedup_step takes only a pointer).
+- Still open: memmove element parts on heap (insert/remove/insert_from_slice spilled p1-p3, push_v4 spilled), drop-tracking element type, real element types (helix Range, u8, Arc<Node>), Debug. See smallvec-verify/CLAIM.md.

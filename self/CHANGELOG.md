@@ -452,3 +452,70 @@ Snapshots for rollback are in self/snapshots/.
   check_structure.py). Wrote them for candidates/inih/r62-3-g2bbdec4 now.
 - Tested: base 2 configs proved; mutant in one config caught (12/13) using only that config; unknown
   config rejected; separate stores and sessions.
+
+## 2026-11-02 v0.2.37 fork_diff computes function labels itself
+- what: fork_diff no longer reads f["label"]; it computes the label with standards.function_label (same overrides as evaluate) when the label is not set yet.
+- why: crc32fast thread: `vpipe run` scored all 11 fork rewrites as "unfixed" (gate 1 fail) because fork_diff runs before evaluate() sets labels; `vpipe card` right after gave unfixed 0. CI runs `vpipe run`.
+- evidence: crc32fast latest.json with labels stripped: fork_diff gives unfixed 0, rewrites 11.
+
+## 2026-11-02 v0.2.38 export --dest writes pipeline/run.sh relative to the dest repo
+- what: write_entry_extras takes the repo root; export passes the --dest repo, so run.sh cds to that repo's root. Falls back to 4 levels up if the entry is outside the root.
+- why: crc32fast thread: `vpipe export crc32fast --dest <verified-libs>` crashed (entry not under the pipeline ROOT), leaving pipeline/run.sh missing.
+
+## 2026-11-02 v0.2.39 pin Aeneas build 17 + Charon build 7 + Lean library build 18; two new soundness entries
+- what: toolchain/versions.toml pins aeneas-hv build 17 (6c7932cd…), charon-helix build 7 (146dd44d…), patches real-code-build17 and charon-helix-build7, lean-lib-build18 (f20d6b09…). Hashes checked against the files.
+- engine: translator_info records charon_build (BUILD file in the Charon tarball); extract records charon_args. soundness.toml gains `fixed_in_charon_build` (all named build fixes must hold together), `unless_charon_args_re` and `patched_only`.
+- soundness.toml: (1) Charon <7 default-MIR match guards could become `fail panic` (patched runs only, not with --mir elaborated; README item 28). (2) interior mutability in third-party opaque types and generic instantiations, fixed only by Aeneas 17 with Charon 7 (README items 29, 31).
+- check: crc32fast, semver, percent-encoding latest runs hit neither (they use the stock translator). Synthetic patched runs: b14/c6 hit both, b17/c7 hit none, b15/c6 with --mir elaborated hits only (2).
+- why: Extend Aeneas thread published builds 15-17 (2026-11-02), 32 regression cases pass.
+
+## 2026-11-02 v0.2.40 pin Charon build 8
+- what: versions.toml pins charon-helix build 8 (b849bb0a…) and charon-de8736f-helix-build8.patch (099cb92e…), with Aeneas build 17. Hashes checked.
+- why: Extend Aeneas thread (README item 32): Option<&mut T>::unwrap rewritten as a match when T holds references (ropey iterator stacks); only adds translations Aeneas 17 refused, so no soundness entry. 33 regression cases pass. Build 7 soundness fixes carry over (fixed_in_charon_build = 7 matches 8).
+
+## 2026-11-02 v0.2.41 Kani as a third evidence type (verified_by = "lean+kani")
+- what: [kani] in vpipe.toml (bundle, crate, upstream_crate, added files, flags, std_copy, [[kani.harness]] with expect success/fail, fail_check, cover). run_kani: (1) the Kani crate must be the pinned upstream crate plus cfg(kani)-only lines and the listed added files; (2) the std copy is regenerated from rust-lang/rust sources fetched at the pinned tag (never the bundle's copies) and must equal the committed copy byte for byte; (3) each harness runs alone (one CBMC at a time) and must give its expected verdict; a must-fail control must fail on its named check; cover harnesses need every cover satisfied. versions.toml [kani] pins 0.68.0; `vpipe setup kani` installs it. CLAIM.md gets a Kani line (version, flags, checks, verdicts).
+- evidence rule lean+kani: Lean theorems proved on the body without a debug assertion, the named Kani harnesses as expected (the assertion never fires under a precondition), and the named Creusot entries proved (callers meet the precondition).
+- percent-encoding: decode_utf8_lossy moves from open to lean+kani; Creusot bundle src/, scripts/ and README re-copied (precondition on decode_utf8_lossy, 3 new scope entries; trusted list unchanged); kani/ copied from the Creusot thread's bundle.
+- checks: tree check passes on the real crate and catches a changed upstream line and a non-cfg(kani) addition; std files fetched at 1.97.0 match the bundle's.
+- why: percent-encoding Creusot thread (2026-11-02): debug_assert proved with Kani 0.68.
+
+## 2026-11-02 v0.2.42 maintainer-approved evidence labels on CLAIM.md
+- what: functions.toml `evidence_label` is copied to the function and shown in CLAIM.md (new section "Evidence labels" and in the per-function Evidence column, which also names creusot / lean+kani evidence).
+- why: Yerin decided (2026-11-02 03:17 UTC, via the percent-encoding Creusot thread) that the Kani proof counts for decode_utf8_lossy if labelled clearly; the label text is in percent-encoding functions.toml.
+
+## 2026-11-02 v0.2.42 maintainer-approved evidence labels on CLAIM.md
+- what: functions.toml `evidence_label` is copied to the function and shown in CLAIM.md (section "Evidence labels" and the per-function Evidence column, which also names creusot / lean+kani evidence).
+- why: Yerin decided (2026-11-02 03:17 UTC, via the percent-encoding Creusot thread) that the Kani proof counts for decode_utf8_lossy if labelled clearly; the label is in percent-encoding functions.toml.
+
+## 2026-11-02 v0.2.43 pin Aeneas build 18
+- what: versions.toml pins aeneas-hv build 18 (b55be9ba…) and aeneas-fdebf20-real-code-build18.patch (73e9ac82…), with Charon build 8 and lean-lib build 18. Hashes checked; BUILD file says 18.
+- why: Extend Aeneas thread (README Build 18): joins after a match on an enum with a lifetime no longer fail (code after the match is copied into each branch); no check removed; 34 regression cases pass; ropey output identical to build 17. No soundness entry needed; build-17 fixes carry over (fixed_in_build = 17 matches 18).
+
+## 2026-11-02 v0.2.44 pin Aeneas build 19 + Charon build 9; lock-guard soundness entry
+- what: versions.toml pins aeneas-hv build 19 (cfeac1e0…), real-code-build19.patch (8054ae14…), charon-helix build 9 (9a40c0d8…), charon-helix-build9.patch (44146b84…); lean-lib build 18 unchanged. Hashes checked; BUILD files say 19 and 9.
+- soundness.toml: writes through lock guards / RefMut behind &mut were lost (deref_mut modelled as returning a new guard). Fixed only by Aeneas 19 with Charon 9 together. README item 34.
+- check: crc32fast, semver, percent-encoding latest runs not affected (stock translator).
+- why: Extend Aeneas thread (2026-11-02 04:32 UTC); 35 regression cases pass; only new refusal on helix-verify is fuzzy_match (intended).
+
+## 2026-11-02 v0.2.45 `vpipe card` refreshes evidence labels
+- what: evaluate() copies functions.toml evidence_label onto each function, so an edited label shows without a rerun.
+- percent-encoding full run (Creusot + Kani, 0.2.41 engine): 123/123 theorems, 33/33 functions verified; Kani: tree check, std copy (1.97.0) and all 3 harnesses as expected (95 min); Creusot: every entry used as evidence passes, decode_utf8_lossy's own entry fails as expected (not used). decode_utf8_lossy declared full-correctness (was unlabelled).
+
+## 2026-11-02 v0.2.46 gate 7: a generated sorry proved by Creusot does not count (Yerin's decision)
+- what: forbidden sorry hits record their enclosing Lean def (card fills it in for older results). Gate 7 leaves a generated sorry out only when its def is listed in [creusot].covers_generated with a Creusot entry, that entry proved in the run, and the axiom audit shows no proved theorem depends on sorry (no theorem with status sorry, none unaudited). The gate detail names each item left out.
+- percent-encoding: covers_generated lists PercentDecode.Insts.CoreFmtDebug.fmt -> impl_Debug_for_PercentDecode/fmt. Trusted-base gate now passes; real-code gate unchanged (patch equivalence still required).
+- tests: breaking the audit, the Creusot entry, or the listing each makes gate 7 fail again.
+- why: Yerin chose "Only the trusted-base change" on the decision card (2026-11-02 06:24 UTC). The real-code suggestion (Creusot in place of patch equivalence) was declined.
+
+## 2026-11-09 v0.2.47 std models written as defs are listed as trusted assumptions
+- what: extract records std_model_defs (every `@[rust_fun "..."] def` in *External.lean: Rust path, Lean def, file); variant runs merge them; `vpipe card` fills them in for older results from the work folder. CLAIM.md's trusted base gets a line naming each modelled Rust function. No gate change.
+- why: backlog item: the axiom audit sees only `axiom`s, so defs used as trusted std models (e.g. from_utf8_unchecked := ok) were invisible in the result. percent-encoding: 31 (matches its [trust].std_models text); crc32fast: 5.
+
+## 2026-11-09 v0.2.48 `vpipe next` shows each open function's Lean signature
+- what: for Lean entries, each item gets `lean` and `signature` (the generated def header from Funs*.lean), so a worker or agent sees the obligation's shape at once.
+- why: backlog item (Spec.lean stubs); a printed signature gives the same start without writing sorry files into the proof tree.
+
+## 2026-11-09 v0.2.49 Frama-C prompt: known WP options
+- what: templates/prompts/framac.md lists -wp-no-pruning (not -wp-no-let), Typed+Cast for pointer casts, -DNDEBUG scope, the -include prelude for function pointers, and Z3 bit-vector lemma checks, all from general.md (inih, Neovim).
+- why: backlog item; agents kept rediscovering these.

@@ -539,3 +539,99 @@ For the "concrete instance" rule with Frama-C/WP, two cheap checks per configura
 ## 2026-11-01 inih: Frama-C's fgets contract has no length bound
 - Frama-C 32.1's libc spec for `fgets(s, size, f)` says only that the result is NULL or `s`, and that `s` is then a valid string. It does not say the string is shorter than `size` (C11 7.21.7.2p2 guarantees that). With a heap buffer WP cannot find the bound, so goals such as `strlen(line) < max_line` time out.
 - Fix used for inih: an `admit ensures` on the fgets wrapper that states the C11 bound, listed as a trust assumption.
+
+## CBMC vs Frama-C WP for C byte code (Neovim thread, 2026-11-02)
+- WP's typed memory model keeps `char` and `uint8_t` reads of the same bytes separate; code that casts `char *` to `uint8_t *` needs tool patches. CBMC is bit-precise and has no such issue.
+- For functions with bounded loops, CBMC + `--unwinding-assertions` + nondeterministic inputs is a complete proof. Use exact-size malloc objects so any out-of-bounds read fails the pointer check, and a 6-byte object to cover longer strings.
+- CBMC 6.4 lets malloc fail by default: pass `--no-malloc-may-fail`. Run with and without `--unsigned-char`.
+- `(int)` of a pointer difference or a size is the most common bug found so far.
+
+## 2026-11-02 Aeneas soundness: third-party interior mutability is not refused (parsers thread, probe14)
+The patched toolchain's interior-mutability check (toolchain README item 13) matches types by path (core::cell,
+core::sync::atomic, std::sync). Third-party types holding an `UnsafeCell` (e.g. parking_lot / lock_api `Mutex::lock`)
+are translated as pure functions of `&self`: a write through the guard is dropped and the next `lock()` reads the old
+value. Proofs about such code prove the wrong thing. Repro: helix-verify/probe14/repros/third_party_interior_mut/.
+Rule until the tool detects UnsafeCell structurally: check every extracted crate for third-party Mutex/RwLock/Cell-like
+types reached through `&self` (grep the LLBC/Funs for lock_api, parking_lot, once_cell, arc_swap) and refuse claims that
+depend on them. Builds 13/14 and stock all accept it.
+
+## 2026-11-02 semver: serde traits, Unicode tables, big const arrays in Aeneas (Lean)
+- serde's `Serialize` and `Serializer` refer to each other through generic methods. In Lean that is a
+  structure in a negative position of its own fields, so Aeneas warns "will not type-check" and it can't be
+  fixed by ordering or `mutual`. Charon `--exclude`/`--opaque` do not drop required trait methods. What works:
+  a vpipe postprocess that drops the Serializer-family fields taking `T: Serialize` (code that only calls
+  `collect_str` never needs them; any real serializer still fits the trimmed structure) and reorders
+  Serialize* -> Serializer -> Serialize. See pipeline/libraries/semver/tools/serde_traits.py. The de side
+  needs nothing: unused provided Visitor methods are skipped by Charon.
+- `--features serde` goes in vpipe.toml `cargo_args`. Aeneas uses `F32`/`F64` with no definition: define them
+  in TypesExternal (abbrev to Lean Float32/Float) when they only appear in unused trait methods.
+- std `char` Debug (Unicode tables) can't be translated. Generate a range table from std with a small Rust
+  program, write the lookup in translatable code, and test every scalar value against std and upstream.
+  Proofs about the 1812-entry const array: Aeneas needs `-max-recdepth 65536`; prove table facts with
+  `decide +kernel` and `set_option maxRecDepth 100000 in`; avoid `simp` with the array in context.
+- Exhaustive char tests take minutes in debug builds: `#[cfg_attr(debug_assertions, ignore)]` and run them
+  in the release cross-check.
+
+## 2026-11-02 Charon build 6 (default MIR level): match guards over enum fields can extract as `fail panic` (parsers thread, fmt17)
+With `--preset=aeneas` at the default MIR level, Charon keeps the fake shallow borrows of match-guard places; a borrow
+through an enum downcast becomes undefined behaviour, which Aeneas turns into `fail .panic`. The extracted function then
+panics where Rust does not (seen: helix command_line ParseArgsError Display, arm `max: None, min > 0, actual < min`).
+A proof that "the code panics" there is WRONG about Rust. Fix: extract with `--mir elaborated`. Every thread using
+Charon build 6: re-extract with `--mir elaborated` and diff Funs.lean; any difference is a suspect arm. Evidence:
+helix-verify/fmt17/extract-default-mir-cmd/ and fmt17/STATUS.md "Toolchain bug found".
+Follow-up (parsers audit, helix-verify/miraudit/REPORT.md): `--mir elaborated` is not a free switch. For helix
+command_line get_flag/has_flag it makes Aeneas 13/14 refuse the body ("reborrowing a shared value ...", sorry). Use it
+for fmt/Display extractions, otherwise diff the two extractions and keep the default where they agree.
+Update 2026-11-02 02:27Z (Aeneas thread): both issues above are fixed in Charon build 7 + Aeneas build 17
+(toolchain README items 28, 29, 31; regression cases guard_fake_borrow, third_party_interior_mut). Charon drops MIR
+fake borrows, and third-party opaque types that can reach an UnsafeCell are refused when passed by & to a bodiless
+library function.
+
+Frama-C WP lessons (Neovim thread, 2026-11-02): (1) Typed model puts offset arithmetic in
+index-quantifier triggers, so Z3/CVC5 fail even `forall i<m. s[i]!=0 ==> s[j+1]!=0`; quantify
+over pointers instead and run CVC5 with --full-saturate-quant (neovim_verifier tools/bin/cvc5-fsq).
+(2) `\block_length - \offset` variants are unprovable (abstract offset table); use a ghost length
+parameter. (3) Induction over recursive logic functions needs ghost lemma functions with loops.
+(4) -wp-cache none when retrying, the cache keeps timeouts. Alt-Ergo is unfree in nixpkgs, not used.
+
+## 2026-11-02 Match-guard `fail panic` affects every patched Charon build, not only build 6 (Helix movement thread)
+- fmt17's ParseArgsError positive control gives 2 wrong `fail panic` arms at default MIR on patched Charon builds 2, 5 and 6 (and 0 with `--mir elaborated`); stock Charon gives 0. So re-audit extractions made with ANY patched build, not just build 6.
+- `--mir elaborated` can lose loop bodies ("Continue to outer loops are not supported yet") on code with labelled continue; diff both and keep the default where no arm differs.
+- Check what a toolchain dir really holds by binary sha256 against the README tarballs; a dir named for build 8 here held Charon build 2 + Aeneas build 4. Scripts: helix-verify/motion/miraudit/scripts/.
+
+## 2026-11-02 Charon default-MIR match-guard bug: wider than build 6; how to audit (editing-helpers thread)
+- The spurious bare `| none => fail panic` arm appears at the default MIR level in EVERY patched Charon build 1-6 (tested on a crate shaped like ParseArgsError::fmt). Default level gives the same LLBC as `--mir promoted`. Stock vpipe Charon is clean at both levels.
+- `--mir elaborated` is not a drop-in replacement: Aeneas leaves `sorry` on some functions (e.g. ChangeSet::{retain,delete}, comment transaction builders), and charon-driver OOMs (~14 GB) on helix ChangeSet::compose. Better: extract at both levels and compare the panic arms one by one; keep the default extraction when the arms match.
+- Find UnsafeCell-holding types structurally: LLBC `marker_traits.is_freeze == false` (a lower bound; Charon sometimes leaves it empty).
+- Agents share the session scratchpad: use unique scratch directory names (two audits collided on `scratchpad/mir/`).
+- Editing-helpers result: no suspect arm in any extraction; no claim affected. Details: helix-verify/helpers/vacuity/MIR_AUDIT.md.
+
+## 2026-11-02 Creusot 0.14 on Helix code (Creusot parsers thread, helix-verify/creusot-parsers/)
+What Creusot 0.14.0 cannot do. Each item was checked with a small repro:
+- `#[ensures]` on a fn returning `impl Trait` fails: the macro puts the type in a closure parameter. Callers see an opaque type, and the trait-level `Deref`/`DerefMut` specs are `requires(false)`. So code that derefs a returned `impl DerefMut` (fuzzy `lock`) can't be verified.
+- `static` items: "unsupported definition kind ... Static". Fn item to fn pointer coercion: "Unsupported pointer cast ... ReifyFnPointer". Calling a fn-pointer *field* works, given a type invariant `self.f.precondition(())` (`#[logic(open(self))]`).
+- Calling `dyn Fn` gives "forbidden dyn type". Unsizing into `Box<dyn Error>` works. serde derive output uses `&dyn de::Expected`, so derived Deserialize can't be translated.
+- Logic can't recurse through `Seq`/`Vec` (Seq is not positive, and logic mutual recursion is forbidden), so no specs over trees. Program mutual recursion is always rejected.
+- Pearlite has no string literals. Use `const X: &str` with `X.deep_model()`. Note that `str::to_owned` gives `result@ == self@` (view), while `==` on str and `HashMap::get` keys use `deep_model`. These are distinct in Why3, so pick the matching one.
+- Missing from creusot-std 0.14: `Result::map`/`map_err`, `String::new`, `&A == &B`, `str::parse`. See normalize-uri/src/std_extra.rs and ec_std.rs.
+- For-loop ghost names: `produced`, `__creusot_for_iter` (current) and `__creusot_for_iter_old` (initial) work in invariants and in body `proof_assert!`. After the loop, `__creusot_for_iter` is gone, so carry facts in invariants. Facts that hold only on the `break` path still reach the code after the loop.
+- The project mount can't hold symlinks ("Function not implemented"). Point `[patch]` paths at a real vendor copy.
+
+## 2026-11-02 Kani loop contracts for any input length (percent-encoding thread)
+- `-Z loop-contracts` with `kani::arbitrary::any_slice_ref_unbounded()` / `any_vec_unbounded()` ran out of memory (14 GB) even on a 3-line loop. Fix: `-Z unstable-options --cbmc-args --object-bits 8` (or 10). Then it proves in seconds. `--cbmc-args` must be last on the command line (it eats the rest, e.g. `--harness`).
+- With unbounded lengths add `kani::assume(len <= 1 << 40)`; otherwise CBMC reports spurious "Offset result address must equal original pointer address plus offset" failures.
+- Needs `#![cfg_attr(kani, feature(stmt_expr_attributes, proc_macro_hygiene))]`. `while let` works. `for` loops only take invariants over Kani-known iterators (Vec, slices).
+- A harness needs `#[kani::unwind(2)]` or more for loops with contracts. If any unwinding assertion fails, Kani marks every other result UNDETERMINED.
+- To give a std loop an invariant: generate a byte-for-byte copy of the std function from rust-lang/rust sources at the toolchain's commit (`rustc -vV` commit-hash, raw.githubusercontent.com), add only the invariant line, and `#[kani::stub]` the std function with it. Example: percent-encoding-creusot/bundle/kani/scripts/gen_std_copy.py.
+- Always run a must-fail control harness and a `kani::cover!` for the branch the assertion sits in.
+
+## 2026-11-02 Ghost position labels on external values can be unsatisfiable (editing-helpers thread)
+A hypothesis like "there is a label sr : RopeSlice -> Nat×Nat with sr (byte_slice a b) = (a,b)" is false for ropey: Light slices store no position, so byte_slice(0..0) and byte_slice(1..1) are the same value. Any theorem assuming it is vacuous on ordinary documents. Label by content (e.g. the slice's chars) instead, and check every label hypothesis against a concrete instance with two equal-content slices. Proof: helix-verify/helpers/ropey_bridge/lean/RopeyBridge/LabelVacuity.lean.
+
+## 2026-11-02 inih: WP hides pointer differences between a local array and a pointer
+- In WP's default Typed model, `start - &line[0]` (start a char pointer, line a local array) and the length of a callee's `assigns s[0 .. end - s - 1]` show up as "Hide sub-term definition / Uncomparable locations" in the goal. The fact is then simply missing, and simple goals time out.
+- `-wp-model Typed+raw` (no reference-variable optimisation) keeps them. Check a stuck goal with `-wp-gen -wp-print` and grep for "Hide sub-term" before adding hints.
+- Also: `assigns { *p | char* p; base(p) == base(s) && s <= p < end }` frames worse than `assigns s[0 .. end - s - 1]`.
+
+## 2026-11-02 Reproducible builds: record the patched Aeneas in the lakefile (editing-helpers thread)
+Two independent reviewers could not build our published projects with stock ~/hv-shared/packages: they silently need a patched Aeneas Lean library (build16 patch, or the pk16 copy). Every published project must say in its lakefile or a setup script which patch it needs, and its STATUS build line must match. Reviewers should build from the published copy, not the author's tree.

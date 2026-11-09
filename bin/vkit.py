@@ -150,6 +150,7 @@ def doctor(as_json=False):
         "z3": out(["z3", "--version"]),
         "cvc5": out(["cvc5", "--version"]),
         "cbmc": out(["cbmc", "--version"]),
+        "kani": out(["cargo", "kani", "--version"]),
         "nix": out(["nix", "--version"]),
         "opam": out(["opam", "--version"]),
         "docker": out(["docker", "--version"]),
@@ -287,6 +288,21 @@ def setup_framac(yes):
              "or use the dev container (docs/installation.md).")
 
 
+def setup_kani(yes):
+    """Kani at the [kani] pin: cargo install kani-verifier, then `cargo kani setup` (its own nightly
+    and CBMC). Needs rustup/cargo. Several GB; harnesses need ~15 GB RAM and run 25-40 min each."""
+    want = (versions().get("kani") or {}).get("version")
+    if not want:
+        log("no [kani] pin in toolchain/versions.toml; nothing to do")
+        return 0
+    if not which("cargo"):
+        sys.exit("kani needs cargo: install rustup (https://rustup.rs) and re-run.")
+    if not confirm([f"cargo install --locked kani-verifier@{want}",
+                    "cargo kani setup (downloads Kani's pinned nightly and CBMC, several GB)"], yes):
+        return 1
+    return vpipe("setup", "kani")
+
+
 def setup_cbmc(yes):
     if which("cbmc"):
         log("cbmc already installed:", out(["cbmc", "--version"]))
@@ -378,7 +394,7 @@ def main():
     s = ap.add_subparsers(dest="cmd")
     d = s.add_parser("doctor"); d.add_argument("--json", action="store_true")
     st = s.add_parser("setup"); st.add_argument("which", nargs="?", default="all",
-                                                choices=["lean", "framac", "cbmc", "mathlib", "all"])
+                                                choices=["lean", "framac", "cbmc", "kani", "mathlib", "all"])
     st.add_argument("--yes", "-y", action="store_true")
     sk = s.add_parser("skills"); sk.add_argument("action", choices=["install", "list"])
     sk.add_argument("--agent", action="append", help="claude, codex, gemini, or a directory (repeatable)")
@@ -388,8 +404,9 @@ def main():
     if a.cmd == "doctor":
         return doctor(a.json)
     if a.cmd == "setup":
-        steps = {"lean": setup_lean, "framac": setup_framac, "cbmc": setup_cbmc, "mathlib": setup_mathlib}
-        order = ["lean", "framac", "cbmc"] if a.which == "all" else [a.which]
+        steps = {"lean": setup_lean, "framac": setup_framac, "cbmc": setup_cbmc, "kani": setup_kani,
+                 "mathlib": setup_mathlib}
+        order = ["lean", "framac", "cbmc", "kani"] if a.which == "all" else [a.which]
         return max(steps[w](a.yes) or 0 for w in order)
     if a.cmd == "skills":
         if a.action == "list":

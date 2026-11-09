@@ -11,7 +11,7 @@ agents="" tools="" yes=false dry=false path_edit=true
 
 usage() {
   cat <<'EOF'
-Usage: install.sh [--agents claude,codex,gemini|none] [--tools lean,framac,cbmc|all|none]
+Usage: install.sh [--agents claude,codex,gemini|none] [--tools lean,framac,cbmc,kani|all|none]
                   [--dir PATH] [--yes] [--dry-run] [--no-path]
 
 Installs the verification toolkit:
@@ -71,9 +71,9 @@ if [ -z "$agents" ]; then
 fi
 if [ -z "$tools" ]; then
   if $yes; then tools=none
-  else read -r -p "Install provers now? lean,framac,cbmc | all | none [none] " a </dev/tty || a=""; tools=${a:-none}; fi
+  else read -r -p "Install provers now? lean,framac,cbmc,kani | all | none [none] " a </dev/tty || a=""; tools=${a:-none}; fi
 fi
-[ "$tools" = all ] && tools=lean,framac,cbmc
+[ "$tools" = all ] && tools=lean,framac,cbmc,kani
 
 rc="$HOME/.bashrc"; [ "${SHELL##*/}" = zsh ] && rc="$HOME/.zshrc"
 echo

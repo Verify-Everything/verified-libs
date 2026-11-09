@@ -62,3 +62,15 @@ Last update: 2026-10-26 ~14:00 UTC. Safety (memory safety + no UB, -wp-rte) only
 - FILE build: Frama-C's fgets contract has no length bound, so `strlen(line) < max_line` was not provable on the heap. Added `admit ensures fgets_len` to ini_reader_file (C11 7.21.7.2p2). It is listed in vpipe.toml [trust].
 - String build: `keep` after the handler call took 3-5 minutes and timed out under load. Added hint `h_vsep` (value lives in line, and line is separate from section and prev_name; realloc builds only).
 - Both builds now prove these goals (5/5 and 8/8, no cache). Strip checks: SAME and FIXSAME. The full 45-build run restarted 2026-11-01 about 08:30 UTC.
+
+## 2026-11-02 functional proof started (spec draft not yet reviewed)
+- Work copy: scratchpad fv/func/ (ini.c annotated fork, func_model.h, inih_proof.h with a ghost handler-call count and return value). Strips to the fork (FIXSAME).
+- Model: func_model.h states the spec's steps as predicates over the line read (trim, classify, scans, cut copies, error rule). Each line ends with assert f_step; each handler call has an argument assert f_call_*.
+- New assumption: isspace in the C locale (no byte above 127 is whitespace), added as an extra isspace contract. Listed for CLAIM.md.
+- Proved so far (default build): exact contracts of ini_rstrip, ini_lskip, ini_find_chars_or_comment (ini_strncpy0 already had one); line counter, BOM and trim steps. Needs -wp-model Typed+raw (see general.md).
+- rstrip contract change for the functional copy: assigns s[0 .. end - s - 1] instead of the set form, plus requires f_nn (no NUL before end). Both callers satisfy it.
+
+## 2026-11-02 07:40 UTC: stopped (Yerin: stop all work for usage reasons)
+- Full 45-build rerun stopped at 32 of 45 (all 32 fully proved, dead code only where expected). Resume with inih-work/vpipe_resume.sh; finished builds are reused.
+- Functional proof copy saved to inih-work/func/ (run with run.sh ... -wp-model Typed+raw). Proved: helper contracts, line counter, BOM, trim, name=value branch asserts. Open: continuation and section branch asserts (being split into f_cont1-3, f_sect1-2), then f_step.
+- Waiting on Yerin: spec review, planted-bug pick, upstream issues, verified-libs PR (decision card posted).

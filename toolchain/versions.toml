@@ -48,18 +48,18 @@ digest = "sha256:f065d68e1d07c9d6f67976e71accdd0f1069d267fdd3401a4a7d99f75a6d429
 # change); `vpipe selftest --full` runs the regression suite while any library uses it.
 base = "Aeneas fdebf20 + Charon de8736f7"
 dir = "/mnt/project-files/helix-verify/toolchain"
-aeneas_tarball = "aeneas-hv-bin-x86_64-build14.tar.gz"   # build 14 (missing type decl no longer crashes the crate)
-aeneas_sha256 = "3443a838b54e2f700e5f57d0bd623f0e5e1381e9c1e9334572e6d857b0f2a3d7"
-charon_tarball = "charon-helix-bin-x86_64-build6.tar.gz"   # build 6
-charon_sha256 = "2b5ac51bd74be2ff2e9183d059c0985ec65e671356c41b391ae2a01522bb5f13"
-patches = ["aeneas-fdebf20-real-code-build14.patch", "charon-ml-de8736f-fndef-names.patch", "charon-de8736f-helix-build6.patch"]
+aeneas_tarball = "aeneas-hv-bin-x86_64-build19.tar.gz"   # build 19 (writes through lock guards behind &mut refused; use with Charon 9)
+aeneas_sha256 = "cfeac1e0deb4f278808d7fc27dc107a670ebabf85b955d07fecaa878a723e71e"
+charon_tarball = "charon-helix-bin-x86_64-build9.tar.gz"   # build 9 (aliased_interior_mut / shared_params; use with Aeneas 19)
+charon_sha256 = "9a40c0d82aa2713420c14c77963001c9b2838a94f61604f01c1ff34de86873fb"
+patches = ["aeneas-fdebf20-real-code-build19.patch", "charon-ml-de8736f-fndef-names.patch", "charon-de8736f-helix-build9.patch"]
 # Pin build files by their versioned names, so replacing a plain-named file never breaks a pin.
 default_aeneas_args = ["-filter-trait-methods"]   # keep library trait impls to the fields the Lean model has
 regress = "aeneas-regress/run.sh"
 # Aeneas Lean library patch (Iterator.size_hint, «Ty».sub). A library opts in with
 # [extract] lean_lib_patch = true; it then builds against $VPIPE_HOME/lake/<key>-leanlib-<sha12>.
-lean_lib_patch = "aeneas-fdebf20-lean-lib-build17.patch"
-lean_lib_patch_sha256 = "af01d8991fc9663f8d72c620a0f5f4447782c8e98c8463bc96af30e7bfe859e7"
+lean_lib_patch = "aeneas-fdebf20-lean-lib-build18.patch"
+lean_lib_patch_sha256 = "f20d6b09a58a2ca17bfc8ca824e60f0a7ac65b607315bb830c91f3df0067af6b"
 
 [creusot]
 # Second evidence type for Rust functions Aeneas cannot read (verified_by = "creusot" in functions.toml).
@@ -76,3 +76,8 @@ home = "~/.local/share/creusot"
 prebuilt = "cache/creusot-0.14.0-linux-x86_64.tar.gz"   # built by the Creusot thread; paths assume HOME=/root
 prebuilt_sha256 = "6b5d9befc7fddfa15e891ab3ab8affd197f2cc08f626432ccd97a829805d759e"
 rust_components = ["rustc-dev", "llvm-tools", "rustfmt"]
+
+[kani]
+# Third evidence type: bounded model checking (verified_by = "lean+kani" in functions.toml).
+# `vpipe setup kani` runs `cargo install --locked kani-verifier@<version>` and `cargo kani setup`.
+version = "0.68.0"   # CBMC 6.11.0, nightly-2026-08-21 (percent-encoding Creusot thread, 2026-11-02)

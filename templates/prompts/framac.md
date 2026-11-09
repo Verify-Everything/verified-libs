@@ -12,6 +12,16 @@ Rules
 - Check with: frama-c <files> -wp -wp-rte -wp-prover z3,cvc5 -wp-timeout 20 (add -wp-fct NAME to
   focus). Failed goals in the last result tell you where to start.
 - Read {{notes}}/general.md first. Append lessons useful beyond {{lib}} there, dated, naming {{lib}}.
+- Known options (from general.md; set them in [framac] wp_args or a matrix rule, never by hand):
+  - `-wp-no-pruning`: up to 15x faster on one big branchy function (inih's main loop). Avoid
+    `-wp-no-let`: quick to generate, but the goals get huge and time out.
+  - `-wp-model Typed+Cast` when code casts pointers (`char*` to `uint8_t*`, `void*` context back to
+    a struct). Plain Typed fails every goal touching the cast. Record the cast assumption in CLAIM.md.
+  - `-DNDEBUG` only if the claim is about release builds; say so in [scope].
+  - Function pointers: a prelude passed with `-cpp-extra-args="-include prelude.h"` that maps the
+    call to its concrete callee under `#ifdef` modes, plus a `reader == &callee` precondition.
+  - Bit operations (`&`, `<<`, `>>`) on unbounded integers: state small ACSL lemmas, use them via
+    `assert`, and check each lemma separately with Z3 bit-vectors (WP's own lemma proofs time out).
 
 Upstream source (read-only): {{src}}
 Manifest:

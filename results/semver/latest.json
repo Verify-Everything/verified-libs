@@ -4,8 +4,8 @@
  "commit": "280ebcb6edac3aa4cdc545dbff8a26c5ac4861fe",
  "version": "1.0.28",
  "tool": "lean-aeneas",
- "started": "2026-11-02T13:20:46Z",
- "pipeline_version": "0.2.36",
+ "started": "2026-11-09T09:34:30Z",
+ "pipeline_version": "0.2.49",
  "toolchain": {
   "aeneas": "nightly-2026.10.23-fdebf20",
   "charon_rust": "nightly-2026-09-17",
@@ -17,9 +17,9 @@
   "nixpkgs": "https://releases.nixos.org/nixpkgs/nixpkgs-26.11pre1097770.5adc50831c25/nixexprs.tar.zst?narHash=sha256-hVMDyAXU0kxRuG3GygbZkzf5x%2BaBNEC0NYEJ6KwHtD4%3D"
  },
  "clean": false,
- "toolchain_digest": "sha256:da9ed0adfff0011a377e5a6c9c137e8a68cc174db2fbadfc0f78e9e502b39a09",
+ "toolchain_digest": "sha256:3361f371fa145def485c620d9d1cc832cdcb43cee9d3bb1ff61afc4b3ff4db15",
  "container_digest": "sha256:f065d68e1d07c9d6f67976e71accdd0f1069d267fdd3401a4a7d99f75a6d4291",
- "ci_run": "https://github.com/Verify-Everything/verified-libs/actions/runs/41444179401",
+ "ci_run": "https://github.com/Verify-Everything/verified-libs/actions/runs/42586974795",
  "agent_cli": null,
  "archive_sha256": "ccd7b1baee6ac4acc4a56a80c78c0397d94af4ad15c2f8fe722c509bba9bcf73",
  "source": {
@@ -30,7 +30,7 @@
    {
     "cmd": "cd model && cargo test --release --features debug --quiet",
     "ok": true,
-    "tail": "\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 1 test\n.\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.46s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n"
+    "tail": "\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 1 test\n.\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.48s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n"
    }
   ]
  },
@@ -43,20 +43,24 @@
    "-namespace",
    "semver_model"
   ],
+  "charon_args": [
+   "--preset=aeneas"
+  ],
   "translator": {
    "patched": false
   },
   "unexpected_errors": [],
   "unsupported": [],
   "assumed_axioms": [],
+  "std_model_defs": [],
   "internal_errors": [],
   "external_template_changes": [],
   "warnings": [],
-  "log": "[Info ] Imported: /home/vpipe/vpipe-work/semver/semver.llbc\n[Info ] Generated: /home/vpipe/vpipe-work/semver/proj/SemverModel/Code/Types.lean\n[Info ] Generated: /home/vpipe/vpipe-work/semver/proj/SemverModel/Code/Funs.lean\n[Info ] Total execution time: 1.715574 seconds\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+  "log": "[Info ] Imported: /home/vpipe/vpipe-work/semver/semver.llbc\n[Info ] Generated: /home/vpipe/vpipe-work/semver/proj/SemverModel/Code/Types.lean\n[Info ] Generated: /home/vpipe/vpipe-work/semver/proj/SemverModel/Code/Funs.lean\n[Info ] Total execution time: 1.701421 seconds\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
  },
  "prove": {
   "ok": true,
-  "seconds": 339,
+  "seconds": 346,
   "replay": {
    "ok": true,
    "tool": "leanchecker",
@@ -65,7 +69,7 @@
    "peak_gb": [
     [
      "SemverModel",
-     9.82
+     10.1
     ],
     [
      "SemverModel.Proofs.RefineParse",
@@ -76,15 +80,15 @@
      2.25
     ],
     [
-     "SemverModel.Proofs.Main",
-     2.24
+     "SemverModel.Proofs.RoundTrip",
+     2.25
     ],
     [
-     "SemverModel.Proofs.RefinePrint",
+     "SemverModel.Proofs.Main",
      2.24
     ]
    ],
-   "seconds": 193,
+   "seconds": 195,
    "log": ""
   },
   "theorems": [
@@ -1111,7 +1115,7 @@
   "axiom_thms": 0,
   "unaudited": 0,
   "errors": [],
-  "log": "\u2714 [1796/1810] Built SemverModel.Code.Types (1.8s)\n\u26a0 [1797/1810] Built SemverModel.Spec.Mirror (2.0s)\nwarning: SemverModel/Spec/Mirror.lean:47:39: This simp argument is unused:\n  List.getElem!_eq_getElem?_getD\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h1, h2, ha, hb, List.getElem?_eq_getElem]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Spec/Mirror.lean:47:71: This simp argument is unused:\n  List.getElem?_eq_getElem\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h1, h2, ha, hb, List.getElem!_eq_getElem?_getD]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Spec/Mirror.lean:51:31: `if_false` has been deprecated: Use `ite_false` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335f\u0335a\u0335l\u0335s\u0335e\u0335i\u0332t\u0332e\u0332_\u0332f\u0332a\u0332l\u0332s\u0332e\u0332\nwarning: SemverModel/Spec/Mirror.lean:64:32: This simp argument is unused:\n  List.getElem!_eq_getElem?_getD\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h1, ha, List.getElem?_eq_getElem]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Spec/Mirror.lean:64:64: This simp argument is unused:\n  List.getElem?_eq_getElem\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h1, ha, List.getElem!_eq_getElem?_getD]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Spec/Mirror.lean:108:5: Variable name `hi` is not explicitly referenced.\n\nHint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:\n  [apply] _hi\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`\n\u2714 [1798/1810] Built SemverModel.Code.Funs (3.4s)\n\u26a0 [1799/1810] Built SemverModel.Spec.Lists (3.7s)\nwarning: SemverModel/Spec/Lists.lean:290:29: This simp argument is unused:\n  ite_true\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [hle, hre, ite_false]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\n\u2714 [1800/1810] Built SemverModel.Spec.Order (4.4s)\n\u2714 [1801/1810] Built SemverModel.Spec.ParseMirror (4.9s)\n\u26a0 [1802/1810] Built SemverModel.Proofs.RefineCmp (11s)\nwarning: SemverModel/Proofs/RefineCmp.lean:156:47: This simp argument is unused:\n  eq_comm (a := Ordering.eq)\n\nHint: Omit it from the simp argument list.\n  [apply] simp only at *\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Proofs/RefineCmp.lean:144:31: Unused tactic linter: `(try simp only [eq_comm (a := Ordering.eq)] at *)` does nothing.\n\nNote: This linter can be disabled with `set_option linter.unusedTactic false`\nwarning: SemverModel/Proofs/RefineCmp.lean:190:41: This simp argument is unused:\n  eq_comm (a := Ordering.eq)\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [eq_comm (a := Ordering.lt), eq_comm (a := Ordering.gt)] at *\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\n\u2714 [1803/1810] Built SemverModel.Proofs.Order (3.5s)\n\u26a0 [1804/1810] Built SemverModel.Proofs.RefinePrint (10s)\nwarning: SemverModel/Proofs/RefinePrint.lean:87:47: This simp argument is unused:\n  ite_false\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [*, List.append_assoc, ite_true, List.nil_append]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Proofs/RefinePrint.lean:87:58: This simp argument is unused:\n  List.nil_append\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [*, List.append_assoc, ite_true, ite_false]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Proofs/RefinePrint.lean:94:18: This simp argument is unused:\n  List.append_assoc\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [*, ite_true, ite_false, List.nil_append]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Proofs/RefinePrint.lean:94:37: This simp argument is unused:\n  ite_true\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [*, List.append_assoc, ite_false, List.nil_append]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Proofs/RefinePrint.lean:111:88: Unused tactic linter: `done` does nothing.\n\nNote: This linter can be disabled with `set_option linter.unusedTactic false`\n\u26a0 [1805/1810] Built SemverModel.Proofs.RefineParse (66s)\nwarning: SemverModel/Proofs/RefineParse.lean:61:62: Unused tactic linter: `<;>` should be replaced with `;` or be removed.\n\nNote: This linter can be disabled with `set_option linter.unusedTactic false`\n\u26a0 [1806/1810] Built SemverModel.Proofs.RefineVersion (31s)\nwarning: SemverModel/Proofs/RefineVersion.lean:158:6: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: SemverModel/Proofs/RefineVersion.lean:158:18: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\n\u2714 [1807/1810] Built SemverModel.Proofs.RoundTrip (5.6s)\n\u2714 [1808/1810] Built SemverModel.Proofs.Main (2.3s)\n\u2714 [1809/1810] Built SemverModel (2.1s)\nBuild completed successfully (1810 jobs).\n",
+  "log": "\u2714 [1796/1810] Built SemverModel.Code.Types (1.9s)\n\u26a0 [1797/1810] Built SemverModel.Spec.Mirror (3.1s)\nwarning: SemverModel/Spec/Mirror.lean:47:39: This simp argument is unused:\n  List.getElem!_eq_getElem?_getD\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h1, h2, ha, hb, List.getElem?_eq_getElem]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Spec/Mirror.lean:47:71: This simp argument is unused:\n  List.getElem?_eq_getElem\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h1, h2, ha, hb, List.getElem!_eq_getElem?_getD]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Spec/Mirror.lean:51:31: `if_false` has been deprecated: Use `ite_false` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335f\u0335a\u0335l\u0335s\u0335e\u0335i\u0332t\u0332e\u0332_\u0332f\u0332a\u0332l\u0332s\u0332e\u0332\nwarning: SemverModel/Spec/Mirror.lean:64:32: This simp argument is unused:\n  List.getElem!_eq_getElem?_getD\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h1, ha, List.getElem?_eq_getElem]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Spec/Mirror.lean:64:64: This simp argument is unused:\n  List.getElem?_eq_getElem\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h1, ha, List.getElem!_eq_getElem?_getD]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Spec/Mirror.lean:108:5: Variable name `hi` is not explicitly referenced.\n\nHint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:\n  [apply] _hi\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`\n\u2714 [1798/1810] Built SemverModel.Code.Funs (3.4s)\n\u26a0 [1799/1810] Built SemverModel.Spec.Lists (3.8s)\nwarning: SemverModel/Spec/Lists.lean:290:29: This simp argument is unused:\n  ite_true\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [hle, hre, ite_false]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\n\u2714 [1800/1810] Built SemverModel.Spec.Order (4.6s)\n\u2714 [1801/1810] Built SemverModel.Spec.ParseMirror (5.1s)\n\u26a0 [1802/1810] Built SemverModel.Proofs.RefineCmp (12s)\nwarning: SemverModel/Proofs/RefineCmp.lean:156:47: This simp argument is unused:\n  eq_comm (a := Ordering.eq)\n\nHint: Omit it from the simp argument list.\n  [apply] simp only at *\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Proofs/RefineCmp.lean:144:31: Unused tactic linter: `(try simp only [eq_comm (a := Ordering.eq)] at *)` does nothing.\n\nNote: This linter can be disabled with `set_option linter.unusedTactic false`\nwarning: SemverModel/Proofs/RefineCmp.lean:190:41: This simp argument is unused:\n  eq_comm (a := Ordering.eq)\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [eq_comm (a := Ordering.lt), eq_comm (a := Ordering.gt)] at *\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\n\u2714 [1803/1810] Built SemverModel.Proofs.Order (3.7s)\n\u26a0 [1804/1810] Built SemverModel.Proofs.RefinePrint (9.9s)\nwarning: SemverModel/Proofs/RefinePrint.lean:87:47: This simp argument is unused:\n  ite_false\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [*, List.append_assoc, ite_true, List.nil_append]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Proofs/RefinePrint.lean:87:58: This simp argument is unused:\n  List.nil_append\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [*, List.append_assoc, ite_true, ite_false]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Proofs/RefinePrint.lean:94:18: This simp argument is unused:\n  List.append_assoc\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [*, ite_true, ite_false, List.nil_append]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Proofs/RefinePrint.lean:94:37: This simp argument is unused:\n  ite_true\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [*, List.append_assoc, ite_false, List.nil_append]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: SemverModel/Proofs/RefinePrint.lean:111:88: Unused tactic linter: `done` does nothing.\n\nNote: This linter can be disabled with `set_option linter.unusedTactic false`\n\u26a0 [1805/1810] Built SemverModel.Proofs.RefineParse (69s)\nwarning: SemverModel/Proofs/RefineParse.lean:61:62: Unused tactic linter: `<;>` should be replaced with `;` or be removed.\n\nNote: This linter can be disabled with `set_option linter.unusedTactic false`\n\u26a0 [1806/1810] Built SemverModel.Proofs.RefineVersion (32s)\nwarning: SemverModel/Proofs/RefineVersion.lean:158:6: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: SemverModel/Proofs/RefineVersion.lean:158:18: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\n\u2714 [1807/1810] Built SemverModel.Proofs.RoundTrip (5.8s)\n\u2714 [1808/1810] Built SemverModel.Proofs.Main (2.3s)\n\u2714 [1809/1810] Built SemverModel (2.2s)\nBuild completed successfully (1810 jobs).\n",
   "soundness_pattern_hits": []
  },
  "functions": {
@@ -2496,7 +2500,7 @@
  "crosscheck": [],
  "forbidden": [],
  "model_crate": true,
- "finished": "2026-11-02T13:26:30Z",
+ "finished": "2026-11-09T09:40:20Z",
  "admission": {
   "status": "candidate",
   "label": "unlabelled",

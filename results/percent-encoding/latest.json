@@ -4,8 +4,8 @@
  "commit": "00a6ce58d02f4e0d43c5ca0702c0bedb8b1ebf3a",
  "version": "2.3.2",
  "tool": "lean-aeneas",
- "started": "2026-11-02T13:11:42Z",
- "pipeline_version": "0.2.36",
+ "started": "2026-11-09T09:25:19Z",
+ "pipeline_version": "0.2.49",
  "toolchain": {
   "aeneas": "nightly-2026.10.23-fdebf20",
   "charon_rust": "nightly-2026-09-17",
@@ -17,9 +17,9 @@
   "nixpkgs": "https://releases.nixos.org/nixpkgs/nixpkgs-26.11pre1097770.5adc50831c25/nixexprs.tar.zst?narHash=sha256-hVMDyAXU0kxRuG3GygbZkzf5x%2BaBNEC0NYEJ6KwHtD4%3D"
  },
  "clean": false,
- "toolchain_digest": "sha256:da9ed0adfff0011a377e5a6c9c137e8a68cc174db2fbadfc0f78e9e502b39a09",
+ "toolchain_digest": "sha256:3361f371fa145def485c620d9d1cc832cdcb43cee9d3bb1ff61afc4b3ff4db15",
  "container_digest": "sha256:f065d68e1d07c9d6f67976e71accdd0f1069d267fdd3401a4a7d99f75a6d4291",
- "ci_run": "https://github.com/Verify-Everything/verified-libs/actions/runs/41444179401",
+ "ci_run": "https://github.com/Verify-Everything/verified-libs/actions/runs/42586974795",
  "agent_cli": null,
  "archive_sha256": "42645e863db93f5da119118a8337f4e09c545794ad0cfefafca4dc8aac6f3286",
  "source": {
@@ -35,7 +35,7 @@
    {
     "cmd": "cd {tree}/percent_encoding && cargo +stable test --quiet",
     "ok": true,
-    "tail": "\nrunning 18 tests\n..................\ntest result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 6 tests\n......\ntest result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.17s\n\ninfo: syncing channel updates for stable-x86_64-unknown-linux-gnu\ninfo: latest update on 2026-10-15 for version 1.99.1 (58cf8f9c3 2026-10-13)\ninfo: downloading 3 components\nwarn: the missing active toolchain `stable-x86_64-unknown-linux-gnu` has been auto-installed\nwarn: this might cause rustup commands to take longer time to finish than expected\ninfo: you may opt out with `RUSTUP_AUTO_INSTALL=0` or `rustup set auto-install disable`\n"
+    "tail": "\nrunning 18 tests\n..................\ntest result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 6 tests\n......\ntest result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.18s\n\ninfo: syncing channel updates for stable-x86_64-unknown-linux-gnu\ninfo: latest update on 2026-10-15 for version 1.99.1 (58cf8f9c3 2026-10-13)\ninfo: downloading 3 components\nwarn: the missing active toolchain `stable-x86_64-unknown-linux-gnu` has been auto-installed\nwarn: this might cause rustup commands to take longer time to finish than expected\ninfo: you may opt out with `RUSTUP_AUTO_INSTALL=0` or `rustup set auto-install disable`\n"
    },
    {
     "cmd": "rm -rf {tree}/../difftest && cp -r {proj}/rust/difftest {tree}/../difftest && cd {tree}/../difftest && sed -i \"s#../../../rust-url/percent_encoding#{src}/percent_encoding#; s#../percent_encoding_patched#{tree}/percent_encoding#\" Cargo.toml && cargo +stable run --release --quiet -- 2000000",
@@ -59,6 +59,9 @@
    "-max-recdepth",
    "16384"
   ],
+  "charon_args": [
+   "--preset=aeneas"
+  ],
   "translator": {
    "patched": false
   },
@@ -70,17 +73,174 @@
    }
   ],
   "assumed_axioms": [],
+  "std_model_defs": [
+   {
+    "rust": "core::char::convert::{core::convert::From<char, u8>}::from",
+    "lean": "Char.Insts.CoreConvertFromU8.from",
+    "file": "FunsExternal.lean"
+   },
+   {
+    "rust": "core::char::methods::{char}::to_digit",
+    "lean": "core.char.methods.Char.to_digit",
+    "file": "FunsExternal.lean"
+   },
+   {
+    "rust": "core::fmt::{core::fmt::Debug<[@T]>}::fmt",
+    "lean": "Slice.Insts.CoreFmtDebug.fmt",
+    "file": "FunsExternal.lean"
+   },
+   {
+    "rust": "core::intrinsics::transmute",
+    "lean": "core.intrinsics.transmute",
+    "file": "FunsExternal.lean"
+   },
+   {
+    "rust": "core::iter::traits::iterator::Iterator::size_hint",
+    "lean": "core.iter.traits.iterator.Iterator.size_hint.default",
+    "file": "FunsExternal.lean"
+   },
+   {
+    "rust": "core::mem::size_of",
+    "lean": "core.mem.size_of",
+    "file": "FunsExternal.lean"
+   },
+   {
+    "rust": "core::num::{u8}::is_ascii",
+    "lean": "core.num.U8.is_ascii",
+    "file": "FunsExternal.lean"
+   },
+   {
+    "rust": "core::option::{core::ops::try_trait::Try<core::option::Option<@T>>}::branch",
+    "lean": "core.option.Option.Insts.CoreOpsTry_traitTry.branch",
+    "file": "FunsExternal.lean"
+   },
+   {
+    "rust": "core::option::{core::ops::try_trait::FromResidual<core::option::Option<@T>, core::option::Option<!>>}::from_residual",
+    "lean": "core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual",
+    "file": "FunsExternal.lean"
+   },
+   {
+    "rust": "core::slice::iter::{core::fmt::Debug<core::slice::iter::Iter<'0, @T>>}::fmt",
+    "lean": "core.slice.iter.Iter.Insts.CoreFmtDebug.fmt",
+    "file": "FunsExternal.lean"
+   },
+   {
+    "rust": "core::slice::iter::{core::iter::traits::exact_size::ExactSizeIterator<core::slice::iter::Iter<'0, @T>, &'_ @T>}::len",
+    "lean": "core.slice.iter.Iter.Insts.CoreIterTraitsExact_sizeExactSizeIteratorSharedT.len",
+    "file": "FunsExternal.lean"
+   },
+   {
+    "rust": "core::slice::iter::{core::clone::Clone<core::slice::iter::Iter<'0, @T>>}::clone",
+    "lean": "core.slice.iter.Iter.Insts.CoreCloneClone.clone",
+    "file": "FunsExternal.lean"
+   },
+   {
+    "rust": "core::slice::{[@T]}::split_first",
+    "lean": "core.slice.Slice.split_first",
+    "file": "FunsExternal.lean"
+   },
+   {
+    "rust": "core::str::{str}::as_bytes",
+    "lean": "core.str.Str.as_bytes",
+    "file": "FunsExternal.lean"
+   },
+   {
+    "rust": "core::str::converts::from_utf8_unchecked",
+    "lean": "core.str.converts.from_utf8_unchecked",
+    "file": "FunsExternal.lean"
+   },
+   {
+    "rust": "core::fmt::{core::fmt::Write<core::fmt::Formatter<'0>>}::write_str",
+    "lean": "core.fmt.Formatter.Insts.CoreFmtWrite.write_str",
+    "file": "FunsExternal.lean"
+   },
+   {
+    "rust": "core::slice::iter::{core::slice::iter::Iter<'a, @T>}::as_slice",
+    "lean": "core.slice.iter.Iter.as_slice",
+    "file": "FunsExternal.lean"
+   },
+   {
+    "rust": "core::str::converts::from_utf8",
+    "lean": "core.str.converts.from_utf8",
+    "file": "FunsExternal.lean"
+   },
+   {
+    "rust": "alloc::slice::{core::borrow::Borrow<alloc::vec::Vec<@T>, [@T]>}::borrow",
+    "lean": "alloc.vec.Vec.Insts.CoreBorrowBorrowSlice.borrow",
+    "file": "FunsExternal.lean"
+   },
+   {
+    "rust": "alloc::slice::{alloc::borrow::ToOwned<[@T], alloc::vec::Vec<@T>>}::to_owned",
+    "lean": "Slice.Insts.AllocBorrowToOwnedVec.to_owned",
+    "file": "FunsExternal.lean"
+   },
+   {
+    "rust": "alloc::str::{core::borrow::Borrow<alloc::string::String, str>}::borrow",
+    "lean": "alloc.string.String.Insts.CoreBorrowBorrowStr.borrow",
+    "file": "FunsExternal.lean"
+   },
+   {
+    "rust": "alloc::str::{alloc::borrow::ToOwned<str, alloc::string::String>}::to_owned",
+    "lean": "Str.Insts.AllocBorrowToOwnedString.to_owned",
+    "file": "FunsExternal.lean"
+   },
+   {
+    "rust": "alloc::string::{alloc::string::String}::from_utf8",
+    "lean": "alloc.string.String.from_utf8",
+    "file": "FunsExternal.lean"
+   },
+   {
+    "rust": "alloc::string::{alloc::string::String}::from_utf8_lossy",
+    "lean": "alloc.string.String.from_utf8_lossy",
+    "file": "FunsExternal.lean"
+   },
+   {
+    "rust": "alloc::string::{alloc::string::String}::from_utf8_unchecked",
+    "lean": "alloc.string.String.from_utf8_unchecked",
+    "file": "FunsExternal.lean"
+   },
+   {
+    "rust": "alloc::string::{alloc::string::String}::push_str",
+    "lean": "alloc.string.String.push_str",
+    "file": "FunsExternal.lean"
+   },
+   {
+    "rust": "alloc::string::{alloc::string::FromUtf8Error}::utf8_error",
+    "lean": "alloc.string.FromUtf8Error.utf8_error",
+    "file": "FunsExternal.lean"
+   },
+   {
+    "rust": "alloc::string::{core::iter::traits::collect::Extend<alloc::string::String, &'a str>}::extend",
+    "lean": "alloc.string.String.Insts.CoreIterTraitsCollectExtendSharedAStr.extend",
+    "file": "FunsExternal.lean"
+   },
+   {
+    "rust": "alloc::string::{core::convert::From<alloc::borrow::Cow<'a, str, alloc::string::String>, &'a str>}::from",
+    "lean": "alloc.borrow.CowAStrString.Insts.CoreConvertFromSharedAStr.from",
+    "file": "FunsExternal.lean"
+   },
+   {
+    "rust": "alloc::string::{core::convert::From<alloc::borrow::Cow<'a, str, alloc::string::String>, alloc::string::String>}::from",
+    "lean": "alloc.borrow.CowAStrString.Insts.CoreConvertFromString.from",
+    "file": "FunsExternal.lean"
+   },
+   {
+    "rust": "alloc::vec::{core::iter::traits::collect::Extend<alloc::vec::Vec<@T>, @T>}::extend",
+    "lean": "alloc.vec.Vec.Insts.CoreIterTraitsCollectExtend.extend",
+    "file": "FunsExternal.lean"
+   }
+  ],
   "internal_errors": [],
   "external_template_changes": [],
   "warnings": [
    "Could not translate the body of function 'percent_encoding::{impl core::fmt::Debug for percent_encoding::PercentDecode<'a>}::fmt because of previous error",
    "When retrieving the builtin information for trait decl 'core::iter::traits::iterator::Iterator', could not find the information for item 'size_hint'. The model defined in the Lean library seems to be missing the corresponding field."
   ],
-  "log": "[Info ] Imported: /home/vpipe/vpipe-work/percent-encoding/percent-encoding.llbc\n[Error] Unimplemented\nSource: 'src/lib.rs', lines 283:4-283:30; this code is generated from a macro invocation at: 'src/lib.rs', lines 281:16-281:21\n[Warn ] Could not translate the body of function 'percent_encoding::{impl core::fmt::Debug for percent_encoding::PercentDecode<'a>}::fmt because of previous error\nName pattern: 'percent_encoding::{core::fmt::Debug<percent_encoding::PercentDecode<'a>>}::fmt'\nDefinition span: 'src/lib.rs', lines 281:16-281:21\nSource: 'src/lib.rs', lines 283:4-283:30; this code is generated from a macro invocation at: 'src/lib.rs', lines 281:16-281:21\nCompiler source: interp/Interp.ml, line 682\n\n[Warn ] When retrieving the builtin information for trait decl 'core::iter::traits::iterator::Iterator', could not find the information for item 'size_hint'. The model defined in the Lean library seems to be missing the corresponding field.\nSource: '/rustc/library/core/src/iter/traits/iterator.rs', lines 42:0-42:24\nCompiler source: extract/Extract.ml, line 2866\n\n[Info ] Generated the partial file (because of 1 errors, including 1 unique errors): /home/vpipe/vpipe-work/percent-encoding/proj/PercentEncoding/TypesExternal_Template.lean\n[Info ] Generated the partial file (because of 1 errors, including 1 unique errors): /home/vpipe/vpipe-work/percent-encoding/proj/PercentEncoding/Types.lean\n[Info ] Generated the partial file (because of 1 errors, including 1 unique errors): /home/vpipe/vpipe-work/percent-encoding/proj/PercentEncoding/FunsExternal_Template.lean\n[Info ] Generated the partial file (because of 1 errors, including 1 unique errors): /home/vpipe/vpipe-work/percent-encoding/proj/PercentEncoding/Funs.lean\n[Info ] Total execution time: 0.969239 seconds\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+  "log": "[Info ] Imported: /home/vpipe/vpipe-work/percent-encoding/percent-encoding.llbc\n[Error] Unimplemented\nSource: 'src/lib.rs', lines 283:4-283:30; this code is generated from a macro invocation at: 'src/lib.rs', lines 281:16-281:21\n[Warn ] Could not translate the body of function 'percent_encoding::{impl core::fmt::Debug for percent_encoding::PercentDecode<'a>}::fmt because of previous error\nName pattern: 'percent_encoding::{core::fmt::Debug<percent_encoding::PercentDecode<'a>>}::fmt'\nDefinition span: 'src/lib.rs', lines 281:16-281:21\nSource: 'src/lib.rs', lines 283:4-283:30; this code is generated from a macro invocation at: 'src/lib.rs', lines 281:16-281:21\nCompiler source: interp/Interp.ml, line 682\n\n[Warn ] When retrieving the builtin information for trait decl 'core::iter::traits::iterator::Iterator', could not find the information for item 'size_hint'. The model defined in the Lean library seems to be missing the corresponding field.\nSource: '/rustc/library/core/src/iter/traits/iterator.rs', lines 42:0-42:24\nCompiler source: extract/Extract.ml, line 2866\n\n[Info ] Generated the partial file (because of 1 errors, including 1 unique errors): /home/vpipe/vpipe-work/percent-encoding/proj/PercentEncoding/TypesExternal_Template.lean\n[Info ] Generated the partial file (because of 1 errors, including 1 unique errors): /home/vpipe/vpipe-work/percent-encoding/proj/PercentEncoding/Types.lean\n[Info ] Generated the partial file (because of 1 errors, including 1 unique errors): /home/vpipe/vpipe-work/percent-encoding/proj/PercentEncoding/FunsExternal_Template.lean\n[Info ] Generated the partial file (because of 1 errors, including 1 unique errors): /home/vpipe/vpipe-work/percent-encoding/proj/PercentEncoding/Funs.lean\n[Info ] Total execution time: 0.983244 seconds\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
  },
  "prove": {
   "ok": true,
-  "seconds": 129,
+  "seconds": 132,
   "replay": {
    "ok": true,
    "tool": "leanchecker",
@@ -89,7 +249,7 @@
    "peak_gb": [
     [
      "PercentEncoding",
-     6.74
+     6.56
     ],
     [
      "PercentEncoding.Funs",
@@ -108,7 +268,7 @@
      2.22
     ]
    ],
-   "seconds": 67,
+   "seconds": 68,
    "log": ""
   },
   "theorems": [
@@ -981,7 +1141,7 @@
   "axiom_thms": 0,
   "unaudited": 0,
   "errors": [],
-  "log": "\u2714 [1796/1810] Built PercentEncoding.TypesExternal (1.7s)\n\u2714 [1797/1810] Built PercentEncoding.Types (1.8s)\n\u2714 [1798/1810] Built PercentEncoding.FunsExternal (2.1s)\n\u26a0 [1799/1810] Built PercentEncoding.Funs (5.3s)\nwarning: PercentEncoding/Funs.lean:803:4: declaration uses `sorry`\n\u2714 [1800/1810] Built PercentEncoding (1.7s)\n\u2714 [1802/1810] Built Proofs.Spec (1.9s)\n\u2714 [1803/1810] Built Proofs.SpecLemmas (1.0s)\n\u26a0 [1804/1810] Built Proofs.Code (11s)\nwarning: Proofs/Code.lean:85:10: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Code.lean:95:6: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\n\u2714 [1805/1810] Built Proofs (1.7s)\n\u26a0 [1807/1810] Built Proofs.Sets (5.3s)\nwarning: Proofs/Sets.lean:58:14: This simp argument is unused:\n  List.getElem_set\n\nHint: Omit it from the simp argument list.\n  [apply] simp [Ne.symm hq]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Sets.lean:186:47: This simp argument is unused:\n  Bool.and_true\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [hc, decide_true, Bool.true_and]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Sets.lean:201:14: This simp argument is unused:\n  List.getElem_set\n\nHint: Omit it from the simp argument list.\n  [apply] simp [Ne.symm hq]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Sets.lean:216:12: This simp argument is unused:\n  h\n\nHint: Omit it from the simp argument list.\n  [apply] simp [hc, mask_getElem!, Nat.testBit_or, *]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Sets.lean:216:15: This simp argument is unused:\n  hc\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h, mask_getElem!, Nat.testBit_or, *]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Sets.lean:216:19: This simp argument is unused:\n  mask_getElem!\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h, hc, Nat.testBit_or, *]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Sets.lean:237:12: This simp argument is unused:\n  h\n\nHint: Omit it from the simp argument list.\n  [apply] simp [hc, mask_getElem!, u32_not_testBit' _ _ hb, *]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Sets.lean:237:15: This simp argument is unused:\n  hc\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h, mask_getElem!, u32_not_testBit' _ _ hb, *]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Sets.lean:237:19: This simp argument is unused:\n  mask_getElem!\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h, hc, u32_not_testBit' _ _ hb, *]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\n\u26a0 [1808/1810] Built Proofs.Traits (3.1s)\nwarning: Proofs/Traits.lean:22:48: This simp argument is unused:\n  bind_ok\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [List.zip_cons_cons, List.allM]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Traits.lean:16:33: Unused tactic linter: `<;>` should be replaced with `;` or be removed.\n\nNote: This linter can be disabled with `set_option linter.unusedTactic false`\nwarning: Proofs/Traits.lean:16:33: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice\n\nNote: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`\n\u26a0 [1809/1810] Built Proofs.Alloc (4.5s)\nwarning: Proofs/Alloc.lean:339:35: This simp argument is unused:\n  List.length_drop\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [rest1_post] at *\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Alloc.lean:411:8: This simp argument is unused:\n  Usize.ofNatCore_val_eq\n\nHint: Omit it from the simp argument list.\n  [apply] simp [UScalar.ofNatCore_val_eq, Nat.mod_eq_of_lt hb]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Alloc.lean:411:32: This simp argument is unused:\n  UScalar.ofNatCore_val_eq\n\nHint: Omit it from the simp argument list.\n  [apply] simp [Usize.ofNatCore_val_eq, Nat.mod_eq_of_lt hb]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Alloc.lean:450:10: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Alloc.lean:455:10: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Proofs/Alloc.lean:462:10: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Alloc.lean:467:10: `dif_neg` has been deprecated: Use `dite_eq_right` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Proofs/Alloc.lean:492:10: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Alloc.lean:496:10: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Proofs/Alloc.lean:504:10: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Alloc.lean:506:10: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Alloc.lean:513:10: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Proofs/Alloc.lean:526:6: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Alloc.lean:595:10: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Alloc.lean:720:13: This simp argument is unused:\n  core.fmt.Formatter.Insts.CoreFmtWrite\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [core.fmt.Formatter.Insts.CoreFmtWrite.write_str, core.fmt.Formatter.write_str]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Alloc.lean:766:10: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Alloc.lean:770:10: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Proofs/Alloc.lean:778:10: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Alloc.lean:780:10: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Alloc.lean:787:10: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nBuild completed successfully (1810 jobs).\n",
+  "log": "\u2714 [1796/1810] Built PercentEncoding.TypesExternal (1.8s)\n\u2714 [1797/1810] Built PercentEncoding.Types (1.8s)\n\u2714 [1798/1810] Built PercentEncoding.FunsExternal (2.1s)\n\u26a0 [1799/1810] Built PercentEncoding.Funs (5.4s)\nwarning: PercentEncoding/Funs.lean:803:4: declaration uses `sorry`\n\u2714 [1800/1810] Built PercentEncoding (1.7s)\n\u2714 [1802/1810] Built Proofs.Spec (1.9s)\n\u2714 [1803/1810] Built Proofs.SpecLemmas (2.1s)\n\u26a0 [1804/1810] Built Proofs.Code (11s)\nwarning: Proofs/Code.lean:85:10: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Code.lean:95:6: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\n\u2714 [1805/1810] Built Proofs (1.8s)\n\u26a0 [1807/1810] Built Proofs.Sets (5.5s)\nwarning: Proofs/Sets.lean:58:14: This simp argument is unused:\n  List.getElem_set\n\nHint: Omit it from the simp argument list.\n  [apply] simp [Ne.symm hq]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Sets.lean:186:47: This simp argument is unused:\n  Bool.and_true\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [hc, decide_true, Bool.true_and]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Sets.lean:201:14: This simp argument is unused:\n  List.getElem_set\n\nHint: Omit it from the simp argument list.\n  [apply] simp [Ne.symm hq]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Sets.lean:216:12: This simp argument is unused:\n  h\n\nHint: Omit it from the simp argument list.\n  [apply] simp [hc, mask_getElem!, Nat.testBit_or, *]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Sets.lean:216:15: This simp argument is unused:\n  hc\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h, mask_getElem!, Nat.testBit_or, *]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Sets.lean:216:19: This simp argument is unused:\n  mask_getElem!\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h, hc, Nat.testBit_or, *]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Sets.lean:237:12: This simp argument is unused:\n  h\n\nHint: Omit it from the simp argument list.\n  [apply] simp [hc, mask_getElem!, u32_not_testBit' _ _ hb, *]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Sets.lean:237:15: This simp argument is unused:\n  hc\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h, mask_getElem!, u32_not_testBit' _ _ hb, *]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Sets.lean:237:19: This simp argument is unused:\n  mask_getElem!\n\nHint: Omit it from the simp argument list.\n  [apply] simp [h, hc, u32_not_testBit' _ _ hb, *]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\n\u26a0 [1808/1810] Built Proofs.Traits (3.2s)\nwarning: Proofs/Traits.lean:22:48: This simp argument is unused:\n  bind_ok\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [List.zip_cons_cons, List.allM]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Traits.lean:16:33: Unused tactic linter: `<;>` should be replaced with `;` or be removed.\n\nNote: This linter can be disabled with `set_option linter.unusedTactic false`\nwarning: Proofs/Traits.lean:16:33: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice\n\nNote: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`\n\u26a0 [1809/1810] Built Proofs.Alloc (4.6s)\nwarning: Proofs/Alloc.lean:339:35: This simp argument is unused:\n  List.length_drop\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [rest1_post] at *\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Alloc.lean:411:8: This simp argument is unused:\n  Usize.ofNatCore_val_eq\n\nHint: Omit it from the simp argument list.\n  [apply] simp [UScalar.ofNatCore_val_eq, Nat.mod_eq_of_lt hb]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Alloc.lean:411:32: This simp argument is unused:\n  UScalar.ofNatCore_val_eq\n\nHint: Omit it from the simp argument list.\n  [apply] simp [Usize.ofNatCore_val_eq, Nat.mod_eq_of_lt hb]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Alloc.lean:450:10: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Alloc.lean:455:10: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Proofs/Alloc.lean:462:10: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Alloc.lean:467:10: `dif_neg` has been deprecated: Use `dite_eq_right` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Proofs/Alloc.lean:492:10: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Alloc.lean:496:10: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Proofs/Alloc.lean:504:10: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Alloc.lean:506:10: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Alloc.lean:513:10: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Proofs/Alloc.lean:526:6: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Alloc.lean:595:10: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Alloc.lean:720:13: This simp argument is unused:\n  core.fmt.Formatter.Insts.CoreFmtWrite\n\nHint: Omit it from the simp argument list.\n  [apply] simp only [core.fmt.Formatter.Insts.CoreFmtWrite.write_str, core.fmt.Formatter.write_str]\n\nNote: This linter can be disabled with `set_option linter.unusedSimpArgs false`\nwarning: Proofs/Alloc.lean:766:10: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Alloc.lean:770:10: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nwarning: Proofs/Alloc.lean:778:10: `if_pos` has been deprecated: Use `ite_eq_left` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Alloc.lean:780:10: `dif_pos` has been deprecated: Use `dite_eq_left` instead\n\nHint: Replace the deprecated name:\n  d\u0335i\u0335f\u0335_\u0335p\u0335o\u0335s\u0335d\u0332i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332l\u0332e\u0332f\u0332t\u0332\nwarning: Proofs/Alloc.lean:787:10: `if_neg` has been deprecated: Use `ite_eq_right` instead\n\nHint: Replace the deprecated name:\n  i\u0335f\u0335_\u0335n\u0335e\u0335g\u0335i\u0332t\u0332e\u0332_\u0332e\u0332q\u0332_\u0332r\u0332i\u0332g\u0332h\u0332t\u0332\nBuild completed successfully (1810 jobs).\n",
   "soundness_pattern_hits": []
  },
  "functions": {
@@ -1465,11 +1625,12 @@
   {
    "file": "PercentEncoding/Funs.lean",
    "line": 807,
-   "construct": "sorry"
+   "construct": "sorry",
+   "def": "PercentDecode.Insts.CoreFmtDebug.fmt"
   }
  ],
  "model_crate": false,
- "finished": "2026-11-02T13:20:45Z",
+ "finished": "2026-11-09T09:34:29Z",
  "admission": {
   "status": "candidate",
   "label": "unlabelled",

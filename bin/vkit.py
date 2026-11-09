@@ -300,8 +300,15 @@ def setup_kani(yes):
     if not confirm([f"cargo install --locked kani-verifier@{want}",
                     "cargo kani setup (downloads Kani's pinned nightly and CBMC, several GB)"], yes):
         return 1
-    vpipe("setup", "kani")
-    got = out(["cargo", "kani", "--version"])
+    # `cargo kani setup` downloads a release bundle from GitHub; retry, as one 504 fails the install.
+    for attempt in range(3):
+        vpipe("setup", "kani")
+        got = out(["cargo", "kani", "--version"])
+        if got and want in got:
+            break
+        if attempt < 2:
+            log(f"kani setup attempt {attempt + 1} failed; retrying in {30 * (attempt + 1)}s")
+            time.sleep(30 * (attempt + 1))
     if not got or want not in got:
         log(f"kani {want} is not installed after setup (cargo kani --version: {got or 'not found'})")
         return 1

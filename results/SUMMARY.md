@@ -11,9 +11,9 @@ Strength = weakest per-function label (full-correctness > safety-contracts > no-
 
 | Library | Tool | Version | Proved | Sorries | Extra-axiom thms | Axioms | Skipped | Functions | Progress | Strength | Entry | Run |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| crc32fast | lean-aeneas | 1.5.3 | 1151/1151 | 0 | 0 | 0 | 0 | 46/46 | complete | full-correctness | candidate (4/10) | 2026-11-09T09:25:18Z |
-| percent-encoding | lean-aeneas | 2.3.2 | 123/123 | 0 | 0 | 0 | 1 | 28/33 | open: 5 functions | unlabelled | candidate (2/10) | 2026-11-09T09:34:29Z |
-| semver | lean-aeneas | 1.0.28 | 145/145 | 0 | 0 | 0 | 0 | 28/116 | open: 88 functions | unlabelled | candidate (2/10) | 2026-11-09T09:40:20Z |
+| crc32fast | lean-aeneas | 1.5.3 | 1151/1151 | 0 | 0 | 0 | 0 | 46/46 | complete | full-correctness | candidate (5/10) | 2026-11-09T13:38:28Z |
+| percent-encoding | lean-aeneas | 2.3.2 | 123/123 | 0 | 0 | 0 | 1 | 28/33 | open: 5 functions | unlabelled | candidate (2/10) | 2026-11-09T13:45:55Z |
+| semver | lean-aeneas | 1.0.28 | 145/145 | 0 | 0 | 0 | 0 | 28/116 | open: 88 functions | unlabelled | candidate (2/10) | 2026-11-09T13:50:02Z |
 
 ## percent-encoding: open functions (5 of 33)
 

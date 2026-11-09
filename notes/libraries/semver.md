@@ -20,17 +20,28 @@ Stack: Aeneas nightly-2026.10.23-fdebf20 (Charon 0.1.293), Lean v4.35.0, mathlib
   prints back; "x" fails with a printable error; [255] is not UTF-8; ^1.2.3, ~1.2.3, >=, <= match 1.2.3).
   lean/tools/Conditional.lean lists any left over; it now lists none. The upstream Identifier hand model
   (unsafe-code model, not the fork) was dropped from the build and archived in ~/work/semver-verif/archive/.
-- Local fork commits not yet pushed (waiting on Yerin): 7de0e84 (formatter models), 0987dbd (non-vacuity). Both
-  touch proofs/ only.
+- push_debug_non_ascii (2026-11-02): rewritten as translatable code (own UTF-8 decode + escape table
+  src/char_debug.rs, generated from std by gen/char_debug.rs, rustc 1.97 / Unicode 17) and proved against
+  charDebugS. tests/test_char_debug.rs checks all 1.1M scalar values against std and upstream (release only).
+- serde.rs (2026-11-02): extracted with --features serde, proved in Api/SerdeAdapters.lean for any
+  Serializer/Deserializer/Error. tools/serde_traits.py (postprocess) drops 11 Serializer-family methods that
+  take a Serialize value: Serialize <-> Serializer is a negative self-reference no Lean structure allows.
+  semver never calls them. F32/F64 = Lean Float32/Float (unused types). serde's default visit_str is opaque.
+- MIR audit (2026-11-02, guard -> `fail .panic` warning): the fork has no match guards and the extracted
+  Funs.lean has no panic arms. `--mir elaborated` gives the same code except version_req, which Aeneas then
+  cannot translate (body becomes sorry), so the default MIR stays. No parking_lot / Mutex.
+- Pipeline 2026-11-02 on f68aeda (local bundle): 167/167 functions verified, all theorems proved. Gate 1 still
+  lists the 12 removed Identifier internals. DeError::from_parse_error (bodyless trait method) maps to its
+  blanket-impl proofs.
+- Ledger now 340 defs, 0 uncovered; Conditional lists none; Check shows standard axioms only.
+- Pushed 2026-11-02 01:50 (Yerin's OK): Verify-Everything/semver main = f68aeda (7de0e84, 0987dbd, bcf9f2c,
+  f68aeda). The pipeline reads GitHub again.
 
 ## Open (every-function rule) and trust
-- serde.rs: 13 one-line adapters into serde (Aeneas rejects serde's mutually recursive traits), plus the
-  DeError trait declaration. Differential-tested only.
-- printing::push_debug_non_ascii: std char Debug (Unicode tables), opaque std model `charDebugSeg`.
 - Std models listed in vpipe.toml [trust].models (Formatter state, Hash of u64/isize/str/Option/Vec).
-- Gate 1 for forks: Yerin decided 10:13 the fork is the verified code. functions.toml marks the 149 rewritten functions `rewrite = "28e87c4..."` (vpipe 0.2.16), so gate 1 now fails only on the 15 open functions.
+- Gate 1 for forks: Yerin decided 10:13 the fork is the verified code. functions.toml marks the 149 rewritten functions `rewrite = "28e87c4..."` (vpipe 0.2.16), now f68aeda; no open fork functions left.
 - Removed upstream functions (vpipe 0.2.30/0.2.31): functions.toml maps 67 of 80 with replaced_by (fork ids, or
-  {lean, theorems} for derived Clone/PartialEq/Default and EMPTY). QuotedChar::fmt waits on push_debug_non_ascii.
+  {lean, theorems} for derived Clone/PartialEq/Default and EMPTY). 
   12 left: Identifier's packed-pointer helpers, ptr_eq and Drop; nothing in the fork does their job (Vec<u8>).
   The pipeline thread is asking Yerin how gate 1 should treat them (2026-10-26).
 - Admission gates still missing: reviewer-chosen planted bugs (>=10), [scope].reviewed_by, two reviews,
@@ -39,6 +50,6 @@ Stack: Aeneas nightly-2026.10.23-fdebf20 (Charon 0.1.293), Lean v4.35.0, mathlib
 ## Files
 - Work repos: ~/work/semver-verif (proofs, git), ~/work/semver-fork (fork, git). Snapshots in
   /mnt/project-files/semver-verif/ and /mnt/project-files/semver-fork/; fork git bundle
-  /mnt/project-files/semver-verif/semver-fork.bundle (old; the pipeline now reads GitHub).
+  /mnt/project-files/semver-verif/semver-fork.bundle (the pipeline reads it until the push).
 - Pipeline entry: pipeline/libraries/semver (fork manifest, functions.toml). Old model-crate entry backed up
   in /mnt/project-files/semver-verif/pipeline-entry-model-v1/.

@@ -74,7 +74,7 @@ git clone https://github.com/<you>/verified-libs && cd verified-libs && bash ins
 The installer shows its plan and asks before changing anything. It installs the `vkit` and
 `vpipe` commands into `~/.vpipe/bin`, copies the agent skills into your agent's skills folder,
 and (if you choose) installs the pinned provers. Flags: `--agents claude,codex,gemini|none`,
-`--tools lean,framac,cbmc|all|none`, `--yes`, `--dry-run`.
+`--tools lean,framac,cbmc,kani|all|none`, `--yes`, `--dry-run`.
 
 The skills work in **Claude Code, Codex and Gemini CLI**. Inside a clone they load on their own
 (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.agents/skills/`). To install them as a package instead:

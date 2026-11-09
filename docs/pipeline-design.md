@@ -149,6 +149,25 @@ Standard: https://claude.ai/artifact/1tqQsrMgXckaNZQJVXPWvp. Code: `pipeline/bin
 - **Not yet possible here:** a container digest (gate 9) needs a published image; until the toolkit
   makes one, `[container].digest` in toolchain/versions.toml stays empty and no entry can pass gate 9.
   The toolchain digest (sha256 over the pinned versions and the tool binaries) is recorded meanwhile.
+- **Evidence types (0.2.30-0.2.46):** Lean/Aeneas theorems; `verified_by = "creusot"` (ghost-only
+  diff against upstream, std-contract tests, one `cargo creusot` per scope entry, every trusted item
+  listed); `verified_by = "lean+kani"` (Lean on the body without a debug assertion, named Kani
+  harnesses with expected verdicts incl. a must-fail control, Creusot entries for the precondition at
+  callers; the Kani crate must be upstream + cfg(kani) lines; a std copy is regenerated from
+  rust-lang/rust at the pinned tag and must match byte for byte). Frama-C build-option matrix for C.
+  `evidence_label` in functions.toml carries wording Yerin approved onto CLAIM.md.
+- **Gate 7 exception (Yerin, 2026-11-02 06:24):** a sorry in generated Lean does not count when the
+  item is listed in [creusot].covers_generated, that Creusot entry proved, and the axiom audit shows
+  no proved theorem uses sorry. Creusot does NOT replace patch equivalence for gate 1.
+- **Translator pins and soundness (2026-11-02):** patched Aeneas 19 + Charon 9 + lean-lib 18; build
+  numbers are read from BUILD files / the lib patch header; soundness.toml entries can need several
+  build fixes together (fixed_in_build + fixed_in_charon_build), a Charon option (unless_charon_args_re)
+  or the patched translator only. CLAIM.md lists std models written as defs (0.2.47).
+- **Check-in 2026-11-09 (pipeline 0.2.49):** every function verified in crc32fast (7/10 gates),
+  semver (167/167, 5/10) and percent-encoding (33/33, 5/10). Gates nobody here can pass alone: spec-first
+  metadata, the two reviews, and reproducible runs in the pinned container. semver gate 1 stays strict
+  (removed private helpers need a proved counterpart); percent-encoding gate 1 needs a patch
+  equivalence proof. Nothing has been pushed to verified-libs (Yerin's push card closed as "Wait").
 - **Check-in 09:12 UTC (pipeline 0.2.11):** crc32fast 46/46 functions at full-correctness over 5
   variants (1151/1151 theorems), 4/10 gates; still failing real code (archive pin / patch
   equivalence), spec first, planted bugs, trusted base (replay merge fixed in 0.2.10, needs a new run),
@@ -160,6 +179,7 @@ Standard: https://claude.ai/artifact/1tqQsrMgXckaNZQJVXPWvp. Code: `pipeline/bin
   from a reviewer, a cross-check command, the container, and the two sign-offs.
 
 ## Changelog
+- v3 (2026-11-09): evidence types, gate 7 exception, translator pins, check-in for 0.2.49.
 - v2.1 (09:15): pipeline 0.2.1-0.2.11 (tool patches, Codex/Gemini, pinned nixpkgs, patched Aeneas, variants); check-in 4 status.
 - v2 (07:20): admission standard built into the engine (pipeline 0.2.0); candidates/libs layout; Neovim swarm features.
 - v1.5 (06:00): every-function completion rule enforced; repo layout for verified-libs; contributor install needs; one folder per library; shared mathlib.

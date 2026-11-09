@@ -8,14 +8,14 @@ CHANGELOG entry. Humans and threads may add items. Newest evidence wins.
 - [ ] Collect common failure signatures from results/*/ logs into templates/prompts so the agent sees known fixes first.
 - [ ] `vpipe new --agent`: let an agent fill the manifest (extract args, scope, exclusions) from the upstream repo.
 - [ ] CBMC stage for C: bounded checks as a quick first pass before Frama-C WP (Neovim thread: 75 harnesses in 16 s, found an over-2 GiB bug). Needs a cbmc setup script (GitHub .deb works).
-- [ ] Mutation check: plant known bugs and confirm proofs/harnesses fail (Neovim's mutants.sh); flags vacuous proofs and stale harnesses after an upstream bump.
-- [ ] Frama-C: document `-wp-no-let` (200x on inih's main loop), `-wp-model Typed+Cast`, `-DNDEBUG` and the `-include` prelude for function pointers in the C prompt; add a z3 bit-vector lemma-check step (Neovim's check_lemmas.py).
+- [x] DONE (`vpipe mutate`, gate 6): plant known bugs and confirm proofs/harnesses fail.
+- [x] DONE 0.2.49 (prompt tips; the z3 lemma-check step itself is still open). Frama-C: document `-wp-no-let` (200x on inih's main loop), `-wp-model Typed+Cast`, `-DNDEBUG` and the `-include` prelude for function pointers in the C prompt; add a z3 bit-vector lemma-check step (Neovim's check_lemmas.py).
 - [ ] Frama-C via Docker image (inih uses Frama-C 32.1 + Alt-Ergo in Docker; Nix gives 33 without Alt-Ergo): pick one, so C results are comparable.
 - [ ] Model-crate pattern is now used by semver and Helix: add a `vpipe new --model` scaffold (model crate + differential test skeleton wired into [test]).
 - [x] Adopt finished thread work: crc32fast, percent-encoding, semver run natively (2026-10-24).
 
 ## Open (new)
-- [ ] Audit only sees `axiom`s; defs used as trusted std models in FunsExternal.lean (general.md: `from_utf8_unchecked := ok`) are invisible to it. List defs from FunsExternal.lean in the result as assumptions.
+- [x] DONE 0.2.47: std model defs in *External.lean are recorded (extract.std_model_defs) and listed on CLAIM.md.
 
 ## Done
 - [x] Frama-C per-function proved/total in results and SUMMARY.md (first change made by `vpipe improve` in a test copy, 2026-10-24; kept by the gate, ported here).

@@ -1449,7 +1449,7 @@ def Hasher.finalize (self : Hasher) : Result Std.U32 := do
   ok self.state
 
 /-- [crc32fast::specialized::pclmulqdq::get512]:
-    Source: 'src/specialized/pclmulqdq.rs', lines 476:0-481:1 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 482:0-487:1 -/
 def specialized.pclmulqdq.get512
   (a : Slice Std.U8) :
   Result (core.core_arch.x86.__m512i × (Slice Std.U8))
@@ -1464,7 +1464,7 @@ def specialized.pclmulqdq.get512
   ok (r, a1)
 
 /-- [crc32fast::specialized::pclmulqdq::reduce512]:
-    Source: 'src/specialized/pclmulqdq.rs', lines 424:0-428:1 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 430:0-434:1 -/
 def specialized.pclmulqdq.reduce512
   (a : core.core_arch.x86.__m512i) (b : core.core_arch.x86.__m512i)
   (keys : core.core_arch.x86.__m512i) :
@@ -1478,7 +1478,7 @@ def specialized.pclmulqdq.reduce512
   core.core_arch.x86.avx512f._mm512_xor_si512 mi t2
 
 /-- [crc32fast::specialized::pclmulqdq::reduce128]:
-    Source: 'src/specialized/pclmulqdq.rs', lines 404:0-408:1 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 410:0-414:1 -/
 def specialized.pclmulqdq.reduce128
   (a : core.core_arch.x86.__m128i) (b : core.core_arch.x86.__m128i)
   (keys : core.core_arch.x86.__m128i) :
@@ -1490,7 +1490,7 @@ def specialized.pclmulqdq.reduce128
   core.core_arch.x86.sse2._mm_xor_si128 mi t2
 
 /-- [crc32fast::specialized::pclmulqdq::get]:
-    Source: 'src/specialized/pclmulqdq.rs', lines 455:0-460:1 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 461:0-466:1 -/
 def specialized.pclmulqdq.get
   (a : Slice Std.U8) :
   Result (core.core_arch.x86.__m128i × (Slice Std.U8))
@@ -1505,32 +1505,32 @@ def specialized.pclmulqdq.get
   ok (r, a1)
 
 /-- [crc32fast::specialized::pclmulqdq::U_PRIME]
-    Source: 'src/specialized/pclmulqdq.rs', lines 114:0-114:33 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 120:0-120:33 -/
 @[global_simps, irreducible]
 def specialized.pclmulqdq.U_PRIME : Std.I64 := 8439010881#i64
 
 /-- [crc32fast::specialized::pclmulqdq::P_X]
-    Source: 'src/specialized/pclmulqdq.rs', lines 113:0-113:29 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 119:0-119:29 -/
 @[global_simps, irreducible]
 def specialized.pclmulqdq.P_X : Std.I64 := 7976584769#i64
 
 /-- [crc32fast::specialized::pclmulqdq::K5]
-    Source: 'src/specialized/pclmulqdq.rs', lines 111:0-111:28 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 117:0-117:28 -/
 @[global_simps, irreducible]
 def specialized.pclmulqdq.K5 : Std.I64 := 5969371428#i64
 
 /-- [crc32fast::specialized::pclmulqdq::K4]
-    Source: 'src/specialized/pclmulqdq.rs', lines 110:0-110:28 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 116:0-116:28 -/
 @[global_simps, irreducible]
 def specialized.pclmulqdq.K4 : Std.I64 := 3433693342#i64
 
 /-- [crc32fast::specialized::pclmulqdq::K3]
-    Source: 'src/specialized/pclmulqdq.rs', lines 109:0-109:28 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 115:0-115:28 -/
 @[global_simps, irreducible]
 def specialized.pclmulqdq.K3 : Std.I64 := 6259578832#i64
 
 /-- [crc32fast::specialized::pclmulqdq::reduce_128_to_crc]: loop body 0:
-    Source: 'src/specialized/pclmulqdq.rs', lines 323:4-325:5 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 329:4-331:5 -/
 @[rust_loop_body]
 def specialized.pclmulqdq.reduce_128_to_crc_loop.body
   (k3k4 : core.core_arch.x86.__m128i) (x : core.core_arch.x86.__m128i)
@@ -1547,7 +1547,7 @@ def specialized.pclmulqdq.reduce_128_to_crc_loop.body
   else ok (done (x, data))
 
 /-- [crc32fast::specialized::pclmulqdq::reduce_128_to_crc]: loop 0:
-    Source: 'src/specialized/pclmulqdq.rs', lines 323:4-325:5 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 329:4-331:5 -/
 @[rust_loop]
 def specialized.pclmulqdq.reduce_128_to_crc_loop
   (x : core.core_arch.x86.__m128i) (data : Slice Std.U8)
@@ -1560,7 +1560,7 @@ def specialized.pclmulqdq.reduce_128_to_crc_loop
     (x, data)
 
 /-- [crc32fast::specialized::pclmulqdq::reduce_128_to_crc]:
-    Source: 'src/specialized/pclmulqdq.rs', lines 319:0-401:1 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 325:0-407:1 -/
 def specialized.pclmulqdq.reduce_128_to_crc
   (x : core.core_arch.x86.__m128i) (data : Slice Std.U8) : Result Std.U32 := do
   let k3k4 ←
@@ -1624,7 +1624,7 @@ def specialized.pclmulqdq.reduce_128_to_crc
   ok (~~~ i4)
 
 /-- [crc32fast::specialized::pclmulqdq::get256]:
-    Source: 'src/specialized/pclmulqdq.rs', lines 465:0-470:1 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 471:0-476:1 -/
 def specialized.pclmulqdq.get256
   (a : Slice Std.U8) :
   Result (core.core_arch.x86.__m256i × (Slice Std.U8))
@@ -1639,7 +1639,7 @@ def specialized.pclmulqdq.get256
   ok (r, a1)
 
 /-- [crc32fast::specialized::pclmulqdq::reduce256]:
-    Source: 'src/specialized/pclmulqdq.rs', lines 414:0-418:1 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 420:0-424:1 -/
 def specialized.pclmulqdq.reduce256
   (a : core.core_arch.x86.__m256i) (b : core.core_arch.x86.__m256i)
   (keys : core.core_arch.x86.__m256i) :
@@ -1653,22 +1653,22 @@ def specialized.pclmulqdq.reduce256
   core.core_arch.x86.avx2._mm256_xor_si256 mi t2
 
 /-- [crc32fast::specialized::pclmulqdq::MIN_FOLD_BY_4_BYTES]
-    Source: 'src/specialized/pclmulqdq.rs', lines 118:0-118:39 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 124:0-124:39 -/
 @[global_simps, irreducible]
 def specialized.pclmulqdq.MIN_FOLD_BY_4_BYTES : Std.Usize := 128#usize
 
 /-- [crc32fast::specialized::pclmulqdq::K2]
-    Source: 'src/specialized/pclmulqdq.rs', lines 108:0-108:28 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 114:0-114:28 -/
 @[global_simps, irreducible]
 def specialized.pclmulqdq.K2 : Std.I64 := 7631803798#i64
 
 /-- [crc32fast::specialized::pclmulqdq::K1]
-    Source: 'src/specialized/pclmulqdq.rs', lines 107:0-107:28 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 113:0-113:28 -/
 @[global_simps, irreducible]
 def specialized.pclmulqdq.K1 : Std.I64 := 5708721108#i64
 
 /-- [crc32fast::specialized::pclmulqdq::calculate]: loop body 0:
-    Source: 'src/specialized/pclmulqdq.rs', lines 164:4-169:5 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 170:4-175:5 -/
 @[rust_loop_body]
 def specialized.pclmulqdq.calculate_loop.body
   (k1k2 : core.core_arch.x86.__m128i) (data : Slice Std.U8)
@@ -1695,7 +1695,7 @@ def specialized.pclmulqdq.calculate_loop.body
   else ok (done (data, x3, x2, x1, x0))
 
 /-- [crc32fast::specialized::pclmulqdq::calculate]: loop 0:
-    Source: 'src/specialized/pclmulqdq.rs', lines 164:4-169:5 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 170:4-175:5 -/
 @[rust_loop]
 def specialized.pclmulqdq.calculate_loop
   (data : Slice Std.U8) (x3 : core.core_arch.x86.__m128i)
@@ -1711,7 +1711,7 @@ def specialized.pclmulqdq.calculate_loop
     (data, x3, x2, x1, x0)
 
 /-- [crc32fast::specialized::pclmulqdq::calculate]:
-    Source: 'src/specialized/pclmulqdq.rs', lines 140:0-177:1 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 146:0-183:1 -/
 def specialized.pclmulqdq.calculate
   (crc : Std.U32) (data : Slice Std.U8) : Result Std.U32 := do
   let i := Slice.len data
@@ -1750,17 +1750,17 @@ def specialized.pclmulqdq.calculate
       specialized.pclmulqdq.reduce_128_to_crc x5 data5
 
 /-- [crc32fast::specialized::pclmulqdq::K_1024_HIGH]
-    Source: 'src/specialized/pclmulqdq.rs', lines 128:0-128:37 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 134:0-134:37 -/
 @[global_simps, irreducible]
 def specialized.pclmulqdq.K_1024_HIGH : Std.I64 := 5544863872#i64
 
 /-- [crc32fast::specialized::pclmulqdq::K_1024_LOW]
-    Source: 'src/specialized/pclmulqdq.rs', lines 126:0-126:36 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 132:0-132:36 -/
 @[global_simps, irreducible]
 def specialized.pclmulqdq.K_1024_LOW : Std.I64 := 8196649842#i64
 
 /-- [crc32fast::specialized::pclmulqdq::calculate_avx2]: loop body 0:
-    Source: 'src/specialized/pclmulqdq.rs', lines 211:4-216:5 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 217:4-222:5 -/
 @[rust_loop_body]
 def specialized.pclmulqdq.calculate_avx2_loop.body
   (k : core.core_arch.x86.__m256i) (data : Slice Std.U8)
@@ -1787,7 +1787,7 @@ def specialized.pclmulqdq.calculate_avx2_loop.body
   else ok (done (data, v0, v1, v2, v3))
 
 /-- [crc32fast::specialized::pclmulqdq::calculate_avx2]: loop 0:
-    Source: 'src/specialized/pclmulqdq.rs', lines 211:4-216:5 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 217:4-222:5 -/
 @[rust_loop]
 def specialized.pclmulqdq.calculate_avx2_loop
   (data : Slice Std.U8) (v0 : core.core_arch.x86.__m256i)
@@ -1803,7 +1803,7 @@ def specialized.pclmulqdq.calculate_avx2_loop
     (data, v0, v1, v2, v3)
 
 /-- [crc32fast::specialized::pclmulqdq::calculate_avx2]:
-    Source: 'src/specialized/pclmulqdq.rs', lines 192:0-230:1 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 198:0-236:1 -/
 def specialized.pclmulqdq.calculate_avx2
   (crc : Std.U32) (data : Slice Std.U8) : Result Std.U32 := do
   let i := Slice.len data
@@ -1846,23 +1846,23 @@ def specialized.pclmulqdq.calculate_avx2
     specialized.pclmulqdq.reduce_128_to_crc x7 data5
 
 /-- [crc32fast::specialized::pclmulqdq::K_2048_HIGH]
-    Source: 'src/specialized/pclmulqdq.rs', lines 132:0-132:37 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 138:0-138:37 -/
 @[global_simps, irreducible]
 def specialized.pclmulqdq.K_2048_HIGH : Std.I64 := 5136782384#i64
 
 /-- [crc32fast::specialized::pclmulqdq::K_2048_LOW]
-    Source: 'src/specialized/pclmulqdq.rs', lines 130:0-130:36 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 136:0-136:36 -/
 @[global_simps, irreducible]
 def specialized.pclmulqdq.K_2048_LOW : Std.I64 := 4651644810#i64
 
 /-- [crc32fast::specialized::pclmulqdq::MIN_AVX512_BYTES]
-    Source: 'src/specialized/pclmulqdq.rs', lines 120:0-120:41 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 126:0-126:41 -/
 @[global_simps, irreducible]
 def specialized.pclmulqdq.MIN_AVX512_BYTES : Result Std.Usize :=
   2#usize * 1024#usize
 
 /-- [crc32fast::specialized::pclmulqdq::calculate_avx512]: loop body 0:
-    Source: 'src/specialized/pclmulqdq.rs', lines 274:4-279:5 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 280:4-285:5 -/
 @[rust_loop_body]
 def specialized.pclmulqdq.calculate_avx512_loop.body
   (k : core.core_arch.x86.__m512i) (data : Slice Std.U8)
@@ -1889,7 +1889,7 @@ def specialized.pclmulqdq.calculate_avx512_loop.body
   else ok (done (data, v0, v1, v2, v3))
 
 /-- [crc32fast::specialized::pclmulqdq::calculate_avx512]: loop 0:
-    Source: 'src/specialized/pclmulqdq.rs', lines 274:4-279:5 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 280:4-285:5 -/
 @[rust_loop]
 def specialized.pclmulqdq.calculate_avx512_loop
   (data : Slice Std.U8) (v0 : core.core_arch.x86.__m512i)
@@ -1905,7 +1905,7 @@ def specialized.pclmulqdq.calculate_avx512_loop
     (data, v0, v1, v2, v3)
 
 /-- [crc32fast::specialized::pclmulqdq::calculate_avx512]:
-    Source: 'src/specialized/pclmulqdq.rs', lines 246:0-308:1 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 252:0-314:1 -/
 def specialized.pclmulqdq.calculate_avx512
   (crc : Std.U32) (data : Slice Std.U8) : Result Std.U32 := do
   let i := Slice.len data
@@ -1973,7 +1973,7 @@ def specialized.pclmulqdq.calculate_avx512
     else specialized.pclmulqdq.reduce_128_to_crc x15 data5
 
 /-- [crc32fast::specialized::pclmulqdq::{crc32fast::specialized::pclmulqdq::State}::update]:
-    Source: 'src/specialized/pclmulqdq.rs', lines 93:4-104:5
+    Source: 'src/specialized/pclmulqdq.rs', lines 99:4-110:5
     Visibility: public -/
 def specialized.pclmulqdq.State.update
   (self : specialized.pclmulqdq.State) (state : Std.U32) (buf : Slice Std.U8) :
@@ -2002,7 +2002,7 @@ def Hasher.update (self : Hasher) (buf : Slice Std.U8) : Result Hasher := do
     ok { amount := i2, state := i3, spec := self.spec }
 
 /-- [crc32fast::specialized::pclmulqdq::{crc32fast::specialized::pclmulqdq::State}::new::{impl core::ops::function::FnOnce<(crc32fast::specialized::pclmulqdq::Kind,), crc32fast::specialized::pclmulqdq::State> for crc32fast::specialized::pclmulqdq::{crc32fast::specialized::pclmulqdq::State}::new::{closure}}::call_once]:
-    Source: 'src/specialized/pclmulqdq.rs', lines 89:27-89:47 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 95:27-95:47 -/
 def
   specialized.pclmulqdq.State.new.closure.Insts.CoreOpsFunctionFnOnceTupleKindState.call_once
   (c : specialized.pclmulqdq.State.new.closure)
@@ -2012,7 +2012,7 @@ def
   ok { kind := tupled_args }
 
 /-- Trait implementation: [crc32fast::specialized::pclmulqdq::{crc32fast::specialized::pclmulqdq::State}::new::{impl core::ops::function::FnOnce<(crc32fast::specialized::pclmulqdq::Kind,), crc32fast::specialized::pclmulqdq::State> for crc32fast::specialized::pclmulqdq::{crc32fast::specialized::pclmulqdq::State}::new::{closure}}]
-    Source: 'src/specialized/pclmulqdq.rs', lines 89:27-89:47 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 95:27-95:47 -/
 @[reducible]
 def
   specialized.pclmulqdq.State.new.closure.Insts.CoreOpsFunctionFnOnceTupleKindState
@@ -2023,13 +2023,13 @@ def
 }
 
 /-- [crc32fast::specialized::pclmulqdq::{crc32fast::specialized::pclmulqdq::State}::detect]:
-    Source: 'src/specialized/pclmulqdq.rs', lines 42:4-62:5 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 42:4-65:5 -/
 def specialized.pclmulqdq.State.detect
   : Result (Option specialized.pclmulqdq.Kind) := do
   ok none
 
 /-- [crc32fast::specialized::pclmulqdq::{crc32fast::specialized::pclmulqdq::State}::new]:
-    Source: 'src/specialized/pclmulqdq.rs', lines 87:4-90:5
+    Source: 'src/specialized/pclmulqdq.rs', lines 93:4-96:5
     Visibility: public -/
 def specialized.pclmulqdq.State.new
   : Result (Option specialized.pclmulqdq.State) := do

@@ -14,7 +14,7 @@ namespace Crc32fastVerif
 /-- The kernel the crate should pick: the widest one whose instructions the CPU has. -/
 def bestKind : Option specialized.pclmulqdq.Kind :=
   if cpuHas .pclmulqdq && cpuHas .sse4_1 && cpuHas .ssse3 then
-    if cpuHas .avx512f && cpuHas .vpclmulqdq then some .Avx512
+    if cpuHas .avx512f && cpuHas .avx2 && cpuHas .vpclmulqdq then some .Avx512
     else if cpuHas .avx2 && cpuHas .vpclmulqdq then some .Avx2
     else some .Sse
   else none
@@ -40,10 +40,11 @@ def needs : specialized.pclmulqdq.Kind → List Feature
   | .Avx512 => [.pclmulqdq, .sse4_1, .ssse3, .avx2, .vpclmulqdq, .avx512f]
 
 /-- Safety of the `unsafe` kernel calls: detection only picks a kernel whose instructions the CPU
-    reports. (`calculate_avx512` also enables `avx2`; on real CPUs AVX-512F implies AVX2, which this
-    check does not test. The crate relies on that implication.) -/
+    reports (every `#[target_feature]` of the kernel and of the kernels it calls, `sse2` and the
+    `avx` that `avx2` builds on aside). Fork commit after de4662a adds the `avx2` check for AVX-512,
+    which `calculate_avx512` needs because it calls `calculate_avx2` on short inputs. -/
 theorem detect_safe (k : specialized.pclmulqdq.Kind) (h : bestKind = some k) :
-    ∀ f ∈ needs k, f = .avx2 ∧ k = .Avx512 ∨ cpuHas f = true := by
+    ∀ f ∈ needs k, cpuHas f = true := by
   unfold bestKind at h
   cases k <;> intro f hf <;> simp only [needs, List.mem_cons, List.not_mem_nil, or_false] at hf <;>
     revert h <;>

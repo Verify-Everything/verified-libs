@@ -2,10 +2,10 @@
 library: crc32fast
 version: 1.5.3
 source: https://github.com/Verify-Everything/crc32fast
-commit: de4662afb648f638673178da002fbc93e518d1df
-archive_sha256: 5694352b4adc1de261b6eb50e9c3943730934c039d6d4622577d6443d23b1fe6
+commit: e31e9a136024cda82582a680671068bd792a39a7
+archive_sha256: 13c21880cc49882b7c51953fa5fe62ac7386599e34bd6085f2bd26e6ff0120cc
 tool: Lean 4 + Aeneas
-tool_version: aeneas nightly-2026.10.23-fdebf20, charon_rust nightly-2026-09-17, lean 4.35.0; sha256:da9ed0adfff0011a377e5a6c9c137e8a68cc174db2fbadfc0f78e9e502b39a09
+tool_version: aeneas nightly-2026.10.23-fdebf20, charon_rust nightly-2026-09-17, lean 4.35.0; sha256:3361f371fa145def485c620d9d1cc832cdcb43cee9d3bb1ff61afc4b3ff4db15
 strength: full-correctness
 status: candidate
 functions: 46/46
@@ -26,35 +26,37 @@ Functions: 46/46 at full-correctness (46 verified or fixed)
   - update_slow, update_fast_16, every SIMD kernel (SSE, AVX2, AVX-512, aarch64 CRC32) and hash equal the bit-at-a-time reference CRC-32, for inputs of any length
   - Hasher::update then finalize equals hash of the concatenated input (incremental = single pass), with any kernel State::new picks
   - combine and Hasher::combine equal the CRC of the concatenation
-  - No function panics or fails on any input; the u64 byte count wraps modulo 2^64 (fix in fork commit 990c6c1; upstream panics in debug builds)
+  - No public function panics or fails on any input (internal helpers such as get*/fold_16 are proved under the length conditions every caller meets); the u64 byte count wraps modulo 2^64 (fix in fork commit 990c6c1; upstream panics in debug builds)
   - Debug writes exactly `crc32fast::Hasher`; Clone, Default, Hash::write/finish behave as documented
 
 ## Code
-- Upstream: https://github.com/Verify-Everything/crc32fast @ de4662afb648f638673178da002fbc93e518d1df, archive SHA-256 5694352b4adc1de261b6eb50e9c3943730934c039d6d4622577d6443d23b1fe6
-- Fork: https://github.com/Verify-Everything/crc32fast @ de4662afb648f638673178da002fbc93e518d1df, from https://github.com/srijs/rust-crc32fast @ d2363eab95ebc85fcf726d1c8fa845148e474591 (archive SHA-256 5f9d28e38dcb613309c036523202e50241cdea899e8af524de6397dad594bf61); functions changed: src/lib.rs:Hasher::combine, src/lib.rs:Hasher::update, src/specialized/aarch64.rs:calculate, src/specialized/aarch64.rs:crc_quads, src/specialized/aarch64.rs:split_quads, src/specialized/pclmulqdq.rs:get, src/specialized/pclmulqdq.rs:get256, src/specialized/pclmulqdq.rs:get512, src/specialized/pclmulqdq.rs:load128, src/specialized/pclmulqdq.rs:load256, src/specialized/pclmulqdq.rs:load512, src/specialized/pclmulqdq.rs:reduce512, src/specialized/pclmulqdq.rs:reduce_128_to_crc
+- Upstream: https://github.com/Verify-Everything/crc32fast @ e31e9a136024cda82582a680671068bd792a39a7, archive SHA-256 13c21880cc49882b7c51953fa5fe62ac7386599e34bd6085f2bd26e6ff0120cc
+- Fork: https://github.com/Verify-Everything/crc32fast @ e31e9a136024cda82582a680671068bd792a39a7, from https://github.com/srijs/rust-crc32fast @ d2363eab95ebc85fcf726d1c8fa845148e474591 (archive SHA-256 5f9d28e38dcb613309c036523202e50241cdea899e8af524de6397dad594bf61); functions changed: src/lib.rs:Hasher::combine, src/lib.rs:Hasher::update, src/specialized/aarch64.rs:calculate, src/specialized/aarch64.rs:crc_quads, src/specialized/aarch64.rs:split_quads, src/specialized/pclmulqdq.rs:State::detect@L42, src/specialized/pclmulqdq.rs:State::detect@L68, src/specialized/pclmulqdq.rs:get, src/specialized/pclmulqdq.rs:get256, src/specialized/pclmulqdq.rs:get512, src/specialized/pclmulqdq.rs:load128, src/specialized/pclmulqdq.rs:load256, src/specialized/pclmulqdq.rs:load512, src/specialized/pclmulqdq.rs:reduce512, src/specialized/pclmulqdq.rs:reduce_128_to_crc
 - Fork rewrites (proved on the fork only; users must adopt the fork): src/specialized/aarch64.rs:calculate, src/specialized/aarch64.rs:crc_quads, src/specialized/aarch64.rs:split_quads, src/specialized/pclmulqdq.rs:get, src/specialized/pclmulqdq.rs:get256, src/specialized/pclmulqdq.rs:get512, src/specialized/pclmulqdq.rs:load128, src/specialized/pclmulqdq.rs:load256, src/specialized/pclmulqdq.rs:load512, src/specialized/pclmulqdq.rs:reduce512, src/specialized/pclmulqdq.rs:reduce_128_to_crc
+- Upstream functions the fork replaced (replacement proved at full-correctness): src/specialized/pclmulqdq.rs:State::detect@L65 -> src/specialized/pclmulqdq.rs:State::detect@L68
 - Features and targets covered: riscv64gc-unknown-none-elf, no_std (portable code: every target without a SIMD kernel), x86_64-unknown-linux-gnu, no_std (compile-time detection) and std (runtime detection, any CPU answer), aarch64-unknown-linux-gnu, no_std and std (runtime crc detection, any CPU answer), x86_64 kernels: SSE4.1+PCLMULQDQ, AVX2+VPCLMULQDQ, AVX-512+VPCLMULQDQ (the nightly feature only switches the AVX-512 path on; its code is proved); variants: riscv64-portable, x86_64, x86_64-std, aarch64, aarch64-std
 - Upstream releases checked 2026-10-24T07:08:07Z: pinned version is the latest
 
 ## Specification
-- Plain words: crc32fast computes the standard CRC-32 (ISO-HDLC, reflected polynomial 0xEDB88320, init and final XOR 0xFFFFFFFF). Every public function returns the CRC the bit-at-a-time reference gives, for any input and on every target and kernel; incremental updates and combine equal a single pass; nothing panics.
+- Plain words: crc32fast computes the standard CRC-32 (ISO-HDLC, reflected polynomial 0xEDB88320, init and final XOR 0xFFFFFFFF). Every public function returns the CRC the bit-at-a-time reference gives, for any input, on the five verified builds (riscv64 no_std; x86_64 no_std and std with the SSE, AVX2 and AVX-512 kernels; aarch64 little-endian no_std and std); incremental updates and combine equal a single pass; no public function panics. Not verified: i686, aarch64_be, no_std builds with SIMD target features enabled, rustc 1.80-1.88.
 - Formal spec files: common/Crc32fast/Spec.lean
 - Matches standard / test vectors: CRC-32/ISO-HDLC check value crc32("123456789") = 0xCBF43926 (Greg Cook's CRC catalogue), proved in Spec.lean, crc32fast's own vectors: crc32("") = 0, crc32("hello world") = 0x0d4a1185, proved in Spec.lean
 
 ## Proof
-- Tool(s) and versions: lean-aeneas; aeneas nightly-2026.10.23-fdebf20, charon_rust nightly-2026-09-17, lean 4.35.0; toolchain digest sha256:da9ed0adfff0011a377e5a6c9c137e8a68cc174db2fbadfc0f78e9e502b39a09; container digest NOT IN A PINNED CONTAINER
+- Tool(s) and versions: lean-aeneas; aeneas nightly-2026.10.23-fdebf20, charon_rust nightly-2026-09-17, lean 4.35.0; toolchain digest sha256:3361f371fa145def485c620d9d1cc832cdcb43cee9d3bb1ff61afc4b3ff4db15; container digest NOT IN A PINNED CONTAINER
 - Kernel replay (leanchecker): passed
 - Theorems / goals: 1167/1167 proved, 0 sorries, 0 with extra axioms
 - Per-function results: below, and functions.toml for declared labels and evidence
-- Planted-bug check: planted bugs 17/17 caught (0 invalid), chosen by adversarial reviewer agent (independent of the proof author), crc32fast thread, 2026-11-02
+- Planted-bug check: no planted-bug run on this commit (`vpipe mutate`)
 - Differential cross-check of the translation: 2 differential cross-check command(s)
 
 ## Trusted base
 - Axioms reported by the checker: Classical.choice, Quot.sound, propext
 - Std or library models: core.fmt.Formatter.sink, core.fmt.Formatter.isPretty, core.fmt.Formatter.debug_struct, core.fmt.builders.DebugStruct.finish, core.num.U32.wrapping_neg, core.option.Option.unwrap_or_else, core.option.Option.Insts.CoreCloneClone.clone, core.option.Option.Insts.CoreOpsTry_traitTry.branch, core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionNever.from_residual, core.iter.traits.iterator.Iterator.fold.default, core.slice.iter.Iter.Insts.CoreIterTraitsIteratorIteratorSharedAT.fold, x86 SSE2/SSSE3/SSE4.1/PCLMULQDQ/AVX/AVX2/AVX-512/VPCLMULQDQ intrinsics (24, in variants/x86_64*/Crc32fast/External), crc32fast.specialized.pclmulqdq.load128, crc32fast.specialized.pclmulqdq.load256, crc32fast.specialized.pclmulqdq.load512, x86.cpuHas, a64.cpuHasCrc, core.core_arch.aarch64.neon.generated.__crc32d, core.core_arch.arm_shared.neon.generated.__crc32b, crc32fast.specialized.aarch64.split_quads, a64.splitPre, a64.splitMid
-- Tool assumptions: translator (Aeneas/Charon) faithful; Lean kernel sound
+- Std models written as definitions (trusted; not axioms, so the axiom audit does not see them; 43): `core::core_arch::aarch64::neon::generated::__crc32d`, `core::core_arch::arm_shared::neon::generated::__crc32b`, `core::core_arch::x86::avx2::_mm256_extracti128_si256`, `core::core_arch::x86::avx2::_mm256_xor_si256`, `core::core_arch::x86::avx512f::_mm512_castsi128_si512`, `core::core_arch::x86::avx512f::_mm512_castsi512_si128`, `core::core_arch::x86::avx512f::_mm512_extracti32x4_epi32`, `core::core_arch::x86::avx512f::_mm512_set_epi64`, `core::core_arch::x86::avx512f::_mm512_xor_si512`, `core::core_arch::x86::avx::_mm256_castsi128_si256`, `core::core_arch::x86::avx::_mm256_castsi256_si128`, `core::core_arch::x86::avx::_mm256_set_epi64x`, `core::core_arch::x86::pclmulqdq::_mm_clmulepi64_si128`, `core::core_arch::x86::sse2::_mm_add_epi8`, `core::core_arch::x86::sse2::_mm_and_si128`, `core::core_arch::x86::sse2::_mm_cvtsi32_si128`, `core::core_arch::x86::sse2::_mm_set1_epi8`, `core::core_arch::x86::sse2::_mm_set_epi32`, `core::core_arch::x86::sse2::_mm_set_epi64x`, `core::core_arch::x86::sse2::_mm_setr_epi8`, `core::core_arch::x86::sse2::_mm_srli_si128`, `core::core_arch::x86::sse2::_mm_xor_si128`, `core::core_arch::x86::sse41::_mm_extract_epi32`, `core::core_arch::x86::ssse3::_mm_shuffle_epi8`, `core::core_arch::x86::vpclmulqdq::_mm256_clmulepi64_epi128`, `core::core_arch::x86::vpclmulqdq::_mm512_clmulepi64_epi128`, `core::fmt::builders::{core::fmt::builders::DebugStruct<'a, 'b>}::finish`, `core::fmt::{core::fmt::Formatter<'a>}::debug_struct`, `core::iter::traits::iterator::Iterator::fold`, `core::num::{u32}::wrapping_neg`, `core::option::{core::clone::Clone<core::option::Option<@T>>}::clone`, `core::option::{core::ops::try_trait::FromResidual<core::option::Option<@T>, core::option::Option<!>>}::from_residual`, `core::option::{core::ops::try_trait::Try<core::option::Option<@T>>}::branch`, `core::option::{core::option::Option<@T>}::unwrap_or_else`, `core::slice::iter::{core::iter::traits::iterator::Iterator<core::slice::iter::Iter<'a, @T>, &'a @T>}::fold`, `std_detect::detect::arch::aarch64::__is_feature_detected::crc`, `std_detect::detect::arch::x86::__is_feature_detected::avx2`, `std_detect::detect::arch::x86::__is_feature_detected::avx512f`, `std_detect::detect::arch::x86::__is_feature_detected::pclmulqdq`, `std_detect::detect::arch::x86::__is_feature_detected::sse2`, `std_detect::detect::arch::x86::__is_feature_detected::sse4_1`, `std_detect::detect::arch::x86::__is_feature_detected::ssse3`, `std_detect::detect::arch::x86::__is_feature_detected::vpclmulqdq`
+- Tool assumptions: Charon/Aeneas (stock nightly-2026.10.23-fdebf20) translate the fork faithfully; Lean kernel sound. Hand-written models of the CPU instructions follow the Intel/ARM pseudocode and are checked against this CPU (x86) and qemu (aarch64) by crosscheck/models.sh. ASSUMPTION: _mm256_castsi128_si256 and _mm512_castsi128_si512 return zero upper bits; Intel and Rust's docs leave them undefined/non-deterministic, current rustc fills zeros, and the proofs depend on it (fix candidate: _mm*_zextsi128_*). ASSUMPTION: a CPU reporting avx2 also supports avx (std_detect checks OS AVX support before reporting avx2). aarch64 models assume little endian.
 - Translator: stock Aeneas/Charon release
-- Unsafe / FFI boundaries: not listed
+- Unsafe / FFI boundaries: Every SIMD kernel is an unsafe #[target_feature] fn; safety rests on detection (std: detect_safe proves every target feature of the picked kernel, and of the kernels it calls, is reported by the CPU; no_std: kernels are compiled in only when the target features are enabled at compile time) and on the load helpers being called with enough bytes (proved at every call).
 - Patches applied: none
 - Forbidden constructs found: 0
 
@@ -70,6 +72,8 @@ Functions: 46/46 at full-correctness (46 verified or fixed)
 ## Bugs found and fixes
 - `src/lib.rs:Hasher::update`: upstream panics in debug builds when the u64 byte count overflows (e.g. new_with_initial_len(_, u64::MAX) then update); fixed with wrapping_add, proved for every input
 - `src/lib.rs:Hasher::combine`: same u64 overflow as update (amount += other.amount); fixed with wrapping_add
+- `src/specialized/pclmulqdq.rs:State::detect@L42`: variant x86_64 (no_std, compile-time cfg)
+- `src/specialized/pclmulqdq.rs:State::detect@L68`: variant x86_64-std: runtime detection, any CPU answer; detect_safe: every picked kernel's target features are reported by the CPU
 
 ## Admission gates
 
@@ -80,7 +84,7 @@ Functions: 46/46 at full-correctness (46 verified or fixed)
 | all inputs | yes | no bounded-only evidence |
 | full strength | yes | entry strength full-correctness |
 | spec first | NO | need [scope].properties, [scope].written (date) and [scope].reviewed_by |
-| not vacuous | yes | planted bugs 17/17 caught (0 invalid), chosen by adversarial reviewer agent (independent of the proof author), crc32fast thread, 2026-11-02 |
+| not vacuous | NO | no planted-bug run on this commit (`vpipe mutate`) |
 | trusted base | yes | clean; kernel replay passed |
 | cross check | yes | 2 differential cross-check command(s) |
 | reproducible | NO | 0 matching clean run(s) on this toolchain |
@@ -119,8 +123,8 @@ Functions: 46/46 at full-correctness (46 verified or fixed)
 | `src/specialized/aarch64.rs:crc_bytes` | verified | full-correctness | crc_bytes_eq |
 | `src/specialized/mod.rs:State::new` | verified | full-correctness | state_new_eq |
 | `src/specialized/mod.rs:State::update` | verified | full-correctness | state_update_eq |
-| `src/specialized/pclmulqdq.rs:State::detect@L42` | verified | full-correctness | detect_eq, state_new_eq |
-| `src/specialized/pclmulqdq.rs:State::detect@L65` | verified | full-correctness | detect_eq, state_new_eq |
+| `src/specialized/pclmulqdq.rs:State::detect@L42` | fixed | full-correctness | detect_eq, state_new_eq |
+| `src/specialized/pclmulqdq.rs:State::detect@L68` | fixed | full-correctness | detect_eq, detect_safe, state_new_eq |
 | `src/specialized/pclmulqdq.rs:State::new` | verified | full-correctness | state_new_eq |
 | `src/specialized/pclmulqdq.rs:State::update` | verified | full-correctness | state_update_eq |
 | `src/specialized/pclmulqdq.rs:calculate` | verified | full-correctness | calculate_eq |

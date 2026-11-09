@@ -44,7 +44,7 @@ structure Hasher where
   spec : Option specialized.pclmulqdq.State
 
 /-- [crc32fast::specialized::pclmulqdq::{crc32fast::specialized::pclmulqdq::State}::new::{closure}]
-    Source: 'src/specialized/pclmulqdq.rs', lines 89:27-89:47 -/
+    Source: 'src/specialized/pclmulqdq.rs', lines 95:27-95:47 -/
 @[reducible]
 def specialized.pclmulqdq.State.new.closure := Unit
 

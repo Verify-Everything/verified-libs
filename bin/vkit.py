@@ -300,7 +300,13 @@ def setup_kani(yes):
     if not confirm([f"cargo install --locked kani-verifier@{want}",
                     "cargo kani setup (downloads Kani's pinned nightly and CBMC, several GB)"], yes):
         return 1
-    return vpipe("setup", "kani")
+    vpipe("setup", "kani")
+    got = out(["cargo", "kani", "--version"])
+    if not got or want not in got:
+        log(f"kani {want} is not installed after setup (cargo kani --version: {got or 'not found'})")
+        return 1
+    log(got)
+    return 0
 
 
 def setup_cbmc(yes):

@@ -46,7 +46,9 @@ jobs:
       - name: Build
         run: docker build -f container/Dockerfile -t "$IMAGE:${{ github.sha }}" .
       - name: Smoke test (engine gate inside the image, repo mounted read-write)
-        run: docker run --rm -v "$PWD:/work" "$IMAGE:${{ github.sha }}" python3 self/gate.py
+        run: |
+          docker run --rm -v "$PWD:/work" "$IMAGE:${{ github.sha }}" python3 self/gate.py
+          docker run --rm "$IMAGE:${{ github.sha }}" cargo kani --version
       - name: Push and report the digest
         if: github.event_name != 'pull_request'
         env:
